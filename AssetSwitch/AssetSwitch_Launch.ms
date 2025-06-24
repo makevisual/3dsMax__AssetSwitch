@@ -18,11 +18,11 @@ global FN_DoSwitch_Type
 global FN_Callback_SelectionChange
 global FN_setup_Initalize
 
-globalASSET_Functions
+global ASSET_Functions -- Typo?
 
-versionNumber = "1.5.0"
+versionNumber = "1.6.0"
 
-global PublishCenterExecutable = @"U:\Make_Tools\AssetSwitch\Release\1.5\bin\PublishCenter.ms"
+global PublishCenterExecutable = @"U:\Make_Tools\AssetSwitch\Release\1.6\bin\PublishCenter.ms"
 
-filein @"U:\Make_Tools\AssetSwitch\Release\1.5\bin\AssetSwitchFunctions.ms"
-filein @"U:\Make_Tools\AssetSwitch\Release\1.5\bin\AssetSwitchUI.ms"
+filein @"U:\Make_Tools\AssetSwitch\Release\1.6\bin\AssetSwitchFunctions.ms"
+filein @"U:\Make_Tools\AssetSwitch\Release\1.6\bin\AssetSwitchUI.ms"
