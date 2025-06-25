@@ -55,7 +55,7 @@ struct ASSET_Functions
 
 			clearListener()
 			assetGlobalName = (getINISetting assetFile "Global" "name")				
-			print assetGlobalName
+			--print assetGlobalName
 			selectionArray[i].name = assetGlobalName
 			)
 			
@@ -144,7 +144,7 @@ struct ASSET_Functions
 				
 				if curPath == undefined then curPath = ""
 				
-				if ( DoesFileExist (curPath + @"\Data\assetSwitch.ini") ) 
+				if ( DoesFileExist (curPath + @"\Data\assetSwitch.ini") ) OR ( DoesFileExist (curPath + @"\Source\Data\assetSwitch.ini") )
 				then ( lab_Project.text = curPath )
 				else ( lab_Project.text = "" )
 			)
@@ -205,6 +205,7 @@ struct ASSET_Functions
 	(
 		newDir 				= ( arg_Path + @"\Assets\" + arg_Class + @"\" )
 		newDir2 			= ( newDir + arg_Name + @"\" )
+		
 		newAssetFilename 	= ( newDir + arg_Name + @"\" + arg_Name + ".asset" )
 		newSaveFileName 	= (	newDir2 + @"\Build\Model\" + arg_Name +"_Model_001.max" )
 		
@@ -213,12 +214,11 @@ struct ASSET_Functions
 		else
 		(
 			makedir newDir2
-
-			copyFolder = ("xcopy " + "\"" + @"U:\Pitches\[project]\Assets\Characters\[Character_A]" + "\"" + " " + "\"" + newDir2 + "\"" + " /E")
+			copyFolder = ("xcopy " + "\"" + @"U:\Pitches\[Project]\Assets\Characters\[Asset3D]" + "\"" + " " + "\"" + newDir2 + "\"" + " /E")
  			hiddendoscommand copyFolder
  			
-			renameFile ( newDir + "[Character_A]" ) ( newDir + arg_Name + @"\" )
-			renameFile ( newDir2 + @"\" + "[Character_A].asset" ) newAssetFilename
+			renameFile ( newDir + "[Asset3D]" ) ( newDir + arg_Name + @"\" )
+			renameFile ( newDir2 + @"\" + "[Object_A].asset" ) newAssetFilename
 			 
 			newNode = ASSET_Functions.CreateNewAsset_Node arg_Class arg_Name
 			ASSET_Functions.Asset_Initialize newNode newAssetFilename
