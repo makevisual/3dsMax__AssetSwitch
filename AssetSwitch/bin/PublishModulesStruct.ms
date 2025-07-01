@@ -32,7 +32,7 @@ struct ASSET_PublishFunctions
 	-- Returns the log file as string
 	function LOGget =
 	(
-		LOGfile = ((getdir #userscripts) + "\asset_switch_log.txt")
+		LOGfile = ((getdir #userscripts) + @"\asset_switch_log.txt") -- Maybe add @ at the beggining of the string to avoid string escapes?
 		return LOGfile
 	),
 	
@@ -67,13 +67,13 @@ struct ASSET_PublishFunctions
 		-- start collecting direct children of <obj>
 		allChildren = #(obj)
 
-		-- add children and their children etc recursively
+		-- add children and their children etc recursively  ----- VERY CLEVER SOLUTION!
 		i = 0
 		while i < allChildren.count do
-			(
+		(
 			i += 1
 			join allChildren allChildren[i].children
-			)
+		)
 
 		-- remove initial object if <includeParent> == false
 		if not includeParent then deleteitem allChildren 1
@@ -244,6 +244,46 @@ struct ASSET_PublishFunctions
 			-- Collect all child nodes in array
 			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+			-- Bakes on ALL children the Asset Name as a User Properties. -- TODO: Change the functionality to add the object itself to it
+
+			if saveArr.count > 1 do
+			(
+				Global_Asset_Name = (getINISetting assetFile "Global" "name")
+				ChildArray = deepCopy saveArr
+				deleteItem ChildArray 1
+				for child in ChildArray do
+				(
+					if (doesUserPropExist child "AssetName") do
+					(
+						deleteUserProp child "AssetName"
+					)
+					setUserProp child "Make_NodeName" child.name
+				)
+			)
+
+
+
+
+
+
+
+
+
+
+
 			-- Make the target folder if it doesn't exist, and saves the file to it
 			makeDir (getFilenamePath arg_path)
 			saveNodes saveArr arg_path
@@ -378,7 +418,7 @@ struct ASSET_PublishFunctions
 		Catch(return "ERROR: vrmesh Publish failed")
 	),
 
-	-- Publish a vrmeshAsMaxFile	
+	-- Publish a vrmeshAsMaxFile	                                                 ----> ASK_AARON - To Deprecate?
 	function pub_vrmeshAsMaxFile arg_asset arg_path =
 	(
 		try(
@@ -425,7 +465,7 @@ struct ASSET_PublishFunctions
 		Catch(return "ERROR: vrmesh as max Publish failed")
 	),
 
-	-- Publish a xmeshFile	
+	-- Publish a xmeshFile		                                                 ----> ASK_AARON - To Deprecate? ToDo: YES!
 	function pub_xmeshFile arg_asset arg_path arg_iniKey =
 	(
 		try(
@@ -433,7 +473,7 @@ struct ASSET_PublishFunctions
 			ExportAnimation = 	(execute (getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" ))
 			FrameStart = 		(execute (getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" ))
 			FrameEnd =			(execute (getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" ))
-			SampleMode = 		(execute (getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "SampleMode" ))
+			SampleMode = 		(execute (getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "SampleMode" )) ----> ASK_AARON - This option is absent on the INI file
 				
 			if ExportAnimation == ok 	do (ExportAnimation = false )
 			if FrameStart == ok 		do (FrameStart = 0 )

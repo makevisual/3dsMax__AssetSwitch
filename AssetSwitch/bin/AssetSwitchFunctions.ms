@@ -4,12 +4,12 @@ struct ASSET_Functions
 	(
 		assetFile = arg_assetFile
 		
-		setUserProp arg_Obj "asset_file" assetFile
-		setUserProp arg_Obj "asset_file_curType" ""
-		setUserProp arg_Obj "asset_file_curVersion" ""
+		setUserProp arg_Obj "Make_Asset_Filepath" assetFile
+		setUserProp arg_Obj "Make_Asset_Loaded_Filetype" ""
+		setUserProp arg_Obj "Make_Asset_Loaded_Version" ""
 		
 		setINISetting assetFile "Global" "name" arg_Obj.name
-		select arg_Obj
+		--select arg_Obj -- Selecting this BUGGER is clearing the listener and avoiding me to troubleshoot the script because there is a CALLBACK that has a ton of clearListener() all over it
 	),
 	
 	function ChangeAsset_auto arg_assetFile arg_assetName =
@@ -49,11 +49,41 @@ struct ASSET_Functions
 		for i in 1 to selectionArray.count do
 			(
 			-- Reset userProperties
-			setUserProp selectionArray[i] "asset_file" assetFile
-			setUserProp selectionArray[i] "asset_file_curType" initalType
-			setUserProp selectionArray[i] "asset_file_curVersion" initalVer
+			setUserProp selectionArray[i] "Make_Asset_Filepath" assetFile
+			setUserProp selectionArray[i] "Make_Asset_Loaded_Filetype" initalType
+			setUserProp selectionArray[i] "Make_Asset_Loaded_Version" initalVer
 
-			clearListener()
+
+
+
+
+
+
+
+
+
+
+
+
+			--clearListener() -- REMEMBER TO UNCOMMENT THIS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 			assetGlobalName = (getINISetting assetFile "Global" "name")				
 			--print assetGlobalName
 			selectionArray[i].name = assetGlobalName
@@ -73,15 +103,12 @@ struct ASSET_Functions
 		-- Get the project folder
 		for i in 1 to curFileParts.count do
 		(
-			if curFileParts[i] == "Projects" or curFileParts[i] == "Pitches"
-			then
+			if curFileParts[i] == "Projects" or curFileParts[i] == "Pitches" then -- TODO: Resolve this hardcoded project structure that expects a Projects or Pitches folder
 			(
-
 				for j in 1 to i do
 				(
 					str = str + curFileParts[j] + @"\"
 				)
-				
 				str = ( str + curFileParts[ ( i + 1 ) ] )
 				exit
 			)
@@ -94,7 +121,7 @@ struct ASSET_Functions
 	(
 		try (destroydialog CreateNewAsset_Dialog) catch()
 
-		rollout CreateNewAsset_Dialog  "Create New Asset" width:350 height:250
+		rollout CreateNewAsset_Dialog  "Create New Asset 1.6" width:350 height:250
 		(
 			groupbox			grp_project			"Project" 			width: (CreateNewAsset_Dialog.width - 25 ) height:65
 				button 			btn_ChooseProject 	"Choose Project" 	width: (CreateNewAsset_Dialog.width - 35 ) offset:[0,(grp_project.height * -1 + 10)]
@@ -116,17 +143,24 @@ struct ASSET_Functions
 			(
 				str = ( edt_Handle.text + "_" + edt_Name.text )
 				
-				if edt_Handle.text == "" or edt_Name.text == ""
-				then( btn_create.enabled = false )
-				else( btn_create.enabled = true )
+				if (edt_Handle.text == "") or (edt_Name.text == "") or (lab_Project.text == "") then -- Added (lab_Project.text == "") so the Create Asset Button would only be enabled
+																									 -- in case a valid project folder is selected
+				(
+					btn_create.enabled = false
+				)
+				else
+				(
+					btn_create.enabled = true
+				)
 				
 				return str
 			)
 			
 			function chooseProject_check arg_proj =
 			(
- 				if arg_proj != ""
- 				then
+				print "arg_proj"
+				print arg_proj
+ 				if arg_proj != "" then
 				(
 					lab_Project.text = arg_proj
 					btn_create.enabled = true
@@ -138,21 +172,28 @@ struct ASSET_Functions
 				)
 			)
 			
+
+			
+			function update_lab_create =
+			(
+				assetNameStr		= makeAssetName()
+				lab_create.text 	= ( @"\Assets\" + ddl_AssetClass.selected + @"\" + assetNameStr + @"\" )
+			)
 			function chooseProject_manual =
 			(
 				curPath = getSavepath()
 				
 				if curPath == undefined then curPath = ""
 				
-				if ( DoesFileExist (curPath + @"\Data\assetSwitch.ini") ) OR ( DoesFileExist (curPath + @"\Source\Data\assetSwitch.ini") )
-				then ( lab_Project.text = curPath )
-				else ( lab_Project.text = "" )
-			)
-			
-			function update_lab_create =
-			(
-				assetNameStr		= makeAssetName()
-				lab_create.text 	= ( @"\Assets\" + ddl_AssetClass.selected + @"\" + assetNameStr + @"\" )
+				if ( DoesFileExist (curPath + @"\Data\assetSwitch.ini") ) OR ( DoesFileExist (curPath + @"\Source\Data\assetSwitch.ini") ) then
+				(
+					lab_Project.text = curPath
+					update_lab_create() -- Added to enable the Create Asset Button in case a valid project folder is selected
+				)
+				else
+				(
+					lab_Project.text = ""
+				)
 			)
 			
 			on ddl_AssetClass selected arg do ( update_lab_create() )
@@ -166,10 +207,13 @@ struct ASSET_Functions
 			
 			on CreateNewAsset_Dialog open do
 			(
+				print "heey!!"
 -- 				edt_Handle.text = "TST"
 -- 				edt_Name.text	= "Test"
 				
-				curProj = ASSET_Functions.chooseProject_auto()
+				curProj = ASSET_Functions.ChooseProject_auto()
+				print "curProj"
+				print curProj
 				chooseProject_check curProj
 				update_lab_create()
 			)
@@ -179,6 +223,10 @@ struct ASSET_Functions
 				newPath 		= lab_Project.text
 				newClass		= ddl_AssetClass.selected
 				newAssetName 	= makeAssetName()
+				print "newClass"
+				print newClass
+				print "newAssetName"
+				print newAssetName
 				ASSET_Functions.CreateNewAsset newPath newClass newAssetName CreateNewAsset_Dialog
 			)
 		)
@@ -190,8 +238,8 @@ struct ASSET_Functions
 		newNode = circle wirecolor:blue radius:20 renderable:off steps:1 optimize:false
 		
 		filteredName = filterstring arg_name "_"
-		globlalName = (arg_Class[1] + "_" + filteredName[1] + "_Global")
-		newNode.name = globlalName
+		globalName = (arg_Class[1] + "_" + filteredName[1] + "_Global")
+		newNode.name = globalName
 		
 		newCTRL_layer 		= LayerManager.newLayerFromName (arg_Class[1] + "_" + filteredName[1] + "_Ctrl" )
 		newOBJ_layer 		= LayerManager.newLayerFromName (arg_Class[1] + "_" + filteredName[1] + "_Geo" )
@@ -207,10 +255,16 @@ struct ASSET_Functions
 		newDir2 			= ( newDir + arg_Name + @"\" )
 		
 		newAssetFilename 	= ( newDir + arg_Name + @"\" + arg_Name + ".asset" )
-		newSaveFileName 	= (	newDir2 + @"\Build\Model\" + arg_Name +"_Model_001.max" )
+		newSaveFileName 	= (	newDir2 + @"Build\Model\" + arg_Name +"_Model_001.max" ) -- This line is never creating a file because there is no folder structure that has "Build/Model"
+		print "newAssetFilename"
+		print newAssetFilename
+		print "newSaveFileName"
+		print newSaveFileName
 		
-		if ( doesfileexist newDir2 )
-		then (messagebox "Asset Already Exists")
+		if ( doesfileexist newDir2 ) then
+		(
+			messagebox "Asset Already Exists"
+		)
 		else
 		(
 			makedir newDir2
@@ -219,13 +273,11 @@ struct ASSET_Functions
  			
 			renameFile ( newDir + "[Asset3D]" ) ( newDir + arg_Name + @"\" )
 			renameFile ( newDir2 + @"\" + "[Object_A].asset" ) newAssetFilename
-			 
+			
 			newNode = ASSET_Functions.CreateNewAsset_Node arg_Class arg_Name
 			ASSET_Functions.Asset_Initialize newNode newAssetFilename
-			
 			saveMaxFile newSaveFileName quiet:true
-			
-			try (destroydialog arg_Dialog) catch()
+			--try (destroydialog arg_Dialog) catch()
 		)
 	)
 )

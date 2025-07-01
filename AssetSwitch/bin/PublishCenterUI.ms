@@ -6,6 +6,7 @@
 --- version 1.1 : 08.05.2014  	>> Improved Publish settings
 --- version 1.4 : 01.16.2015  	>> Naming version of objects now made easier
 --					 >> Save globalNode properties, if present
+--- version 1.6 : 06.26.2025  	>> Script modernization and features improvements
 --*****************************************************
 
 try (destroydialog ASSET_PublishCenterRollout) catch()
@@ -137,41 +138,6 @@ struct ASSET_PublishOptions
 		)
 		createDialog ASSET_Options_MaxFile
 	),
-
-	-- Max Optimized File Options Rollout
--- 	fn maxoptimizedfile =
--- 	(
--- 		rollout ASSET_Options_MaxOptimizedFile  "Publish Center Options" width:350 height:120
--- 		(
--- 			groupbox grp "Optimzed 3DS Max File Options" width:(ASSET_Options_MaxOptimizedFile.width - 25) height:(ASSET_Options_MaxOptimizedFile.height - 40)
--- 				checkbox chk_attachAll "attach all elements" pos:[25,25]
--- 				radiobuttons radio_type labels:#("vertex %","vertex count") columns:1 align:#left offset:[10,0]
--- 				spinner spinner_Percent "" align:#left width:60 range:[10.0,100.0,30.0] offset:[100,-35] type:#float
--- 				spinner spinner_Count "" align:#left width:60 range:[3,10000,1000] offset:[100,-5] type:#integer
-				
--- 			button buttonOK "OK" pos:[(ASSET_Options_MaxOptimizedFile.width - 92),(ASSET_Options_MaxOptimizedFile.height - 30)]
--- 			button buttonCancel "Cancel" align:#right offset:[0,-26]
-
--- 			on ASSET_Options_MaxOptimizedFile open do
--- 			(
--- 				try( chk_attachAll.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "AttachAllElements" )) )catch()
--- 				try( radio_type.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "VertexCapType" )) )catch()
--- 				try( spinner_Percent.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "VertexCapPercent" )) )catch()
--- 				try( spinner_Count.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "VertexCapCount" )) )catch()
--- 			)
-			
--- 			on buttonOK pressed do
--- 			(
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "AttachAllElements" (chk_attachAll.checked as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "VertexCapType" (radio_type.state as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "VertexCapPercent" (spinner_Percent.value as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "VertexCapCount" (spinner_Count.value as string)
--- 				destroydialog ASSET_Options_MaxOptimizedFile
--- 			)
--- 			on buttonCancel pressed do( destroydialog ASSET_Options_MaxOptimizedFile )
--- 		)
--- 		createDialog ASSET_Options_MaxOptimizedFile
--- 	),
 	
 	-- Material File Options Rollout
 	fn materialfile =
@@ -228,227 +194,7 @@ struct ASSET_PublishOptions
 			on buttonCancel pressed do( destroydialog ASSET_Options_vrmeshFile )
 		)
 		createDialog ASSET_Options_vrmeshFile
-	),
-
-	-- VRMESH as Max File Options Rollout
--- 	fn vrmeshasmaxfile =
--- 	(
--- 		rollout ASSET_Options_vrmeshAsMaxFile  "Publish Center Options" width:350 height:105
--- 		(
--- 			groupbox grp "VRMESH as 3dsMax File Options" width:(ASSET_Options_vrmeshAsMaxFile.width - 25) height:(ASSET_Options_vrmeshAsMaxFile.height - 40)
--- 				checkbox chk_exportAnimation "Export Animation" pos:[25,25]
--- 				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[150,-19]
--- 				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[240,-20]
-				
--- 				spinner spn_facecount "Number of faces in preview mesh: " align:#left range:[1,50000,1000] type:#integer offset:[15,0] width:105
-				
--- 			button buttonOK "OK" pos:[(ASSET_Options_vrmeshAsMaxFile.width - 92),(ASSET_Options_vrmeshAsMaxFile.height - 30)]
--- 			button buttonCancel "Cancel" align:#right offset:[0,-26]
-				
--- 			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
--- 			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
-			
--- 			on ASSET_Options_vrmeshAsMaxFile open do
--- 			(
--- 				try( chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "ExportAnimation" )) )catch()
--- 				try( spn_from.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "FrameStart" )) )catch()
--- 				try( spn_to.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "FrameEnd" )) )catch()
--- 				try( spn_facecount.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "Facecount" )) )catch()
--- 			)
-				
--- 			on buttonOK pressed do
--- 			(
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "ExportAnimation" (chk_exportAnimation.checked as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "FrameStart" (spn_from.value as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "FrameEnd" (spn_to.value as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "Facecount" (spn_facecount.value as string)	
--- 				destroydialog ASSET_Options_vrmeshAsMaxFile
-					
--- 				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_vrmeshAsMaxAnimFrames "vrmeshAsMaxFile"
--- 			)
--- 			on buttonCancel pressed do( destroydialog ASSET_Options_vrmeshAsMaxFile )
--- 		)
--- 		createDialog ASSET_Options_vrmeshAsMaxFile
--- 	),
-
-	-- xmesh File Options Rollout
-	fn xmeshfile =
-	(
-		rollout ASSET_Options_xmeshFile  "Publish Center Options" width:350 height:115
-		(
-			groupbox grp "XMESH File" width:(ASSET_Options_xmeshFile.width - 25) height:(ASSET_Options_xmeshFile.height - 40)
-				checkbox chk_exportAnimation "Export Animation" pos:[25,25]
-				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[150,-19]
-				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[240,-20]
-				dropdownlist ddl_samples align:#left offset:[11,0] width:(ASSET_Options_xmeshFile.width - 43) items:#("1 sample per frame","2 sample per frame","4 sample per frame","5 samples per frame","8 samples per frame","10 samples per frame")
-				
-			button buttonOK "OK" pos:[(ASSET_Options_xmeshFile.width - 92),(ASSET_Options_xmeshFile.height - 30)]
-			button buttonCancel "Cancel" align:#right offset:[0,-26]
-				
-			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
-			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
-			
-			on ASSET_Options_xmeshFile open do
-			(
-				try( chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "ExportAnimation" )) )catch()
-				try( spn_from.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "FrameStart" )) )catch()
-				try( spn_to.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "FrameEnd" )) )catch()
-				try( ddl_samples.selection = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "SampleMode" )) )catch()
-			)
-				
-			on buttonOK pressed do
-			(
-				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "ExportAnimation" (chk_exportAnimation.checked as string)
-				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "FrameStart" (spn_from.value as string)
-				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "FrameEnd" (spn_to.value as string)
-				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "SampleMode" (ddl_samples.selection as string)	
-				destroydialog ASSET_Options_xmeshFile
-					
-				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_xmeshAnimFrames "xmeshFile"
-			)
-			on buttonCancel pressed do( destroydialog ASSET_Options_xmeshFile )
-		)
-		createDialog ASSET_Options_xmeshFile
 	)
-
-	-- xmesh as Max File Options Rollout
--- 	fn xmeshasmaxfile =
--- 	(
--- 		rollout ASSET_Options_xmeshAsMaxFile  "Publish Center Options" width:350 height:115
--- 		(
--- 			groupbox grp "XMESH as 3dsMax File" width:(ASSET_Options_xmeshAsMaxFile.width - 25) height:(ASSET_Options_xmeshAsMaxFile.height - 40)
--- 				checkbox chk_exportAnimation "Export Animation" pos:[25,25]
--- 				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[150,-19]
--- 				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[240,-20]
--- 				dropdownlist ddl_samples align:#left offset:[11,0] width:(ASSET_Options_xmeshAsMaxFile.width - 43) items:#("1 sample per frame","2 sample per frame","4 sample per frame","5 samples per frame","8 samples per frame","10 samples per frame")
-				
--- 			button buttonOK "OK" pos:[(ASSET_Options_xmeshAsMaxFile.width - 92),(ASSET_Options_xmeshAsMaxFile.height - 30)]
--- 			button buttonCancel "Cancel" align:#right offset:[0,-26]
-				
--- 			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
--- 			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
-			
--- 				on ASSET_Options_xmeshAsMaxFile open do
--- 			(
--- 				try( chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "ExportAnimation" )) )catch()
--- 				try( spn_from.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "FrameStart" )) )catch()
--- 				try( spn_to.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "FrameEnd" )) )catch()
--- 				try( ddl_samples.selection = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "SampleMode" )) )catch()
--- 			)
-				
--- 			on buttonOK pressed do
--- 			(
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "ExportAnimation" (chk_exportAnimation.checked as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "FrameStart" (spn_from.value as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "FrameEnd" (spn_to.value as string)
--- 				setinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "SampleMode" (ddl_samples.selection as string)	
--- 				destroydialog ASSET_Options_xmeshAsMaxFile
-					
--- 				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_xmeshAsMaxAnimFrames "xmeshAsMaxFile"
--- 			)
--- 			on buttonCancel pressed do( destroydialog ASSET_Options_xmeshAsMaxFile )
--- 		)
--- 		createDialog ASSET_Options_xmeshAsMaxFile
--- 	)
-
-		-- Point Cache File Options Rollout
---	fn pointcachefile =
---	(
---		rollout ASSET_Options_PointCacheFile  "Publish Center Options" width:350 height:115
---		(
---			groupbox grp "Point Cache File" width:(ASSET_Options_PointCacheFile.width - 25) height:(ASSET_Options_PointCacheFile.height - 40)
---				checkbox chk_exportAnimation "Export Animation" pos:[25,25]
---				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[150,-19]
---				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[240,-20]
---				dropdownlist ddl_samples align:#left offset:[11,0] width:(ASSET_Options_PointCacheFile.width - 43) items:#("Autodesk Cache (.xml)","Point Cache 2 (.pc2)")
---				
---			button buttonOK "OK" pos:[(ASSET_Options_PointCacheFile.width - 92),(ASSET_Options_PointCacheFile.height - 30)]
---			button buttonCancel "Cancel" align:#right offset:[0,-26]
---				
---			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
---			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
---
---			on ASSET_Options_PointCacheFile open do
---			(
---				try( chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "ExportAnimation" )) )catch()
---				try( spn_from.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "FrameStart" )) )catch()
---				try( spn_to.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "FrameEnd" )) )catch()
---				try( ddl_samples.selection = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "SampleMode" )) )catch()
---			)
---				
---			on buttonOK pressed do
---			(
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "ExportAnimation" (chk_exportAnimation.checked as string)
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "FrameStart" (spn_from.value as string)
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "FrameEnd" (spn_to.value as string)
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "SampleMode" (ddl_samples.selection as string)	
---				destroydialog ASSET_Options_PointCacheFile
---					
---				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_PointCacheFileAnimFrames "PointCacheFile"
---			)
---			on buttonCancel pressed do( destroydialog ASSET_Options_PointCacheFile )
---		)
---		createDialog ASSET_Options_PointCacheFile
---	),
-
-	-- Point Cache as Max File Options Rollout
---	fn pointcacheasmaxfile =
---	(
---		rollout ASSET_Options_PointCacheAsMaxFile  "Publish Center Options" width:350 height:115
---		(
---			groupbox grp "Point Cache as 3dsMax File" width:(ASSET_Options_PointCacheAsMaxFile.width - 25) height:(ASSET_Options_PointCacheAsMaxFile.height - 40)
---				checkbox chk_exportAnimation "Export Animation" pos:[25,25]
---				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[150,-19]
---				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[240,-20]
---				dropdownlist ddl_samples align:#left offset:[11,0] width:(ASSET_Options_PointCacheAsMaxFile.width - 43) items:#("Autodesk Cache (.xml)","Point Cache 2 (.pc2)")
---				
---			button buttonOK "OK" pos:[(ASSET_Options_PointCacheAsMaxFile.width - 92),(ASSET_Options_PointCacheAsMaxFile.height - 30)]
---			button buttonCancel "Cancel" align:#right offset:[0,-26]
---				
---			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
---			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
---			
---				on ASSET_Options_PointCacheAsMaxFile open do
---			(
---				try( chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "ExportAnimation" )) )catch()
---				try( spn_from.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "FrameStart" )) )catch()
---				try( spn_to.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "FrameEnd" )) )catch()
---				try( ddl_samples.selection = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "SampleMode" )) )catch()
---			)
---				
---			on buttonOK pressed do
---			(
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "ExportAnimation" (chk_exportAnimation.checked as string)
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "FrameStart" (spn_from.value as string)
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "FrameEnd" (spn_to.value as string)
---				setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "SampleMode" (ddl_samples.selection as string)	
---				destroydialog ASSET_Options_PointCacheAsMaxFile
---					
---				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_PointCacheAsMaxFileAnimFrames "PointCacheAsMaxFile"
---			)
---			on buttonCancel pressed do( destroydialog ASSET_Options_PointCacheAsMaxFile )
---		)
---		createDialog ASSET_Options_PointCacheAsMaxFile
---	),
-
-		-- Save Animation Options Rollout
---	fn saveanimationfile =
---	(
---		rollout ASSET_Options_SaveAnimationFile  "Publish Center Options" width:350 height:85
---		(
---			groupbox grp "Save Animation as File" width:(ASSET_Options_SaveAnimationFile.width - 25) height:(ASSET_Options_SaveAnimationFile.height - 40)
---				label lab_nope "No options available to configure." pos:[25,25]
---				button buttonOK "OK" pos:[(ASSET_Options_SaveAnimationFile.width - 92),(ASSET_Options_SaveAnimationFile.height - 30)]
---				button buttonCancel "Cancel" align:#right offset:[0,-26]
---					
---				on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
---				on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
---				
---				on buttonOK pressed do (destroydialog ASSET_Options_SaveAnimationFile)
---				on buttonCancel pressed do( destroydialog ASSET_Options_SaveAnimationFile )
---		)
---		createDialog ASSET_Options_SaveAnimationFile
---	)
 )
 
 -- Function that calls the publish center, and its constituents
@@ -456,7 +202,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 (	
 	
 	-- The main rollout
-	rollout	ASSET_PublishCenterRollout "Publish Center 1.5" width:380 height:505
+	rollout	ASSET_PublishCenterRollout "Publish Center 1.6" width:380 height:505
 	(
 		label lab_AssetName assetName
 
@@ -480,14 +226,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 				spinner spinner_MaxFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
 				button button_MaxFile_Options "Options" offset:[0,-25] align:#right
 				label lab_MaxFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-		
---		groupbox grp_MaxOptimizedFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
---			checkbox chk_MaxOptimizedFile "Optimized 3ds Max File" align:#left offset:[0,((grp_MaxOptimizedFile.height * -1) - 5)] -- enabled:false
---				dropdownlist ddl_MaxOptimizedFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
---				edittext edt_MaxOptimizedFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
---				spinner spinner_MaxOptimizedFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
---				button button_MaxOptimizedFile_Options "Options" offset:[0,-25] align:#right
---				label lab_MaxOptimizedFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 			
 		groupbox grp_vrmeshFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
 			checkbox chk_vrmeshFile ".vrmesh" align:#left offset:[0,((grp_vrmeshFile.height * -1) - 5)] -- enabled:false
@@ -498,65 +236,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 				label lab_vrmeshAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
 				button button_vrmeshFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
 				label lab_vrmeshFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-		
---		groupbox grp_vrmeshAsMaxFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
---			checkbox chk_vrmeshAsMaxFile ".vrmesh as Max File" align:#left offset:[0,((grp_vrmeshAsMaxFile.height * -1) - 5)] -- enabled:false
---				dropdownlist ddl_vrmeshAsMaxFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
---				edittext edt_vrmeshAsMaxFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
---				spinner spinner_vrmeshAsMaxFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
---				button button_vrmeshAsMaxFile_Options "Options" offset:[0,-25] align:#right
---				label lab_vrmeshAsMaxAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
---				button button_vrmeshAsMaxFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
---				label lab_vrmeshAsMaxFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-		
-		groupbox grp_xmeshFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
-			checkbox chk_xmeshFile ".xmesh" align:#left offset:[0,((grp_xmeshFile.height * -1) - 5)] -- enabled:false
-				dropdownlist ddl_xmeshFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
-				edittext edt_xmeshFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
-				spinner spinner_xmeshFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
-				button button_xmeshFile_Options "Options" offset:[0,-25] align:#right
-				label lab_xmeshAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
-				button button_xmeshFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
-				label lab_xmeshFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-		
---		groupbox grp_xmeshAsMaxFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
---			checkbox chk_xmeshAsMaxFile ".xmesh as Max File" align:#left offset:[0,((grp_xmeshAsMaxFile.height * -1) - 5)] -- enabled:false
---				dropdownlist ddl_xmeshAsMaxFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
---				edittext edt_xmeshAsMaxFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
---				spinner spinner_xmeshAsMaxFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
---				button button_xmeshAsMaxFile_Options "Options" offset:[0,-25] align:#right
---				label lab_xmeshAsMaxAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
---				button button_xmeshAsMaxFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
---				label lab_xmeshAsMaxFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-		
---		groupbox grp_PointCacheFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
---			checkbox chk_PointCacheFile "Point Cache" align:#left offset:[0,((grp_PointCacheFile.height * -1) - 5)] enabled:false
---				dropdownlist ddl_PointCacheFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
---				edittext edt_PointCacheFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
---				spinner spinner_PointCacheFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
---				button button_PointCacheFile_Options "Options" offset:[0,-25] align:#right
---				label lab_PointCacheFileAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
---				button button_PointCacheFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
---				label lab_PointCacheFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-		
---		groupbox grp_PointCacheAsMaxFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
---			checkbox chk_PointCacheAsMaxFile "Point Cache as Max File" align:#left offset:[0,((grp_PointCacheAsMaxFile.height * -1) - 5)] enabled:false
---				dropdownlist ddl_PointCacheAsMaxFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
---				edittext edt_PointCacheAsMaxFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
---				spinner spinner_PointCacheAsMaxFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
---				button button_PointCacheAsMaxFile_Options "Options" offset:[0,-25] align:#right
---				label lab_PointCacheAsMaxFileAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
---				button button_PointCacheAsMaxFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
---				label lab_PointCacheAsMaxFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-			
---		groupbox grp_SaveAnimationFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
---			checkbox chk_SaveAnimationFile "Save Animation" align:#left offset:[0,((grp_SaveAnimationFile.height * -1) - 5)] enabled:false
---				dropdownlist ddl_SaveAnimationFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
---				edittext edt_SaveAnimationFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
---				spinner spinner_SaveAnimationFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
---				button button_SaveAnimationFile_Options "Options" offset:[0,-25] align:#right
---				label lab_SaveAnimationFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-			
+
 		groupbox grp_PublishAsset "Publish Asset" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:120
 			label lab_PublishAssetDir  "" style_sunkenedge:true align:#left width:(ASSET_PublishCenterRollout.width - 68) height:16 offset:[0,((grp_PublishAsset.height * -1) + 10)]
 				button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23]
@@ -578,7 +258,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 				2:(curAssetName = "")
 			)
 			
-			case curClass of 
+			case curClass of 	--------------------------------------------- ASK_AARON - Maybe some of these test clauses could be eliminated since their formats are deprecated?
 			(
 				1: -- 3dsMaxFile
 				(
@@ -598,7 +278,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 					comboString = (@"\" + curClassName + @"\" + curAssetName + nameVer + curClassExtension )
 					target.text = comboString
 			
-					return comboString
+					return comboString 	------------------------------------------------------------------ ASK_AARON -Why are we using RETURN on this clause?
 					
 				)
 				4: -- vrmeshFile
@@ -608,7 +288,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 				)
 				5: -- vrmeshAsMaxFile
 				(
-					curClassName = "VrmeshAsMax"
+					curClassName = "VrmeshAsMax"     -- TODO: Reevaluate (maybe turn to VrayRig - Rigid objects only)
 					curClassExtension = ".max"
 				)
 				6: -- xmeshFile
@@ -636,7 +316,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 					curClassName = "PointCacheAsMax"
 					curClassExtension = ".max"
 				)
-				10: -- PointCacheAsMaxFile
+				10: -- PointCacheAsMaxFile  --???????????????????????????????
 				(
 					curClassName = "SaveAnimation"
 					curClassExtension = ".xaf"
@@ -706,15 +386,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 		
 		-- Functions that update the filename and path for the desired asset class
 		function FN_Update_3dsMaxFile =				(FN_UpdateLocalPath lab_MaxFile 1 ddl_MaxFile_Name.selection edt_MaxFile_Prefex.text spinner_MaxFile_Number.value)
--- 		function FN_Update_MaxOptimizedFile =		(FN_UpdateLocalPath lab_MaxOptimizedFile 2 ddl_MaxOptimizedFile_Name.selection edt_MaxOptimizedFile_Prefex.text spinner_MaxOptimizedFile_Number.value)
 		function FN_Update_MaterialFile =			(FN_UpdateLocalPath lab_MaterialFile 3 ddl_MaterialFile_Name.selection edt_MaterialFile_Prefex.text spinner_MaterialFile_Number.value)
 		function FN_Update_vrmeshFile =				(FN_UpdateLocalPath lab_vrmeshFile 4 ddl_vrmeshFile_Name.selection edt_vrmeshFile_Prefex.text spinner_vrmeshFile_Number.value)
--- 		function FN_Update_vrmeshAsMaxFile  =		(FN_UpdateLocalPath lab_vrmeshAsMaxFile 5 ddl_vrmeshAsMaxFile_Name.selection edt_vrmeshAsMaxFile_Prefex.text spinner_vrmeshAsMaxFile_Number.value)
-		function FN_Update_xmeshFile =				(FN_UpdateLocalPath lab_xmeshFile 6 ddl_xmeshFile_Name.selection edt_xmeshFile_Prefex.text spinner_xmeshFile_Number.value)
--- 		function FN_Update_xmeshAsMaxFile =			(FN_UpdateLocalPath lab_xmeshAsMaxFile 7 ddl_xmeshAsMaxFile_Name.selection edt_xmeshAsMaxFile_Prefex.text spinner_xmeshAsMaxFile_Number.value)
--- 		function FN_Update_PointCacheFile =			(FN_UpdateLocalPath lab_PointCacheFile 8 ddl_PointCacheFile_Name.selection edt_PointCacheFile_Prefex.text spinner_PointCacheFile_Number.value)
--- 		function FN_Update_PointCacheAsMaxFile =	(FN_UpdateLocalPath lab_PointCacheAsMaxFile 9 ddl_PointCacheAsMaxFile_Name.selection edt_PointCacheAsMaxFile_Prefex.text spinner_PointCacheAsMaxFile_Number.value)
--- 		function FN_Update_SaveAnimationFile =		(FN_UpdateLocalPath lab_SaveAnimationFile 10 ddl_SaveAnimationFile_Name.selection edt_SaveAnimationFile_Prefex.text spinner_SaveAnimationFile_Number.value)
 			
 		function FN_ReportResult arg_result arg_timestart_minor = -- arg_result : the string returned from the publisher  | arg_timestart : the start time of the operation
 		(
@@ -730,8 +403,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 			print "---------------------------------------------- FETCH --------------------------------------------"
 			fetchMaxFile quiet:true
 			nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
-			assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "asset_file"))
-			assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "asset_file"))
+			assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "Make_Asset_Filepath"))
+			assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "Make_Asset_Filepath"))
 
 		)
 		
@@ -750,7 +423,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- Publisher for the 3dsMaxFile class
 		function FN_Publish_MaxFile =
 		(
-			local publish_filepath = ( assetDir + "\Publish" + (FN_Update_3dsMaxFile()))
+			local publish_filepath = ( assetDir + @"\Publish" + (FN_Update_3dsMaxFile())) -- ASK_AARON - Maybe add @ on this string?
 			
 			-- Prepare to publish
 			timestart_minor = timestamp()
@@ -760,16 +433,12 @@ function FN_PublishCenter = -- asset: the current asset definition
 			
 			-- Call the publish function
 			result = ASSET_PublishFunctions.pub_3dsMaxFile "asset" publish_filepath
-
-			-- Store the published name
--- 			setUserProp nodeAssetForPublish "PUBhist_MaxFile" edt_MaxFile_Prefex.text
--- 			setUserProp nodeAssetForPublish "PUBhist_MaxFileVer" spinner_MaxFile_Number.value
 				
 			-- Report result of the Publish
 			FN_ReportResult result timestart_minor
 		)
 		
-		-- Publisher for the Optimized MaxOptimizedFile class
+		-- Publisher for the Optimized MaxOptimizedFile class <-- ASK_AARON - MAYBE THIS IS DEPRECATED AND CAN BE REMOVED?
 		function FN_Publish_MaxOptimizedFile =
 		(
 			local publish_filepath = ( assetDir + "\Publish" + (FN_Update_MaxOptimizedFile()))
@@ -779,11 +448,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing Optimized 3dsMax File >>>")
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath )
 			lab_Status.text = " Status: Publishing Optimized 3dsMax File"
-
-
-			-- Store the published name
--- 			setUserProp nodeAssetForPublish "PUBhist_MaxOptFile" edt_MaxOptimizedFile_Prefex.text
--- 			setUserProp nodeAssetForPublish "PUBhist_MaxOptFileVer" spinner_MaxOptimizedFile_Number.value
 			
 			-- Call the publish function
 			result = ASSET_PublishFunctions.pub_MaxOptimizedFile "asset" publish_filepath
@@ -791,10 +455,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 			-- Restore the scene file
 			FN_RestoreFromHold()
 
-			-- Store the published name
-			--setUserProp nodeAssetForPublish "PUBhist_MaxOptFile" edt_MaxOptimizedFile_Prefex.text
-			--setUserProp nodeAssetForPublish "PUBhist_MaxOptFileVer" spinner_MaxOptimizedFile_Number.value
-				
 			-- Report result of the Publish
 			FN_ReportResult result timestart_minor
 		)
@@ -802,7 +462,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- Publisher for the MaterialFile class
 		function FN_Publish_MaterialFile =
 		(
-			local publish_filepath = ( assetDir + "\Publish" + (FN_Update_MaterialFile()))
+			local publish_filepath = ( assetDir + "\Publish" + (FN_Update_MaterialFile())) -- ASK_AARON - Maybe add @ on this string?
 			
 			-- Prepare to publish
 			timestart_minor = timestamp()
@@ -810,17 +470,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath )
 			lab_Status.text = " Status: Publishing Material File"
 
-			-- Store the published name
---			setUserProp nodeAssetForPublish "PUBhist_Material" edt_MaterialFile_Prefex.text
---			setUserProp nodeAssetForPublish "PUBhist_MaterialVer" spinner_MaterialFile_Number.value
-
-			
 			-- Call the publish function
 			result = ASSET_PublishFunctions.pub_MaterialFile "asset" publish_filepath
-
-			-- Store the published name
--- 			setUserProp nodeAssetForPublish "PUBhist_Material" edt_MaterialFile_Prefex.text
--- 			setUserProp nodeAssetForPublish "PUBhist_MaterialVer" spinner_MaterialFile_Number.value
 				
 			-- Report result of the Publish
 			FN_ReportResult result timestart_minor
@@ -829,17 +480,13 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- Publisher for the vrmeshFile class
 		function FN_Publish_vrmeshFile =
 		(
-			publish_filepath = ( assetDir + "\Publish" + (FN_Update_vrmeshFile()))
+			publish_filepath = ( assetDir + "\Publish" + (FN_Update_vrmeshFile())) -- ASK_AARON - Maybe add @ on this string?
 			
 			-- Prepare to publish
 			timestart_minor = timestamp()
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing vrmesh File >>>")
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath)
 			lab_Status.text = " Status: Publishing vrmesh File"
-
-			-- Store the published name
---			setUserProp nodeAssetForPublish "PUBhist_Vrmesh" edt_vrmeshFile_Prefex.text
---			setUserProp nodeAssetForPublish "PUBhist_VrmeshVer" spinner_vrmeshFile_Number.value
 			
 			-- Call the publish function
 			result = ASSET_PublishFunctions.pub_vrmeshFile "asset" publish_filepath
@@ -851,138 +498,45 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_ReportResult result timestart_minor
 		)
 		
-		-- Publisher for the vrmeshAsMaxFile class
--- 		function FN_Publish_vrmeshAsMaxFile =
--- 		(
--- 			publish_filepath = ( assetDir + "\Publish" + (FN_Update_vrmeshAsMaxFile()))
-			
--- 			-- Prepare to publish
--- 			timestart_minor = timestamp()
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing vrmesh as Max File >>>")
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath)
--- 			lab_Status.text = " Status: Publishing vrmesh as max File"
-			
--- 			-- Call the publish function
--- 			result = ASSET_PublishFunctions.pub_vrmeshAsMaxFile "asset" publish_filepath
-				
--- 			-- Restore the scene file
--- 			FN_RestoreFromHold()
-
--- 			-- Store the published name
--- 			setUserProp nodeAssetForPublish "PUBhist_VrmeshAsMax" edt_vrmeshAsMaxFile_Prefex.text
--- 			setUserProp nodeAssetForPublish "PUBhist_VrmeshVerAsMax" spinner_vrmeshAsMaxFile_Number.value
-				
--- 			-- Report result of the Publish
--- 			FN_ReportResult result timestart_minor
--- 		)
 		
-		-- Publisher for the xmeshFile class
-		function FN_Publish_xmeshFile =
+		function FN_PUBhistSave = -- ASK_AARON - 
+								  -- This function is adding User Properties to the Global/Root of the asset, "nodeAssetForPublish" is the Global Variable that stores this object and this 
+								  -- variable is defined earlier at this script if the function FN_RestoreFromHold is invoked or, most likely, was already defined when the file 
+								  -- "PublishModulesStruct.ms" was loaded and executed by another file called "PublishCenter.ms". This "PublishCenter.ms" is defined to another Global
+								  -- Variable called "PublishCenterExecutable", which is defined on the "AssetSwitch_Launch.ms" located one folder up from where this very script is
+								  -- located. This Global Variable is finally called when the Publish button ("btn_PublishAsset", on the "AssetSwitchUI.ms" file) on the Asset Switch v1.6.0 
+								  -- rollout is pressed.
+								  --
+								  -- So, the Flow of this logic is:
+								  -- 1. - The "AssetSwitchUI.ms" is called from the "MAKE Tools" menu bar when the user selects "AssetSwitch". This script then:
+								  -- 2. - Creates the Global Variable "PublishCenterExecutable", defined as the path to the "PublishCenter.ms" script.
+								  -- 3. - When the user clicks the Publish button ("btn_PublishAsset"), the "PublishCenterExecutable" variable is called (using FileIn)
+								  -- 4. - The "PublishCenterExecutable" calls the "PublishCenter.ms", which calls the "PublishModulesStruct.ms"
+								  -- 5. - The "PublishModulesStruct.ms" creates the "nodeAssetForPublish" Global Variable
+								  --
+								  -- Worth noting that the "nodeAssetForPublish" depends on another Global Variable to be defined - "nodeAssetHandle". This later variable is initialized
+								  -- at the "PublishCenter.ms"
 		(
-			publish_filepath = ( assetDir + "\Publish" + (FN_Update_xmeshFile()))
-			
-			-- Prepare to publish
-			timestart_minor = timestamp()
-			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing xmesh File >>>")
-			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath )
-			lab_Status.text = " Status: Publishing xmesh File"
+ 			--setUserProp nodeAssetForPublish "PUBhist_Material" edt_MaterialFile_Prefex.text
+ 			setUserProp nodeAssetForPublish "Make_Asset_Material_Versions" spinner_MaterialFile_Number.value
+ 			--setUserProp nodeAssetForPublish "PUBhist_MaxFile" edt_MaxFile_Prefex.text
+ 			setUserProp nodeAssetForPublish "Make_Asset_Max_Versions" spinner_MaxFile_Number.value
+ 			--setUserProp nodeAssetForPublish "PUBhist_Vrmesh" edt_vrmeshFile_Prefex.text
+ 			setUserProp nodeAssetForPublish "Make_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
 
-			-- Store the published name
---			setUserProp nodeAssetForPublish "PUBhist_Xmesh" edt_xmeshFile_Prefex.text
---			setUserProp nodeAssetForPublish "PUBhist_XmeshVer" spinner_xmeshFile_Number.value
-			
-			-- Call the publish function
-			result = ASSET_PublishFunctions.pub_xmeshFile "asset" publish_filepath "xmeshFile"
-				
-			-- Restore the scene file
-			FN_RestoreFromHold()
 
-			-- Report result of the Publish
-			FN_ReportResult result timestart_minor
-		)
-		
-		-- Publisher for the xmeshAsMaxFile class
--- 		function FN_Publish_xmeshAsMaxFile =
--- 		(
--- 			publish_filepath = ( assetDir + "\Publish" + (FN_Update_xmeshAsMaxFile()))
-			
--- 			-- Prepare to publish
--- 			timestart_minor = timestamp()
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing xmesh as max File >>>")
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath )
--- 			lab_Status.text = " Status: Publishing xmesh as max File"
-			
--- 			-- Call the publish function
--- 			result = ASSET_PublishFunctions.pub_xmeshAsMaxFile "asset" publish_filepath "xmeshAsMaxFile"
-				
--- 			-- Restore the scene file
--- 			FN_RestoreFromHold()
 
--- 			-- Store the published name
--- 			setUserProp nodeAssetForPublish "PUBhist_XmeshAsMax" edt_xmeshAsMaxFile_Prefex.text
--- 			setUserProp nodeAssetForPublish "PUBhist_XmeshVerAsMax" spinner_xmeshAsMaxFile_Number.value
-				
--- 			-- Report result of the Publish
--- 			FN_ReportResult result timestart_minor
--- 		)
-		
-		-- Publisher for the PointCacheFile class
--- 		function FN_Publish_PointCacheFile =
--- 		(
--- 			-- Prepare to publish
--- 			timestart_minor = timestamp()
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing Point Cache File >>>")
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + ( assetDir + "\Publish" + (FN_Update_PointCacheFile())))
--- 			lab_Status.text = " Status: Publishing Point Cache File"
-			
--- 			-- Call the publish function
--- 			result = ASSET_PublishFunctions.pub_PointCacheFile "asset" "path"
-				
--- 			-- Report result of the Publish
--- 			FN_ReportResult result timestart_minor
--- 		)
-		
--- 		-- Publisher for the PointCacheAsMaxFile class
--- 		function FN_Publish_PointCacheAsMaxFile =
--- 		(
--- 			-- Prepare to publish
--- 			timestart_minor = timestamp()
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing 'Point Cache as max' File >>>")
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + ( assetDir + "\Publish" + (FN_Update_PointCacheAsMaxFile())))
--- 			lab_Status.text = " Status: Publishing 'Point Cache as max' File"
-			
--- 			-- Call the publish function
--- 			result = ASSET_PublishFunctions.pub_PointCacheAsMaxFile "asset" "path"
-				
--- 			-- Report result of the Publish
--- 			FN_ReportResult result timestart_minor
--- 		)
-		
--- 		-- Publisher for the SaveAnimationFile class
--- 		function FN_Publish_SaveAnimationFile =
--- 		(
--- 			-- Prepare to publish
--- 			timestart_minor = timestamp()
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing 'Save Animation' File >>>")
--- 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + ( assetDir + "\Publish" + (FN_Update_SaveAnimationFile())))
--- 			lab_Status.text = " Status: Publishing 'Save Animation' File"
-			
--- 			-- Call the publish function
--- 			result = ASSET_PublishFunctions.pub_SaveAnimationFile "asset" "path"
-				
--- 			-- Report result of the Publish
--- 			FN_ReportResult result timestart_minor
--- 		)
-		function FN_PUBhistSave = 
-		(
- 			setUserProp nodeAssetForPublish "PUBhist_Material" edt_MaterialFile_Prefex.text
- 			setUserProp nodeAssetForPublish "PUBhist_MaterialVer" spinner_MaterialFile_Number.value
- 			setUserProp nodeAssetForPublish "PUBhist_MaxFile" edt_MaxFile_Prefex.text
- 			setUserProp nodeAssetForPublish "PUBhist_MaxFileVer" spinner_MaxFile_Number.value
- 			setUserProp nodeAssetForPublish "PUBhist_Vrmesh" edt_vrmeshFile_Prefex.text
- 			setUserProp nodeAssetForPublish "PUBhist_VrmeshVer" spinner_vrmeshFile_Number.value
- 			setUserProp nodeAssetForPublish "PUBhist_Xmesh" edt_xmeshFile_Prefex.text
- 			setUserProp nodeAssetForPublish "PUBhist_XmeshVer" spinner_xmeshFile_Number.value
+
+
+
+
+ 			setUserProp nodeAssetForPublish "Make_Asset_TimeStamp" localTime           --------- ASK_AARON - This whole procedure can be faster if instead of using the
+ 																					-- "setUserProp" command, create the whole string with all the variables and
+ 																					-- their values and apply that string with the "setUserPropBuffer" command.
+ 																					-- the caveats is that using the latter command ALL THE USER PROPERTIES will
+ 																					-- be erased and replaced by the new one
+ 			setUserProp nodeAssetForPublish "Make_Asset_Author" sysInfo.username
+ 			setUserProp nodeAssetForPublish "Make_Asset_Computer" sysInfo.computername 
 		)
 		
 		-- Enables / Disables UI items if that section is enabled
@@ -994,13 +548,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_MaxFile_Number.enabled = bool
 			edt_MaxFile_Prefex.enabled = bool
 			ddl_MaxFile_Name.enabled = bool
-			
-			-- Optimized 3dsMaxFile
--- 			bool = chk_MaxOptimizedFile.checked
--- 			lab_MaxOptimizedFile.enabled = bool
--- 			spinner_MaxOptimizedFile_Number.enabled = bool
--- 			edt_MaxOptimizedFile_Prefex.enabled = bool
--- 			ddl_MaxOptimizedFile_Name.enabled = bool
 			
 			-- MaterialFile
 			bool = chk_MaterialFile.checked
@@ -1015,64 +562,14 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_vrmeshFile_Number.enabled = bool
 			edt_vrmeshFile_Prefex.enabled = bool
 			ddl_vrmeshFile_Name.enabled = bool
-			
-			-- vrmeshAsMaxFile
--- 			bool = chk_vrmeshAsMaxFile.checked
--- 			lab_vrmeshAsMaxFile.enabled = bool
--- 			spinner_vrmeshAsMaxFile_Number.enabled = bool
--- 			edt_vrmeshAsMaxFile_Prefex.enabled = bool
--- 			ddl_vrmeshAsMaxFile_Name.enabled = bool
-			
-			-- xmeshFile
-			bool = chk_xmeshFile.checked
-			lab_xmeshFile.enabled = bool
-			spinner_xmeshFile_Number.enabled = bool
-			edt_xmeshFile_Prefex.enabled = bool
-			ddl_xmeshFile_Name.enabled = bool
-			
-			-- xmeshAsMaxFile
--- 			bool = chk_xmeshAsMaxFile.checked
--- 			lab_xmeshAsMaxFile.enabled = bool
--- 			spinner_xmeshAsMaxFile_Number.enabled = bool
--- 			edt_xmeshAsMaxFile_Prefex.enabled = bool
--- 			ddl_xmeshAsMaxFile_Name.enabled = bool
-			
-			-- PointCacheFile
---			bool = chk_PointCacheFile.checked
---			lab_PointCacheFile.enabled = bool
---			spinner_PointCacheFile_Number.enabled = bool
---			edt_PointCacheFile_Prefex.enabled = bool
---			ddl_PointCacheFile_Name.enabled = bool
-			
-			-- PointCacheAsMaxFile
---			bool = chk_PointCacheAsMaxFile.checked
---			lab_PointCacheAsMaxFile.enabled = bool
---			spinner_PointCacheAsMaxFile_Number.enabled = bool
---			edt_PointCacheAsMaxFile_Prefex.enabled = bool
---			ddl_PointCacheAsMaxFile_Name.enabled = bool
-
-			-- SaveAnimation
---			bool = chk_SaveAnimationFile.checked
---			lab_SaveAnimationFile.enabled = bool
---			spinner_SaveAnimationFile_Number.enabled = bool
---			edt_SaveAnimationFile_Prefex.enabled = bool
---			ddl_SaveAnimationFile_Name.enabled = bool
 		)
 		
 		function FN_CountEnabled =
 		(
 			count = 0
 			if chk_MaxFile.checked then 			(count += 1)
--- 			if chk_MaxOptimizedFile.checked then 	(count += 1)
 			if chk_MaterialFile.checked then 		(count += 1)
 			if chk_vrmeshFile.checked then 			(count += 1)
--- 			if chk_vrmeshAsMaxFile.checked then 	(count += 1)
-			if chk_xmeshFile.checked then 			(count += 1)
--- 			if chk_xmeshAsMaxFile.checked then 		(count += 1)
---			if chk_PointCacheFile.checked then 		(count += 1)
---			if chk_PointCacheAsMaxFile.checked then (count += 1)
---			if chk_SaveAnimationFile.checked then	(count += 1)
-			
 			return count
 		)
 		
@@ -1093,15 +590,11 @@ function FN_PublishCenter = -- asset: the current asset definition
 			)
 
 			FN_Update_3dsMaxFile()
-			FN_Update_MaxOptimizedFile()
+			--FN_Update_MaxOptimizedFile() ----> ASK_AARON - Deprecated?
 			FN_Update_MaterialFile()
 			FN_Update_vrmeshFile()
-			FN_Update_vrmeshAsMaxFile()
-			FN_Update_xmeshFile()
-			FN_Update_xmeshAsMaxFile()
---			FN_Update_PointCacheFile()
---			FN_Update_PointCacheAsMaxFile()
---			FN_Update_SaveAnimationFile()
+			--FN_Update_vrmeshAsMaxFile() ----> ASK_AARON - Deprecated?
+
 		)
 
 		-- Event Handlers
@@ -1117,7 +610,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 			if arg != ddl_className.items.count 
 			then
 			(
--- 				edt_PrefixGang_Custom.enabled = false
 				edt_PrefixGang_Custom.enabled = true
 				updateAllPrefixes ddl_className.items[arg]
 
@@ -1142,21 +634,10 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled" (chk_MaxFile.checked as string)
 			FN_CategoryToggle() 
 		)
-			on spinner_MaxFile_Number changed state do FN_Update_3dsMaxFile()
-			on edt_MaxFile_Prefex changed state do FN_Update_3dsMaxFile()
-			on ddl_MaxFile_Name selected state do FN_Update_3dsMaxFile()
+		on spinner_MaxFile_Number changed state do FN_Update_3dsMaxFile()
+		on edt_MaxFile_Prefex changed state do FN_Update_3dsMaxFile()
+		on ddl_MaxFile_Name selected state do FN_Update_3dsMaxFile()
 			
-		-- 3dsMaxOptimizedFile
---  		on button_MaxOptimizedFile_Options pressed do (ASSET_PublishOptions.maxoptimizedfile())
--- 		on chk_MaxOptimizedFile changed state do 
--- 		(
--- 			setinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "OutputEnabled" (chk_MaxOptimizedFile.checked as string)
--- 			FN_CategoryToggle() 
--- 		)
--- 			on spinner_MaxOptimizedFile_Number changed state do FN_Update_MaxOptimizedFile()
--- 			on edt_MaxOptimizedFile_Prefex changed state do FN_Update_MaxOptimizedFile()
--- 			on ddl_MaxOptimizedFile_Name selected state do FN_Update_MaxOptimizedFile()
-		
 		-- MaterialFile
 		on button_MaterialFile_Options pressed do (ASSET_PublishOptions.materialfile())
 		on chk_MaterialFile changed state do
@@ -1164,9 +645,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled" (chk_MaterialFile.checked as string)
 			FN_CategoryToggle() 
 		)
-			on spinner_MaterialFile_Number changed state do FN_Update_MaterialFile()
-			on edt_MaterialFile_Prefex changed state do FN_Update_MaterialFile() 
-			on ddl_MaterialFile_Name selected state do FN_Update_MaterialFile()
+		on spinner_MaterialFile_Number changed state do FN_Update_MaterialFile()
+		on edt_MaterialFile_Prefex changed state do FN_Update_MaterialFile() 
+		on ddl_MaterialFile_Name selected state do FN_Update_MaterialFile()
 		
 		-- vrmeshFile
 		on button_vrmeshFile_Options pressed do (ASSET_PublishOptions.vrmeshfile())
@@ -1176,95 +657,19 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "OutputEnabled" (chk_vrmeshFile.checked as string)
 			FN_CategoryToggle() 
 		)
-			on spinner_vrmeshFile_Number changed state do FN_Update_vrmeshFile()
-			on edt_vrmeshFile_Prefex changed state do FN_Update_vrmeshFile()
-			on ddl_vrmeshFile_Name selected state do FN_Update_vrmeshFile()
+		on spinner_vrmeshFile_Number changed state do FN_Update_vrmeshFile()
+		on edt_vrmeshFile_Prefex changed state do FN_Update_vrmeshFile()
+		on ddl_vrmeshFile_Name selected state do FN_Update_vrmeshFile()
 			
-		-- vrmeshAsMaxFile
--- 		on button_vrmeshAsMaxFile_Options pressed do (ASSET_PublishOptions.vrmeshasmaxfile())
--- 		on button_vrmeshAsMaxFileRefresh pressed do (FN_RefreshFrameRange "vrmeshAsMaxFile" lab_vrmeshAsMaxAnimFrames)
--- 		on chk_vrmeshAsMaxFile changed state do
--- 		(
--- 			setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled" (chk_vrmeshAsMaxFile.checked as string)
--- 			FN_CategoryToggle() 
--- 		)
--- 			on spinner_vrmeshAsMaxFile_Number changed state do FN_Update_vrmeshAsMaxFile()
--- 			on edt_vrmeshAsMaxFile_Prefex changed state do FN_Update_vrmeshAsMaxFile()
--- 			on ddl_vrmeshAsMaxFile_Name selected state do FN_Update_vrmeshAsMaxFile()
-
-		-- xmeshFile
-		on button_xmeshFile_Options pressed do (ASSET_PublishOptions.xmeshfile())
-		on button_xmeshFileRefresh pressed do (FN_RefreshFrameRange "xmeshFile" lab_xmeshAnimFrames)
-		on chk_xmeshFile changed state do 
-		(
-			setinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "OutputEnabled" (chk_xmeshFile.checked as string)
-			FN_CategoryToggle() 
-		)
-			on spinner_xmeshFile_Number changed state do FN_Update_xmeshFile()
-			on edt_xmeshFile_Prefex changed state do FN_Update_xmeshFile()
-			on ddl_xmeshFile_Name selected state do FN_Update_xmeshFile()
-			
-		-- xmeshAsMaxFile
--- 		on button_xmeshAsMaxFile_Options pressed do (ASSET_PublishOptions.xmeshasmaxfile())
--- 		on button_xmeshAsMaxFileRefresh pressed do (FN_RefreshFrameRange "xmeshAsMaxFile" lab_xmeshAsMaxAnimFrames)
--- 		on chk_xmeshAsMaxFile changed state do
--- 		(
--- 			setinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "OutputEnabled" (chk_xmeshAsMaxFile.checked as string)
--- 			FN_CategoryToggle() 
--- 		)
--- 			on spinner_xmeshAsMaxFile_Number changed state do FN_Update_xmeshAsMaxFile()
--- 			on edt_xmeshAsMaxFile_Prefex changed state do FN_Update_xmeshAsMaxFile()
--- 			on ddl_xmeshAsMaxFile_Name selected state do FN_Update_xmeshAsMaxFile()
-			
-		-- PointCacheFile
---		on button_PointCacheFile_Options pressed do (ASSET_PublishOptions.pointcachefile())
---		on button_PointCacheFileRefresh pressed do (FN_RefreshFrameRange "PointCacheFile" lab_PointCacheFileAnimFrames)
---		on chk_PointCacheFile changed state do
---		(
---			setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "OutputEnabled" (chk_PointCacheFile.checked as string)
---			FN_CategoryToggle() 
---		)
---			on spinner_PointCacheFile_Number changed state do FN_Update_PointCacheFile()
---			on edt_PointCacheFile_Prefex changed state do FN_Update_PointCacheFile()
---			on ddl_PointCacheFile_Name selected state do FN_Update_PointCacheFile()
-			
-		-- PointCacheAsMaxFile
---		on button_PointCacheAsMaxFile_Options pressed do (ASSET_PublishOptions.pointcacheasmaxfile())
---		on button_PointCacheAsMaxFileRefresh pressed do (FN_RefreshFrameRange "PointCacheAsMaxFile" lab_PointCacheAsMaxFileAnimFrames)
---		on chk_PointCacheAsMaxFile changed state do	
---		(
---			setinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "OutputEnabled" (chk_PointCacheAsMaxFile.checked as string)
---			FN_CategoryToggle() 
---		)
---			on spinner_PointCacheAsMaxFile_Number changed state do FN_Update_PointCacheAsMaxFile()
---			on edt_PointCacheAsMaxFile_Prefex changed state do FN_Update_PointCacheAsMaxFile()
---			on ddl_PointCacheAsMaxFile_Name selected state do FN_Update_PointCacheAsMaxFile()
-
-		-- SaveAnimationFile
---		on button_SaveAnimationFile_Options pressed do (ASSET_PublishOptions.saveanimationfile())
---		on chk_SaveAnimationFile changed state do
---		(
---			setinisetting (ASSET_PublishFunctions.INIget()) "SaveAnimationFile" "OutputEnabled" (chk_SaveAnimationFile.checked as string)
---			FN_CategoryToggle() 
---		)
---			on spinner_SaveAnimationFile_Number changed state do FN_Update_SaveAnimationFile()
---			on edt_SaveAnimationFile_Prefex changed state do FN_Update_SaveAnimationFile()
---			on ddl_SaveAnimationFile_Name selected state do FN_Update_SaveAnimationFile()
-		
 		-- UI Update triggers for when the main rollout first opens
 		on ASSET_PublishCenterRollout open do
 		(
 			-- Loads previous settings, if settings had been set
 			try( chk_MaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled")) )catch()
-			try( chk_MaxOptimizedFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "OutputEnabled")) )catch()
+			try( chk_MaxOptimizedFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 			try( chk_MaterialFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled")) )catch()
 			try( chk_vrmeshFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "OutputEnabled")) )catch()
-			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch()
-			try( chk_xmeshFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshFile" "OutputEnabled")) )catch()
-			try( chk_xmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "xmeshAsMaxFile" "OutputEnabled")) )catch()
---			try( chk_PointCacheFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheFile" "OutputEnabled")) )catch()
---			try( chk_PointCacheAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "PointCacheAsMaxFile" "OutputEnabled")) )catch()
---			try( chk_SaveAnimationFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "SaveAnimationFile" "OutputEnabled")) )catch()
+			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 
 			-- Update stored names 
 			curStr = ((getUserProp nodeAssetForPublish "PUBhist_MaxFile") as string )
@@ -1278,42 +683,21 @@ function FN_PublishCenter = -- asset: the current asset definition
 			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Vrmesh") as string )
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_vrmeshFile_Prefex.text = curStr
-
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Xmesh") as string )
-			if curStr == "undefined" then( curStr = "ver" )
-			edt_xmeshFile_Prefex.text = curStr
-
 			
 			-- Update stored interations
 			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAssetForPublish "PUBhist_MaxFileVer" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
--- 			try( spinner_MaxOptimizedFile_Number.value 	= ( ( getUserProp nodeAssetForPublish "PUBhist_MaxOptFileVer" ) 	as integer ) ) catch ( spinner_MaxOptimizedFile_Number.value 	= 001 )
 			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "PUBhist_MaterialVer" ) 		as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
 			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "PUBhist_VrmeshVer" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
--- 			try( spinner_vrmeshAsMaxFile_Number.value 	= ( ( getUserProp nodeAssetForPublish "PUBhist_VrmeshVerAsMax" )	as integer ) ) catch ( spinner_vrmeshAsMaxFile_Number.value 	= 001 )
-			try( spinner_xmeshFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "PUBhist_XmeshVer" ) 			as integer ) ) catch ( spinner_xmeshFile_Number.value 			= 001 )
--- 			try( spinner_xmeshAsMaxFile_Number.value 	= ( ( getUserProp nodeAssetForPublish "PUBhist_XmeshVerAsMax" ) 	as integer ) ) catch ( spinner_xmeshAsMaxFile_Number.value 		= 001 )
 				
 			-- Update individual paths for each asset
 			FN_Update_3dsMaxFile()
--- 			FN_Update_MaxOptimizedFile()
 			FN_Update_MaterialFile()
 			FN_Update_vrmeshFile()
--- 			FN_Update_vrmeshAsMaxFile()
-			FN_Update_xmeshFile()
--- 			FN_Update_xmeshAsMaxFile()
---			FN_Update_PointCacheFile()
---			FN_Update_PointCacheAsMaxFile()
---			FN_Update_SaveAnimationFile()
 
 
 				
 			--arg_enabled: if animation is enabled | arg_source: either scene or predefined range | arg_label: the UI element to update
 			FN_UpdateFrameRange lab_vrmeshAnimFrames "vrmeshFile"
--- 			FN_UpdateFrameRange lab_vrmeshAsMaxAnimFrames "vrmeshAsMaxFile"
-			FN_UpdateFrameRange lab_xmeshAnimFrames "xmeshFile"
--- 			FN_UpdateFrameRange lab_xmeshAsMaxAnimFrames "xmeshAsMaxFile"
---			FN_UpdateFrameRange lab_PointCacheFileAnimFrames "PointCacheFile"
---			FN_UpdateFrameRange lab_PointCacheAsMaxFileAnimFrames "PointCacheAsMaxFile"
 				
 			-- Update Ui Items
 			FN_PublishAssetDirPreview()
@@ -1323,16 +707,14 @@ function FN_PublishCenter = -- asset: the current asset definition
 			--todo
 			--try(ddl_className.items = (ASSET_PublishOptions.FN_GetPrefixList() + #("Layout"))) catch (ddl_className.items = #("Layout"))
 				
--- 			updateAllPrefixes ddl_className.items[1]
+
 		)
 		
 		-- Main publish Action
 		on btn_PublishAsset pressed do
 		(
 			-- prepare for publishing
-			-- Removed this override, should not be necessary any longer
-			--nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle) -- DEFINE FOR CURRENT ASSET -16
-			
+
 			timestart = timestamp()
 			errorcount = 0
 			ASSET_PublishFunctions.LOGclear()
@@ -1350,65 +732,25 @@ function FN_PublishCenter = -- asset: the current asset definition
 			
 			-- individual publish operations, and progressbar updates
 			if chk_MaxFile.checked then 
-				(
-					errorcount += FN_Publish_MaxFile()
-					countCurrent += 1
-					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
-				)
--- 			if chk_MaxOptimizedFile.checked then
---				(
--- 					errorcount += FN_Publish_MaxOptimizedFile()
--- 					countCurrent += 1
--- 					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
--- 				)
+			(
+				errorcount += FN_Publish_MaxFile() -- ASK_AARON - How is the error count updated by this function?? Ask Aaron about this!
+				countCurrent += 1
+				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+			)
+
 			if chk_MaterialFile.checked then
-				(
-					errorcount += FN_Publish_MaterialFile()
-					countCurrent += 1
-					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
-				)
+			(
+				errorcount += FN_Publish_MaterialFile()
+				countCurrent += 1
+				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+			)
 			if chk_vrmeshFile.checked then
-				(
-					errorcount += FN_Publish_vrmeshFile()
-					countCurrent += 1
-					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
-				)
--- 			if chk_vrmeshAsMaxFile.checked then
---				(
--- 					errorcount += FN_Publish_vrmeshAsMaxFile()
--- 					countCurrent += 1
--- 					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
--- 				)
-			if chk_xmeshFile.checked then
-				(
-					errorcount += FN_Publish_xmeshFile()
-					countCurrent += 1
-					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
-				)
--- 			if chk_xmeshAsMaxFile.checked then
--- 				(
--- 					errorcount += FN_Publish_xmeshAsMaxFile()
--- 					countCurrent += 1
--- 					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
--- 				)
---			if chk_PointCacheFile.checked then
---				(
---					errorcount += FN_Publish_PointCacheFile()
---					countCurrent += 1
---					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
---				)
---			if chk_PointCacheAsMaxFile.checked then
---				(
---					errorcount += FN_Publish_PointCacheAsMaxFile()
---					countCurrent += 1
---					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
---				)
---			if chk_SaveAnimationFile.checked then
---				(
---					errorcount += FN_Publish_SaveAnimationFile()
---					countCurrent += 1
---					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
---				)
+			(
+				errorcount += FN_Publish_vrmeshFile()
+				countCurrent += 1
+				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+			)
+		
 
 			-- report the results of the publishing operations
 			FN_ReportEnd errorcount timestart
@@ -1431,7 +773,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			ASSET_PublishFunctions.LOGopen()
 		)
 	)
-	createDialog ASSET_PublishCenterRollout --modal:true
+	createDialog ASSET_PublishCenterRollout 380 430 --modal:true -- added a fixed size for this dialog
 
 
 )
