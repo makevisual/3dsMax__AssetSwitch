@@ -403,8 +403,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 			print "---------------------------------------------- FETCH --------------------------------------------"
 			fetchMaxFile quiet:true
 			nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
-			assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "Make_Asset_Filepath"))
-			assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "Make_Asset_Filepath"))
+			assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
+			assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
 
 		)
 		
@@ -518,11 +518,11 @@ function FN_PublishCenter = -- asset: the current asset definition
 								  -- at the "PublishCenter.ms"
 		(
  			--setUserProp nodeAssetForPublish "PUBhist_Material" edt_MaterialFile_Prefex.text
- 			setUserProp nodeAssetForPublish "Make_Asset_Material_Versions" spinner_MaterialFile_Number.value
+ 			setUserProp nodeAssetForPublish "MAKE_Asset_Material_Versions" spinner_MaterialFile_Number.value
  			--setUserProp nodeAssetForPublish "PUBhist_MaxFile" edt_MaxFile_Prefex.text
- 			setUserProp nodeAssetForPublish "Make_Asset_Max_Versions" spinner_MaxFile_Number.value
+ 			setUserProp nodeAssetForPublish "MAKE_Asset_Max_Versions" spinner_MaxFile_Number.value
  			--setUserProp nodeAssetForPublish "PUBhist_Vrmesh" edt_vrmeshFile_Prefex.text
- 			setUserProp nodeAssetForPublish "Make_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
+ 			setUserProp nodeAssetForPublish "MAKE_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
 
 
 
@@ -530,13 +530,13 @@ function FN_PublishCenter = -- asset: the current asset definition
 
 
 
- 			setUserProp nodeAssetForPublish "Make_Asset_TimeStamp" localTime           --------- ASK_AARON - This whole procedure can be faster if instead of using the
+ 			setUserProp nodeAssetForPublish "MAKE_Asset_TimeStamp" localTime           --------- ASK_AARON - This whole procedure can be faster if instead of using the
  																					-- "setUserProp" command, create the whole string with all the variables and
  																					-- their values and apply that string with the "setUserPropBuffer" command.
  																					-- the caveats is that using the latter command ALL THE USER PROPERTIES will
  																					-- be erased and replaced by the new one
- 			setUserProp nodeAssetForPublish "Make_Asset_Author" sysInfo.username
- 			setUserProp nodeAssetForPublish "Make_Asset_Computer" sysInfo.computername 
+ 			setUserProp nodeAssetForPublish "MAKE_Asset_Author" sysInfo.username
+ 			setUserProp nodeAssetForPublish "MAKE_Asset_Computer" sysInfo.computername 
 		)
 		
 		-- Enables / Disables UI items if that section is enabled

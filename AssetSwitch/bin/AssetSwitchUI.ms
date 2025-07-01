@@ -236,9 +236,9 @@ fn FN_ChangeAsset =
 		for i in 1 to selectionArray.count do
 		(
 			-- Reset userProperties
-			setUserProp selectionArray[i] "Make_Asset_Filepath" newAsset
-			setUserProp selectionArray[i] "Make_Asset_Loaded_Filetype" initalType
-			setUserProp selectionArray[i] "Make_Asset_Loaded_Version" initalVer
+			setUserProp selectionArray[i] "MAKE_Asset_Filepath" newAsset
+			setUserProp selectionArray[i] "MAKE_Asset_Loaded_Filetype" initalType
+			setUserProp selectionArray[i] "MAKE_Asset_Loaded_Version" initalVer
 
 			assetGlobalName = (getINISetting newAsset "Global" "name")				
 			print assetGlobalName
@@ -468,7 +468,7 @@ fn FN_UiUpdate_Versions =
 		
 	MAIN_AssetSwitchUI.lab_importType.text = ( "Import Module: " + (FN_importTypeTest curVersionFile))
 	
-	curVersion = getUserProp selection[1] "Make_Asset_Loaded_Version"
+	curVersion = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
 		
 	curVersionArr =	FN_GetVersionsInDir()
 	for i in 1 to curVersionArr.count do
@@ -508,9 +508,9 @@ fn FN_UiUpdate =
 	curTypesArr =	FN_GetObjectsInDir()
 	curVersionArr = FN_GetVersionsInDir()
 		
-	curMaterial = getUserProp selection[1] "Make_Asset_Loaded_Material"
-	curType = getUserProp selection[1] "Make_Asset_Loaded_Filetype"
-	curVersion = getUserProp selection[1] "Make_Asset_Loaded_Version"
+	curMaterial = getUserProp selection[1] "MAKE_Asset_Loaded_Material"
+	curType = getUserProp selection[1] "MAKE_Asset_Loaded_Filetype"
+	curVersion = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
 		
 	for i in 1 to curMaterialsArr.count do
 	(
@@ -598,7 +598,7 @@ fn FN_UiUpdate_SelectionCheck =
 		for i in 1 to selectionArray.count do
 		(
 			-- reads the 'asset_file' property from the object, and returns it, if there is no stored property, returns 'invald' instead
-			curAssetFile = (getUserProp selectionArray[i] "Make_Asset_Filepath")
+			curAssetFile = (getUserProp selectionArray[i] "MAKE_Asset_Filepath")
 				
 			if curAssetFile == undefined then
 			(
@@ -625,7 +625,7 @@ fn FN_UiUpdate_SelectionCheck =
 		(
 			"":
 			(
-				assetFile = (getUserProp selectionArray[1] "Make_Asset_Filepath")
+				assetFile = (getUserProp selectionArray[1] "MAKE_Asset_Filepath")
 				assetName = try((getFilenameFile assetFile))catch()
 				assetDir = try((getFilenamePath assetFile))catch()
 				
@@ -634,7 +634,7 @@ fn FN_UiUpdate_SelectionCheck =
 				-- Attempt to set the VERSION dropdown based off of a stored value ( this is the gross hack to get this thing into place..... I am ashamed -> Don't be!)
 				try
 				(
-					curVersion_temp = getUserProp selection[1] "Make_Asset_Loaded_Version"
+					curVersion_temp = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
 					curVersionArr =	FN_GetVersionsInDir()
 
 					FN_UiUpdate_Objects() -- ASK AARON -> Added thi line to Brute Force fix for the unpopulated Objects DropDownList
@@ -974,9 +974,9 @@ fn FN_DoSwitch =
 	-- Set selection as inode handles for use in fetching, and store the currently chosen settings
 	for i in 1 to switchObjectsArray.count do
 	(
-		setUserProp switchObjectsArray[i] "Make_Asset_Loaded_Material" curMaterial
-		setUserProp switchObjectsArray[i] "Make_Asset_Loaded_Filetype" curType
-		setUserProp switchObjectsArray[i] "Make_Asset_Loaded_Version" curVersion
+		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Material" curMaterial
+		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Filetype" curType
+		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Version" curVersion
 
 		-- Try and set the paramaters of the global
 		try ( switchObjectsArray[i].radius = 		( execute ( getinisetting AssetFile "Global" "radius" ) ) ) catch ()
@@ -1254,7 +1254,7 @@ rcMenu rc_MainMenu
 		
 		try
 			(
-				getUserProp selection[1] "Make_Asset_Filepath"
+				getUserProp selection[1] "MAKE_Asset_Filepath"
 				filein @"U:\Make_Tools\AssetSwitch\Release\bin\PublishCenter.ms"
 			)
 		catch
@@ -1265,7 +1265,7 @@ rcMenu rc_MainMenu
 	
 	on MI_setup_Initalize picked do ( FN_setup_Initalize() )
 	-- Loop through selected objects and remove any user defined properties that start with "Make_Asset_Filepath"
-	on MI_setup_RemoveInfo picked do ( for i in 1 to selection.count do	( FN_setup_RemoveInfo selection[i] "Make_Asset_Filepath" ) )
+	on MI_setup_RemoveInfo picked do ( for i in 1 to selection.count do	( FN_setup_RemoveInfo selection[i] "MAKE_Asset_Filepath" ) )
 		
 	on MI_asset_Choose picked do ( FN_ChangeAsset() )
 		
@@ -1344,7 +1344,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 			global nodeAsset
 			try
 			(
-				getUserProp selection[1] "Make_Asset_Filepath"
+				getUserProp selection[1] "MAKE_Asset_Filepath"
 				filein PublishCenterExecutable
 			)
 			catch

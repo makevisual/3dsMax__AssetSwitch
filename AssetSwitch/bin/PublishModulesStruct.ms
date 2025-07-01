@@ -270,7 +270,7 @@ struct ASSET_PublishFunctions
 					(
 						deleteUserProp child "AssetName"
 					)
-					setUserProp child "Make_NodeName" child.name
+					setUserProp child "MAKE_NodeName" child.name
 				)
 			)
 

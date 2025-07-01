@@ -4,9 +4,9 @@ struct ASSET_Functions
 	(
 		assetFile = arg_assetFile
 		
-		setUserProp arg_Obj "Make_Asset_Filepath" assetFile
-		setUserProp arg_Obj "Make_Asset_Loaded_Filetype" ""
-		setUserProp arg_Obj "Make_Asset_Loaded_Version" ""
+		setUserProp arg_Obj "MAKE_Asset_Filepath" assetFile
+		setUserProp arg_Obj "MAKE_Asset_Loaded_Filetype" ""
+		setUserProp arg_Obj "MAKE_Asset_Loaded_Version" ""
 		
 		setINISetting assetFile "Global" "name" arg_Obj.name
 		--select arg_Obj -- Selecting this BUGGER is clearing the listener and avoiding me to troubleshoot the script because there is a CALLBACK that has a ton of clearListener() all over it
@@ -49,9 +49,9 @@ struct ASSET_Functions
 		for i in 1 to selectionArray.count do
 			(
 			-- Reset userProperties
-			setUserProp selectionArray[i] "Make_Asset_Filepath" assetFile
-			setUserProp selectionArray[i] "Make_Asset_Loaded_Filetype" initalType
-			setUserProp selectionArray[i] "Make_Asset_Loaded_Version" initalVer
+			setUserProp selectionArray[i] "MAKE_Asset_Filepath" assetFile
+			setUserProp selectionArray[i] "MAKE_Asset_Loaded_Filetype" initalType
+			setUserProp selectionArray[i] "MAKE_Asset_Loaded_Version" initalVer
 
 
 
