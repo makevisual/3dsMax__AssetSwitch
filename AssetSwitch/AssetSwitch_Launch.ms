@@ -28,4 +28,5 @@ versionNumber = "1.6.0"
 
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFunctions.ms")
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchUI.ms")
+	filein (AssetSwitchDirectory + @"\bin\AssetSwitch_FolderStructure.ms")
 )

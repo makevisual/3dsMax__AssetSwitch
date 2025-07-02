@@ -9,7 +9,7 @@ struct ASSET_Functions
 		setUserProp arg_Obj "MAKE_Asset_Loaded_Version" ""
 
 		setINISetting assetFile "Global" "name" arg_Obj.name -- This MOTHER OF WASPS creates the .asset file if this file does not exist.... 2 hours fooling around it.
-	
+		
 		--select arg_Obj -- Selecting this BUGGER is clearing the listener and avoiding me to troubleshoot the script because there is a CALLBACK that has a ton of clearListener() all over it
 	),
 	
@@ -289,6 +289,7 @@ struct ASSET_Functions
 			
 			newNode = ASSET_Functions.CreateNewAsset_Node arg_Class arg_Name
 			ASSET_Functions.Asset_Initialize newNode newAssetFilename
+			ASSET_FolderStructure.InitializeFolderStrucure newDir2
 			saveMaxFile newSaveFileName quiet:true
 			--try (destroydialog arg_Dialog) catch()
 		)
