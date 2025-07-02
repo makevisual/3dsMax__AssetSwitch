@@ -15,45 +15,14 @@ Creates the Folder Strucure needed for creating Assets
 */
 struct ASSET_FolderStructure
 (
-	DefaultFolderStructure = 
-	#(
-		#("Build", "Layout", "Model", "Rig", "Sculpt", "Shade"),
-		"Cache",
-		"Comp",
-		"Image_Sequences",
-		#("Publish", "Material"),
-		#("References", "Mesh", "xref"),
-		"Renders",
-		#("Surfaces", "Substance")
-	),
-	function CreateFolders Folder RootFolder =
-	(
-		if (classof Folder == array) then
-		(
-			for i in 1 to Folder.count do
-			(
-				if i == 1 then
-				(
-					makedir (RootFolder + Folder[1])
-				)
-				else
-				(
-					CreateFolders (Folder[i]) (RootFolder + Folder[1] + @"\")
-				)
-			)
-		)
-		else
-		(
-			makedir (RootFolder + Folder)
-		)
-	),
 	function InitializeFolderStrucure AssetFolder =
 	(
-		FolderStructure = (ASSET_FolderStructure()).DefaultFolderStructure
-		for MainItems in FolderStructure do
+		MyDir = (pathConfig.removePathLeaf (pathConfig.removePathLeaf (getSourceFileName())))
+		FolderStructure = #()
+		FolderStructure = for Var in (getINISetting (MyDir + @"\" + "AssetSwitch_FolderStructure.ini") "folders") collect (getINISetting (MyDir + @"\" + "AssetSwitch_FolderStructure.ini") "folders" Var)
+		for Folder in FolderStructure do
 		(
-			CreateFolders MainItems AssetFolder
+			makedir (AssetFolder + Folder)
 		)
-		--CreateFolders MainItems AssetFolder
 	)
 )
