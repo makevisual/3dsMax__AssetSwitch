@@ -5,5 +5,11 @@ global nodeAssetForPublish
 global nodeAssetHandle = nodeAsset.inode.handle
 global assetName
 
-filein "U:\Make_Tools\AssetSwitch\Release\1.5\bin\PublishModulesStruct.ms"
-filein "U:\Make_Tools\AssetSwitch\Release\1.5\bin\PublishCenterUI.ms"
+
+(local 
+
+	AssetSwitchDirectory = (pathConfig.removePathLeaf (getSourceFileName()))
+
+	filein (AssetSwitchDirectory + @"\PublishModulesStruct.ms")
+	filein (AssetSwitchDirectory + @"\PublishCenterUI.ms")
+)

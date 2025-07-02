@@ -1,8 +1,6 @@
 ==================================
 === Asset Switch Change Log ======
 ==================================
-Build V1.6.0 Update - 06/24/2025
-	* Fixed a bug that was preventing new assets from being created
 
 Build V1.4.1 Update - 02/10/2015
 	* Fixed character asset creation overwrite bug
