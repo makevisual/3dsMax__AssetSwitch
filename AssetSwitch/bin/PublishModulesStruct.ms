@@ -17,7 +17,7 @@ struct ASSET_PublishFunctions
 	-- Returns the asset switch .ini file, making one if none exists
 	function INIget =
 	(
-		INIfile = ((getdir #userscripts) + "\asset_switch.ini")
+		INIfile = ((getdir #userscripts) + @"\asset_switch.ini")
 		
 		if doesfileexist INIfile
 		then (return INIfile)

@@ -3,12 +3,13 @@ struct ASSET_Functions
 	function Asset_Initialize arg_Obj arg_assetFile =
 	(
 		assetFile = arg_assetFile
-		
+
 		setUserProp arg_Obj "MAKE_Asset_Filepath" assetFile
 		setUserProp arg_Obj "MAKE_Asset_Loaded_Filetype" ""
 		setUserProp arg_Obj "MAKE_Asset_Loaded_Version" ""
-		
-		setINISetting assetFile "Global" "name" arg_Obj.name
+
+		setINISetting assetFile "Global" "name" arg_Obj.name -- This MOTHER OF WASPS creates the .asset file if this file does not exist.... 2 hours fooling around it.
+	
 		--select arg_Obj -- Selecting this BUGGER is clearing the listener and avoiding me to troubleshoot the script because there is a CALLBACK that has a ton of clearListener() all over it
 	),
 	
@@ -99,11 +100,11 @@ struct ASSET_Functions
 		curFile = maxFilePath
 		curFileParts = (filterString curFile @"\")
 		str = ""
-
 		-- Get the project folder
 		for i in 1 to curFileParts.count do
 		(
 			if curFileParts[i] == "Projects" or curFileParts[i] == "Pitches" then -- TODO: Resolve this hardcoded project structure that expects a Projects or Pitches folder
+																				  -- Still in doubt about the name of the folder. Should it be "Projects" or "[Project]"?
 			(
 				for j in 1 to i do
 				(
@@ -158,8 +159,6 @@ struct ASSET_Functions
 			
 			function chooseProject_check arg_proj =
 			(
-				print "arg_proj"
-				print arg_proj
  				if arg_proj != "" then
 				(
 					lab_Project.text = arg_proj
@@ -192,7 +191,16 @@ struct ASSET_Functions
 				)
 				else
 				(
-					lab_Project.text = ""
+					--lab_Project.text = ""
+
+					-- New funcionality: Create the .ini file if it was not found in the test clause above
+					NewDirectories = (curPath + @"\Source\Data")
+
+
+
+
+
+
 				)
 			)
 			
@@ -202,18 +210,15 @@ struct ASSET_Functions
 			
 			on btn_ChooseProject pressed do
 			(
-				chooseProject_manual()
+				chooseProject_manual() -- TODO: This function is only called once. Maybe it could be retired...
 			)
 			
 			on CreateNewAsset_Dialog open do
 			(
-				print "heey!!"
 -- 				edt_Handle.text = "TST"
 -- 				edt_Name.text	= "Test"
 				
 				curProj = ASSET_Functions.ChooseProject_auto()
-				print "curProj"
-				print curProj
 				chooseProject_check curProj
 				update_lab_create()
 			)
@@ -223,10 +228,6 @@ struct ASSET_Functions
 				newPath 		= lab_Project.text
 				newClass		= ddl_AssetClass.selected
 				newAssetName 	= makeAssetName()
-				print "newClass"
-				print newClass
-				print "newAssetName"
-				print newAssetName
 				ASSET_Functions.CreateNewAsset newPath newClass newAssetName CreateNewAsset_Dialog
 			)
 		)
@@ -251,15 +252,11 @@ struct ASSET_Functions
 	
 	function CreateNewAsset arg_Path arg_Class arg_Name arg_Dialog =
 	(
-		newDir 				= ( arg_Path + @"\Assets\" + arg_Class + @"\" )
-		newDir2 			= ( newDir + arg_Name + @"\" )
+		newDir 				= ( arg_Path + @"\Assets\" + arg_Class + @"\" ) -- TODO: This should be called RootAssetDir for readability?
+		newDir2 			= ( newDir + arg_Name + @"\" )					-- TODO: This should be called CurrentAssetDir for readability?
 		
 		newAssetFilename 	= ( newDir + arg_Name + @"\" + arg_Name + ".asset" )
-		newSaveFileName 	= (	newDir2 + @"Build\Model\" + arg_Name +"_Model_001.max" ) -- This line is never creating a file because there is no folder structure that has "Build/Model"
-		print "newAssetFilename"
-		print newAssetFilename
-		print "newSaveFileName"
-		print newSaveFileName
+		newSaveFileName 	= (	newDir2 + @"Build\Model\" + arg_Name +"_Model_001.max" ) -- TODO: This line is never creating a file because there is no folder structure that has "Build/Model". Should it be fixed?
 		
 		if ( doesfileexist newDir2 ) then
 		(
@@ -268,11 +265,27 @@ struct ASSET_Functions
 		else
 		(
 			makedir newDir2
-			copyFolder = ("xcopy " + "\"" + @"U:\Pitches\[Project]\Assets\Characters\[Asset3D]" + "\"" + " " + "\"" + newDir2 + "\"" + " /E")
- 			hiddendoscommand copyFolder
+			-- TODO: This following commented section does not seem to impact the script's ability to create assets...
+			-- It was supposed to:
+			-- Copy all the folders inside "U:\Pitches\[Project]\Assets\Characters\[Asset3D]" into the Current Asset Directory, namely
+			-- "D:\David\Documents\3dsMax\[Project]\Assets\Characters\AssetHandle_AssetName\". The folder structure copied is as follows:
+			-- Build
+			-- Cache
+			-- Comp
+			-- Image_Sequences
+			-- Publish
+			-- References
+			-- Renders
+			-- Surfaces
+			-- and an empty .asset file called "[Object_A].asset"
+			-- There are subfolders that account for a total of 17 folders. Do we need this folder structure? Or when a [Project] template folder is
+			-- copied over this structure is already present?
+
+			--copyFolder = ("xcopy " + "\"" + @"U:\Pitches\[Project]\Assets\Characters\[Asset3D]" + "\"" + " " + "\"" + newDir2 + "\"" + " /E")
+ 			--hiddendoscommand copyFolder
  			
-			renameFile ( newDir + "[Asset3D]" ) ( newDir + arg_Name + @"\" )
-			renameFile ( newDir2 + @"\" + "[Object_A].asset" ) newAssetFilename
+			--renameFile ( newDir + "[Asset3D]" ) ( newDir + arg_Name + @"\" ) -- This line is also returning FALSE
+			--renameFile ( newDir2 + @"\" + "[Object_A].asset" ) newAssetFilename -- This line is also returning FALSE
 			
 			newNode = ASSET_Functions.CreateNewAsset_Node arg_Class arg_Name
 			ASSET_Functions.Asset_Initialize newNode newAssetFilename

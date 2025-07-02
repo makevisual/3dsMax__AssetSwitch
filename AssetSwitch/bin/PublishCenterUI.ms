@@ -672,22 +672,22 @@ function FN_PublishCenter = -- asset: the current asset definition
 			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 
 			-- Update stored names 
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_MaxFile") as string )
+			curStr = ((getUserProp nodeAssetForPublish "PUBhist_MaxFile") as string ) -- TODO: Fix with the new UserProp values!!!!
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_MaxFile_Prefex.text = curStr
 
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Material") as string )
+			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Material") as string )  -- TODO: Fix with the new UserProp values!!!!
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_MaterialFile_Prefex.text = curStr
 
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Vrmesh") as string )
+			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Vrmesh") as string )  -- TODO: Fix with the new UserProp values!!!!
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_vrmeshFile_Prefex.text = curStr
 			
 			-- Update stored interations
-			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAssetForPublish "PUBhist_MaxFileVer" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
-			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "PUBhist_MaterialVer" ) 		as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
-			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "PUBhist_VrmeshVer" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
+			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAssetForPublish "MAKE_Asset_Max_Versions" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
+			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "MAKE_Asset_Material_Versions" ) 		as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
+			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "MAKE_Asset_Vrmesh_Versions" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
 				
 			-- Update individual paths for each asset
 			FN_Update_3dsMaxFile()
