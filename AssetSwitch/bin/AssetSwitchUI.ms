@@ -1197,10 +1197,10 @@ fn FN_help_About =
 	try(DestroyDialog ROLL_AssetSwitch_Help)catch()
 
 	L1 = ("Asset Switch v" + (versionNumber as string) + "")
-	L2 = "4/29/2014"
+	L2 = "7/3/2025"
 	L0 = ""
-	L3 = "Publish obj tool fixed"
-	L4 = "Publish material added"
+	L3 = ""
+	L4 = ""
 
 	global helptext = #(L1,L2,L0,L3,L4)
 		
