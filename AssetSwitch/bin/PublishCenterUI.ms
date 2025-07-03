@@ -140,17 +140,31 @@ struct ASSET_PublishOptions
 	),
 	
 	-- Material File Options Rollout
-	fn materialfile =
+	fn materialfile tyLibMatExists =
 	(
 		rollout ASSET_Options_MaterialFile  "Publish Center Options" width:350 height:85
 		(
 			groupbox grp "Material File Options" width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 40)
-				label lab_nope "No options available to configure." pos:[25,25]
+				--TODO: Add the option to use tyLibMtl to store materials
+
+
+				checkbox TyLibMaterialCheckbox "Use tyLibMtl to version materials" pos:[25,25] enabled:tyLibMatExists --checked:tyLibMatChecked
+				--label lab_nope "No options available to configure." pos:[25,25]
+
+
+
 			button buttonOK "OK" pos:[(ASSET_Options_MaterialFile.width - 92),(ASSET_Options_MaterialFile.height - 30)]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
-				
-			on buttonOK pressed do( destroydialog ASSET_Options_MaterialFile )
-			on buttonCancel pressed do( destroydialog ASSET_Options_MaterialFile )
+			on buttonOK pressed do
+			(
+				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" (TyLibMaterialCheckbox.checked as string)
+				destroydialog ASSET_Options_MaterialFile
+			)
+			on ASSET_Options_MaterialFile open do
+			(
+				try( TyLibMaterialCheckbox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" )) )catch()
+			)
+			on buttonCancel pressed do ( destroydialog ASSET_Options_MaterialFile )
 		)
 		createDialog ASSET_Options_MaterialFile
 	),
@@ -639,11 +653,19 @@ function FN_PublishCenter = -- asset: the current asset definition
 		on ddl_MaxFile_Name selected state do FN_Update_3dsMaxFile()
 			
 		-- MaterialFile
-		on button_MaterialFile_Options pressed do (ASSET_PublishOptions.materialfile())
+		on button_MaterialFile_Options pressed do
+		(
+			tyLibMatExists = false
+			if FindItem material.classes tyLibMtl != 0 do
+			(
+				tyLibMatExists = true
+			)
+			ASSET_PublishOptions.materialfile tyLibMatExists
+		)
 		on chk_MaterialFile changed state do
 		(
 			setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled" (chk_MaterialFile.checked as string)
-			FN_CategoryToggle() 
+			FN_CategoryToggle()
 		)
 		on spinner_MaterialFile_Number changed state do FN_Update_MaterialFile()
 		on edt_MaterialFile_Prefex changed state do FN_Update_MaterialFile() 

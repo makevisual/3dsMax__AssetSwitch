@@ -291,7 +291,7 @@ struct ASSET_Functions
 			ASSET_Functions.Asset_Initialize newNode newAssetFilename
 			ASSET_FolderStructure.InitializeFolderStrucure newDir2
 			saveMaxFile newSaveFileName quiet:true
-			--try (destroydialog arg_Dialog) catch()
+			try (destroydialog arg_Dialog) catch()
 		)
 	)
 )
