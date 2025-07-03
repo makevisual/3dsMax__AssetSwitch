@@ -19,6 +19,7 @@ global FN_Callback_SelectionChange
 global FN_setup_Initalize
 
 global ASSET_Functions
+global ASSET_FolderStructure
 
 versionNumber = "1.6.1"
 (local 
@@ -28,6 +29,6 @@ versionNumber = "1.6.1"
 
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFunctions.ms")
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchUI.ms")
-	filein (AssetSwitchDirectory + @"\bin\AssetSwitch_FolderStructure.ms")
+	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFolderStructure.ms")
 )
 print (pathConfig.removePathLeaf (getSourceFileName()))
