@@ -738,7 +738,7 @@ fn	FN_DoSwitch_Material arg arg2 = -- arg: the material file | arg2: the node to
 	curMaterialFile = arg
 		
 	-- Test to see if there is a file
-	if (doesfileexist curMaterialFile) then 
+	if (doesfileexist curMaterialFile) then -- TODO: Remap all materials back to their objects (how.... name based?)
 	(
 		for i in 1 to currentMaterialLibrary.count do
 		(

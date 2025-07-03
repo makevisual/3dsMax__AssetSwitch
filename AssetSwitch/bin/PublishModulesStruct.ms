@@ -14,6 +14,15 @@ global nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
 
 struct ASSET_PublishFunctions
 (
+
+
+
+	-- Variable to store Materials from assets and be used on "FindTheMaterial" function
+	--MatCollection = #(),
+
+
+
+
 	-- Returns the asset switch .ini file, making one if none exists
 	function INIget =
 	(
@@ -212,27 +221,68 @@ struct ASSET_PublishFunctions
 	-- Returns a material applied to selected object, or is children
 	function FindTheMaterial arg_Node =
 	(
+
+		MatCollection = #()
+
+
+
+
+
+		-- TODO: Create a collection of materials from the child nodes
+		
+
+
+
+
+
+
+
+
+
+		print "Coletando Materiais"
 		-- If the global doesn't have a material
-		if nodeAssetForPublish.material == undefined
-		-- search its children for a materail
-		then 
+		if nodeAssetForPublish.material == undefined then -- search its children for materials
 		(
+			print "o parent nao tem material"
 			objArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false
 			
+			print "Os Child Nodes"
+			print objArr
+
 			for i in 1 to objArr.count do
 			(
-				if (objArr[i].material == undefined) 
-				then()
+				print "Loop pelos Child Nodes"
+				print objArr[i]
+				if (objArr[i].material == undefined) then
+				(
+					--append (ASSET_PublishFunctions()).MatCollection undefined
+					append MatCollection undefined
+				)
 				-- return the material when found
-				else(return objArr[i].material)
+				else
+				(
+
+					print "Colocando o Material na Array"
+					print objArr[i].material
+
+
+					append MatCollection objArr[i].material
+					--return objArr[i].material -- This is a SLOW procedure (return command) and it is getting just the first material it finds on the
+												-- assets selected
+
+					print "A Array"
+					print MatCollection
+
+											  
+				)
 			)
 			-- return undefined if none found
-			return undefined
+			return MatCollection
 		)
 		--return the global's material
 		else
 		(		
-			return nodeAssetForPublish.material 
+			return (#(nodeAssetForPublish.material))
 		)
 	),
 	
@@ -350,29 +400,60 @@ struct ASSET_PublishFunctions
 	-- Publish a MaterialFile	
 	function pub_MaterialFile arg_asset arg_path =
 	(
+		print "Começar a coletar materiais"
 		try(
 			-- Attempt to get the assets material
-			theMaterial = ASSET_PublishFunctions.FindTheMaterial nodeAssetForPublish
+			theMaterialArray = ASSET_PublishFunctions.FindTheMaterial nodeAssetForPublish
 			
-			if theMaterial == undefined
-			then
+
+			if theMaterialArray.count == 1 then
 			(
-				return "ERROR: No material present to export"
+				if theMaterialArray[1] == undefined then
+				(
+					return "ERROR: No material present to export"
+				)
+				else
+				(
+					-- Clear the temporary library and add the current material to it
+					for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
+					loadDefaultMatLib()
+					append currentMaterialLibrary theMaterialArray[1]
+					
+					makeDir (getFilenamePath arg_path)
+					saveMaterialLibrary arg_path
+					setUserProp nodeAssetForPublish "multiMaterial_file" arg_path
+					--setUserProp nodeAssetForPublish "PUB_Material" arg_path
+					
+					return "Success!"
+				)
 			)
 			else
 			(
 				-- Clear the temporary library and add the current material to it
-				for i in 1 to currentMaterialLibrary.count do(deleteItem currentMaterialLibrary 1)
+				for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
 				loadDefaultMatLib()
-				append currentMaterialLibrary theMaterial
-				
-				makeDir (getFilenamePath arg_path)
-				saveMaterialLibrary arg_path
-				setUserProp nodeAssetForPublish "multiMaterial_file" arg_path
-				--setUserProp nodeAssetForPublish "PUB_Material" arg_path
-				
-				return "Success!"
+				for Mat in theMaterialArray do
+				(
+					if Mat != undefined do
+					(
+						append currentMaterialLibrary Mat
+					)
+				)
+				if currentMaterialLibrary.count != 0 then
+				(
+					makeDir (getFilenamePath arg_path)
+					saveMaterialLibrary arg_path
+					setUserProp nodeAssetForPublish "multiMaterial_file" arg_path
+					return "Success!"
+				)
+				else
+				(
+					return "ERROR: No material present to export"
+				)
 			)
+
+
+
 		)
 		Catch(return "ERROR: Material Publish failed")
 	),

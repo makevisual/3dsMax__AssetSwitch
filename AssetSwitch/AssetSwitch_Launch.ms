@@ -20,7 +20,7 @@ global FN_setup_Initalize
 
 global ASSET_Functions
 
-versionNumber = "1.6.0"
+versionNumber = "1.6.1"
 (local 
 
 	AssetSwitchDirectory = (pathConfig.removePathLeaf (getSourceFileName()))
