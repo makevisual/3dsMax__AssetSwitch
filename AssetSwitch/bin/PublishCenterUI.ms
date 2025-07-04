@@ -138,7 +138,17 @@ struct ASSET_PublishOptions
 		)
 		createDialog ASSET_Options_MaxFile
 	),
-	
+	-- Function to test if tylibMtl is chosen as export option
+	function tylibMtl_test =
+	(
+		getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl"
+	),
+
+
+
+
+
+
 	-- Material File Options Rollout
 	fn materialfile tyLibMatExists =
 	(
@@ -148,7 +158,7 @@ struct ASSET_PublishOptions
 				--TODO: Add the option to use tyLibMtl to store materials
 
 
-				checkbox TyLibMaterialCheckbox "Use tyLibMtl to version materials" pos:[25,25] enabled:tyLibMatExists --checked:tyLibMatChecked
+				checkbox TyLibMaterialCheckbox "Also save tyLibMtl material" pos:[25,25] enabled:tyLibMatExists --checked:tyLibMatChecked
 				--label lab_nope "No options available to configure." pos:[25,25]
 
 
@@ -291,8 +301,18 @@ function FN_PublishCenter = -- asset: the current asset definition
 					
 					comboString = (@"\" + curClassName + @"\" + curAssetName + nameVer + curClassExtension )
 					target.text = comboString
+					tyLibSave = ((ASSET_PublishOptions()).tylibMtl_test())
+					if tyLibSave == "true" then
+					(
+						tylib_comboString = (@"\" + curClassName + @"\" + curAssetName + "tyLibMtl_" + nameVer + curClassExtension )
+						return #(comboString, tylib_comboString)
+					)
+					else
+					(
+						return #(comboString) 	------------------------------------------------------------------ ASK_AARON -Why are we using RETURN on this clause?
+					)
 			
-					return comboString 	------------------------------------------------------------------ ASK_AARON -Why are we using RETURN on this clause?
+					
 					
 				)
 				4: -- vrmeshFile
@@ -476,16 +496,52 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- Publisher for the MaterialFile class
 		function FN_Publish_MaterialFile =
 		(
-			local publish_filepath = ( assetDir + "\Publish" + (FN_Update_MaterialFile())) -- ASK_AARON - Maybe add @ on this string?
 			
+
+			tyLibSave = ((ASSET_PublishOptions()).tylibMtl_test())
+			MaterialNames = (FN_Update_MaterialFile())
+
+			--if tyLibSave == "true" then
+
+
+
+			local publish_filepath =
+			(
+				for i = 1 to MaterialNames.count collect
+				(
+					assetDir + @"\Publish" + MaterialNames[i]
+				)
+			) -- ASK_AARON - Maybe add @ on this string?
+
+
+
+
 			-- Prepare to publish
 			timestart_minor = timestamp()
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing Material File >>>")
-			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath )
+
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath[1] ) -- TODO: publish_filepath[1] currently accounts for
+																											-- the first material name only, and not the tyLibMatl
+			
+
+
+
 			lab_Status.text = " Status: Publishing Material File"
 
+
+
+
+
+
+			
+			
+
+
+			
+
+
 			-- Call the publish function
-			result = ASSET_PublishFunctions.pub_MaterialFile "asset" publish_filepath
+			result = ASSET_PublishFunctions.pub_MaterialFile "asset" publish_filepath tyLibSave
 				
 			-- Report result of the Publish
 			FN_ReportResult result timestart_minor
@@ -667,9 +723,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled" (chk_MaterialFile.checked as string)
 			FN_CategoryToggle()
 		)
-		on spinner_MaterialFile_Number changed state do FN_Update_MaterialFile()
-		on edt_MaterialFile_Prefex changed state do FN_Update_MaterialFile() 
-		on ddl_MaterialFile_Name selected state do FN_Update_MaterialFile()
+		on spinner_MaterialFile_Number changed state do	(FN_Update_MaterialFile())
+		on edt_MaterialFile_Prefex changed state do (FN_Update_MaterialFile())
+		on ddl_MaterialFile_Name selected state do (FN_Update_MaterialFile())
 		
 		-- vrmeshFile
 		on button_vrmeshFile_Options pressed do (ASSET_PublishOptions.vrmeshfile())
@@ -715,8 +771,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_Update_3dsMaxFile()
 			FN_Update_MaterialFile()
 			FN_Update_vrmeshFile()
-
-
 				
 			--arg_enabled: if animation is enabled | arg_source: either scene or predefined range | arg_label: the UI element to update
 			FN_UpdateFrameRange lab_vrmeshAnimFrames "vrmeshFile"

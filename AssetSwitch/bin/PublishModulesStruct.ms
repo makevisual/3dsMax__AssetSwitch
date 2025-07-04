@@ -281,7 +281,8 @@ struct ASSET_PublishFunctions
 		)
 		--return the global's material
 		else
-		(		
+		(
+			print "pegou o mat do Global"
 			return (#(nodeAssetForPublish.material))
 		)
 	),
@@ -398,14 +399,15 @@ struct ASSET_PublishFunctions
 	),
 	
 	-- Publish a MaterialFile	
-	function pub_MaterialFile arg_asset arg_path =
+	function pub_MaterialFile arg_asset arg_path tyLibSave =
 	(
 		print "Começar a coletar materiais"
 		try(
 			-- Attempt to get the assets material
 			theMaterialArray = ASSET_PublishFunctions.FindTheMaterial nodeAssetForPublish
-			
-
+			print theMaterialArray
+			print arg_path
+			-- If there is only one material on the Material Array
 			if theMaterialArray.count == 1 then
 			(
 				if theMaterialArray[1] == undefined then
@@ -419,14 +421,32 @@ struct ASSET_PublishFunctions
 					loadDefaultMatLib()
 					append currentMaterialLibrary theMaterialArray[1]
 					
-					makeDir (getFilenamePath arg_path)
-					saveMaterialLibrary arg_path
-					setUserProp nodeAssetForPublish "multiMaterial_file" arg_path
+					makeDir (getFilenamePath arg_path[1])
+					saveMaterialLibrary arg_path[1]
+					setUserProp nodeAssetForPublish "MAKE_Asset_Mat_File" arg_path[1]
+
+
+					
+
+					if tyLibSave == "true" do
+					(
+						for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
+						loadDefaultMatLib()
+						TylibMaterial = (tylibMtl())
+						TylibMaterial.filename = arg_path[1]
+						append currentMaterialLibrary TylibMaterial
+
+						saveMaterialLibrary arg_path[2]
+						setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[2]
+
+					)
+					
 					--setUserProp nodeAssetForPublish "PUB_Material" arg_path
 					
 					return "Success!"
 				)
 			)
+			-- If there is more than one material on the Material Array
 			else
 			(
 				-- Clear the temporary library and add the current material to it
