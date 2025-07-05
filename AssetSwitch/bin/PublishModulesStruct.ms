@@ -16,13 +16,6 @@ struct ASSET_PublishFunctions
 (
 
 
-
-	-- Variable to store Materials from assets and be used on "FindTheMaterial" function
-	--MatCollection = #(),
-
-
-
-
 	-- Returns the asset switch .ini file, making one if none exists
 	function INIget =
 	(
@@ -217,15 +210,114 @@ struct ASSET_PublishFunctions
 
 		return resultArr
 	),
-	
+
+
+
+
+
+
+	function FindChildrenMaterials ChildrenNodes &MatCollection =
+	(
+		MaterialMapArray = #()
+		for i = 1 to ChildrenNodes.count do
+		(
+			print "Loop pelos Child Nodes"
+			print ChildrenNodes[i]
+			if (ChildrenNodes[i].material != undefined) do
+			(
+				MatIndex = (findItem MatCollection ChildrenNodes[i].material)
+				if MatIndex != 0 then -- Material already presend in the Array
+				(
+					append MaterialMapArray[MatIndex] ChildrenNodes[i].name
+				)
+
+
+				else -- Material not present in the Array
+				(
+					append MatCollection ChildrenNodes[i].material
+					NewIndex = MaterialMapArray.count + 1
+					MaterialMapArray[NewIndex] = #()
+					append MaterialMapArray[NewIndex] ChildrenNodes[i].name
+				)
+			)
+		)
+		return MaterialMapArray
+	),
 	-- Returns a material applied to selected object, or is children
-	function FindTheMaterial arg_Node =
+	function FindTheMaterial arg_path =
 	(
 
 		MatCollection = #()
+		AllNodesArray = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
+		MaterialMapArray = FindChildrenMaterials AllNodesArray MatCollection
+		setinisetting ((substring arg_path[1] 1 (arg_path[1].count - 4)) + ".matmap") "MaterialNodeMap" "MaterialMapArray" (MaterialMapArray as string)
+		if MaterialMapArray.count > 1 then
+		(
+			print "MaterialMapArray[1][1]"
+			print MaterialMapArray[1][1]
+			assetGlobalName = (getINISetting assetFile "Global" "name")
+			print "assetGlobalName"
+			print assetGlobalName
+			if MaterialMapArray[1][1] == assetGlobalName then
+			(
+				-- O Global tem material e alguns children tem materiais diferentes
+				print "entrou aqui"
+				IgnoreChilrend = yesNoCancelBox ("The Asset's Global and children nodes have different" +
+				"\nmaterials. It is RECOMMENDED to cancel and use the" +
+				"\nMultSubCreator tool on MakeToolbox to unify them." +
+				"\n\nIgnore children's material on material asset creation?" +
+				"\n\nYES - Use only Global's material." +
+				"\nNO  - Use the Global and children's materials." +
+				"\nCANCEL - Cancels publishing.") title:"AssetSwitch - Material Conflict"
+				print "IgnoreChilrend"
+				print IgnoreChilrend
+				case IgnoreChilrend of
+				(
+					(#yes):
+					(
+						print "ignore"
+						print "MatCollection"
+						print MatCollection
+						print "NodeGlobalMal"
+						print (nodeAssetForPublish.material)
+						MatCollection = (#(nodeAssetForPublish.material))
+						print MatCollection
+						return MatCollection
+					)
+					(#no):
+					(
+						print "não ignore"
+						print "MatCollection"
+						print MatCollection
+						return MatCollection
+					)
+					(#cancel):
+					(
+						print "cancele"
+						return (#())
+					)
 
 
-
+				)
+			)
+			else
+			(
+				-- O Global não tem material, mas alguns children tem
+			)
+		)
+		else
+		(
+			if MatCollection[1] == nodeAssetForPublish.material then
+			(
+				-- There's only ONE material on the asset and it is assigned to the Global
+				return MatCollection
+			)
+			else
+			(
+				-- There's only ONE material on the asset and it is not assigned to the Global
+			)
+		)
+		
 
 
 		-- TODO: Create a collection of materials from the child nodes
@@ -236,55 +328,33 @@ struct ASSET_PublishFunctions
 
 
 
+		--yesNoCancelBox "The Asset's Global and children nodes have different \nmaterials. It is RECOMMENDED to cancel and use the\nMultSubCreator tool on MakeToolbox to unify them. \n \n Ignore children's material on material asset creation?\n\n YES - Use only Global's material. \n NO  - Use the Global and children's materials.\n CANCEL - Cancels publishing." title:"AssetSwitch - Material Conflict"
 
 
 
-		print "Coletando Materiais"
+
+
+/*
+
 		-- If the global doesn't have a material
 		if nodeAssetForPublish.material == undefined then -- search its children for materials
 		(
-			print "o parent nao tem material"
-			objArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false
-			
-			print "Os Child Nodes"
-			print objArr
-
-			for i in 1 to objArr.count do
-			(
-				print "Loop pelos Child Nodes"
-				print objArr[i]
-				if (objArr[i].material == undefined) then
-				(
-					--append (ASSET_PublishFunctions()).MatCollection undefined
-					append MatCollection undefined
-				)
-				-- return the material when found
-				else
-				(
-
-					print "Colocando o Material na Array"
-					print objArr[i].material
-
-
-					append MatCollection objArr[i].material
-					--return objArr[i].material -- This is a SLOW procedure (return command) and it is getting just the first material it finds on the
-												-- assets selected
-
-					print "A Array"
-					print MatCollection
-
-											  
-				)
-			)
-			-- return undefined if none found
+			ChildrenArray = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false
+			MaterialMapArray = FindChildrenMaterials ChildrenArray MatCollection
+			setinisetting ((substring arg_path[1] 1 (arg_path[1].count - 4)) + ".matmap") "MaterialNodeMap" "MaterialMapArray" (MaterialMapArray as string)
 			return MatCollection
 		)
 		--return the global's material
 		else
 		(
-			print "pegou o mat do Global"
 			return (#(nodeAssetForPublish.material))
 		)
+
+*/
+
+
+
+
 	),
 	
 	-- Publish a 3dsMaxFile	
@@ -404,9 +474,12 @@ struct ASSET_PublishFunctions
 		print "Começar a coletar materiais"
 		try(
 			-- Attempt to get the assets material
-			theMaterialArray = ASSET_PublishFunctions.FindTheMaterial nodeAssetForPublish
+			theMaterialArray = ASSET_PublishFunctions.FindTheMaterial arg_path
+			print "theMaterialArray"
 			print theMaterialArray
+			print "arg_path"
 			print arg_path
+			print arg_path[1]
 			-- If there is only one material on the Material Array
 			if theMaterialArray.count == 1 then
 			(
@@ -448,28 +521,43 @@ struct ASSET_PublishFunctions
 			)
 			-- If there is more than one material on the Material Array
 			else
-			(
-				-- Clear the temporary library and add the current material to it
-				for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
-				loadDefaultMatLib()
-				for Mat in theMaterialArray do
-				(
-					if Mat != undefined do
+			(					
+				--yesNoCancelBox "The Asset has different materials"
+
+
+
+
+					-- Clear the temporary library and add the current material to it
+					for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
+					loadDefaultMatLib()
+					for Mat in theMaterialArray do
 					(
-						append currentMaterialLibrary Mat
+						if Mat != undefined do
+						(
+							append currentMaterialLibrary Mat
+							print "Mat"
+							print Mat
+						)
 					)
-				)
-				if currentMaterialLibrary.count != 0 then
-				(
-					makeDir (getFilenamePath arg_path)
-					saveMaterialLibrary arg_path
-					setUserProp nodeAssetForPublish "multiMaterial_file" arg_path
-					return "Success!"
-				)
-				else
-				(
-					return "ERROR: No material present to export"
-				)
+					if currentMaterialLibrary.count != 0 then
+					(
+						print "salvando o matlib"
+						print "arg_path"
+						print arg_path[1]
+						makeDir (getFilenamePath arg_path[1])
+						saveMaterialLibrary arg_path[1]
+						setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[1]
+						return "Success!"
+					)
+					else
+					(
+						return "ERROR: No material present to export"
+					)
+
+
+
+
+
 			)
 
 

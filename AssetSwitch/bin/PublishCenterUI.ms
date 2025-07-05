@@ -420,7 +420,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		
 		-- Functions that update the filename and path for the desired asset class
 		function FN_Update_3dsMaxFile =				(FN_UpdateLocalPath lab_MaxFile 1 ddl_MaxFile_Name.selection edt_MaxFile_Prefex.text spinner_MaxFile_Number.value)
-		function FN_Update_MaterialFile =			(FN_UpdateLocalPath lab_MaterialFile 3 ddl_MaterialFile_Name.selection edt_MaterialFile_Prefex.text spinner_MaterialFile_Number.value)
+		function FN_Update_Material_Lib_File =		(FN_UpdateLocalPath lab_MaterialFile 3 ddl_MaterialFile_Name.selection edt_MaterialFile_Prefex.text spinner_MaterialFile_Number.value)
 		function FN_Update_vrmeshFile =				(FN_UpdateLocalPath lab_vrmeshFile 4 ddl_vrmeshFile_Name.selection edt_vrmeshFile_Prefex.text spinner_vrmeshFile_Number.value)
 			
 		function FN_ReportResult arg_result arg_timestart_minor = -- arg_result : the string returned from the publisher  | arg_timestart : the start time of the operation
@@ -497,21 +497,21 @@ function FN_PublishCenter = -- asset: the current asset definition
 		function FN_Publish_MaterialFile =
 		(
 			
-
+			-- checks if the user has also set to save a tyLibMtl
 			tyLibSave = ((ASSET_PublishOptions()).tylibMtl_test())
-			MaterialNames = (FN_Update_MaterialFile())
+			-- Updates the Material Libraries Names
+			Material_Libraries = (FN_Update_Material_Lib_File())
 
-			--if tyLibSave == "true" then
 
-
+			--Collect the paths for the Material Libraries to be created
 
 			local publish_filepath =
 			(
-				for i = 1 to MaterialNames.count collect
+				for i = 1 to Material_Libraries.count collect
 				(
-					assetDir + @"\Publish" + MaterialNames[i]
+					assetDir + "Publish" + Material_Libraries[i]
 				)
-			) -- ASK_AARON - Maybe add @ on this string?
+			)
 
 
 
@@ -661,7 +661,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 
 			FN_Update_3dsMaxFile()
 			--FN_Update_MaxOptimizedFile() ----> ASK_AARON - Deprecated?
-			FN_Update_MaterialFile()
+			FN_Update_Material_Lib_File()
 			FN_Update_vrmeshFile()
 			--FN_Update_vrmeshAsMaxFile() ----> ASK_AARON - Deprecated?
 
@@ -723,9 +723,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled" (chk_MaterialFile.checked as string)
 			FN_CategoryToggle()
 		)
-		on spinner_MaterialFile_Number changed state do	(FN_Update_MaterialFile())
-		on edt_MaterialFile_Prefex changed state do (FN_Update_MaterialFile())
-		on ddl_MaterialFile_Name selected state do (FN_Update_MaterialFile())
+		on spinner_MaterialFile_Number changed state do	(FN_Update_Material_Lib_File())
+		on edt_MaterialFile_Prefex changed state do (FN_Update_Material_Lib_File())
+		on ddl_MaterialFile_Name selected state do (FN_Update_Material_Lib_File())
 		
 		-- vrmeshFile
 		on button_vrmeshFile_Options pressed do (ASSET_PublishOptions.vrmeshfile())
@@ -769,7 +769,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 				
 			-- Update individual paths for each asset
 			FN_Update_3dsMaxFile()
-			FN_Update_MaterialFile()
+			FN_Update_Material_Lib_File()
 			FN_Update_vrmeshFile()
 				
 			--arg_enabled: if animation is enabled | arg_source: either scene or predefined range | arg_label: the UI element to update
