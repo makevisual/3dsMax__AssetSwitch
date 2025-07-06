@@ -223,6 +223,7 @@ struct ASSET_PublishFunctions
 		(
 			print "Loop pelos Child Nodes"
 			print ChildrenNodes[i]
+			print ChildrenNodes[i].material
 			if (ChildrenNodes[i].material != undefined) do
 			(
 				MatIndex = (findItem MatCollection ChildrenNodes[i].material)
@@ -251,6 +252,9 @@ struct ASSET_PublishFunctions
 		AllNodesArray = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
 		MaterialMapArray = FindChildrenMaterials AllNodesArray MatCollection
 		setinisetting ((substring arg_path[1] 1 (arg_path[1].count - 4)) + ".matmap") "MaterialNodeMap" "MaterialMapArray" (MaterialMapArray as string)
+		print "MaterialMapArray"
+		print MaterialMapArray
+		print MaterialMapArray.count
 		if MaterialMapArray.count > 1 then
 		(
 			print "MaterialMapArray[1][1]"
@@ -302,7 +306,63 @@ struct ASSET_PublishFunctions
 			)
 			else
 			(
-				-- O Global não tem material, mas alguns children tem
+				-- O Global não tem material, mas alguns children tem e eles são diferentes
+				queryBox ("The Asset's children have different materials" +
+				"\nIt is RECOMMENDED to cancel and use the" +
+				"\nMultSubCreator tool on MakeToolbox to unify them." +
+				"\n\nContinue anyway?" +
+				"\n\nYES - Collect children's materials as is." +
+				"\nNO  - Cancels publishing.") title:"AssetSwitch - Material Conflict"
+
+
+
+
+
+
+				--TODO: CONTINUE HERE WITH POSSIBLE OPTIONS!!!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 			)
 		)
 		else
@@ -469,6 +529,17 @@ struct ASSET_PublishFunctions
 	),
 	
 	-- Publish a MaterialFile	
+	function Create_TyLibMaterial currentMaterialLibrary arg_path =
+	(
+		for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
+		loadDefaultMatLib()
+		TylibMaterial = (tylibMtl())
+		TylibMaterial.filename = arg_path[1]
+		append currentMaterialLibrary TylibMaterial
+
+		saveMaterialLibrary arg_path[2]
+		setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[2]
+	),
 	function pub_MaterialFile arg_asset arg_path tyLibSave =
 	(
 		print "Começar a coletar materiais"
@@ -480,6 +551,62 @@ struct ASSET_PublishFunctions
 			print "arg_path"
 			print arg_path
 			print arg_path[1]
+
+			--yesNoCancelBox "The Asset has different materials"
+			-- Clear the temporary library and add the current material to it
+			for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
+			loadDefaultMatLib()
+			for Mat in theMaterialArray do
+			(
+				if Mat != undefined do
+				(
+					append currentMaterialLibrary Mat
+					print "Mat"
+					print Mat
+				)
+			)
+			if currentMaterialLibrary.count != 0 then
+			(
+				print "salvando o matlib"
+				print "arg_path"
+				print arg_path[1]
+				makeDir (getFilenamePath arg_path[1])
+				saveMaterialLibrary arg_path[1]
+				setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[1]
+				if tyLibSave == "true" do
+				(
+					Create_TyLibMaterial currentMaterialLibrary arg_path
+				)
+				return "Success!"
+			)
+			else
+			(
+				return "ERROR: No material present to export"
+			)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			/*
 			-- If there is only one material on the Material Array
 			if theMaterialArray.count == 1 then
 			(
@@ -493,29 +620,15 @@ struct ASSET_PublishFunctions
 					for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
 					loadDefaultMatLib()
 					append currentMaterialLibrary theMaterialArray[1]
-					
 					makeDir (getFilenamePath arg_path[1])
 					saveMaterialLibrary arg_path[1]
 					setUserProp nodeAssetForPublish "MAKE_Asset_Mat_File" arg_path[1]
-
-
-					
-
 					if tyLibSave == "true" do
 					(
-						for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
-						loadDefaultMatLib()
-						TylibMaterial = (tylibMtl())
-						TylibMaterial.filename = arg_path[1]
-						append currentMaterialLibrary TylibMaterial
 
-						saveMaterialLibrary arg_path[2]
-						setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[2]
-
+						Create_TyLibMaterial currentMaterialLibrary arg_path
 					)
-					
 					--setUserProp nodeAssetForPublish "PUB_Material" arg_path
-					
 					return "Success!"
 				)
 			)
@@ -523,42 +636,48 @@ struct ASSET_PublishFunctions
 			else
 			(					
 				--yesNoCancelBox "The Asset has different materials"
-
-
-
-
-					-- Clear the temporary library and add the current material to it
-					for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
-					loadDefaultMatLib()
-					for Mat in theMaterialArray do
+				-- Clear the temporary library and add the current material to it
+				for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
+				loadDefaultMatLib()
+				for Mat in theMaterialArray do
+				(
+					if Mat != undefined do
 					(
-						if Mat != undefined do
-						(
-							append currentMaterialLibrary Mat
-							print "Mat"
-							print Mat
-						)
+						append currentMaterialLibrary Mat
+						print "Mat"
+						print Mat
 					)
-					if currentMaterialLibrary.count != 0 then
+				)
+				if currentMaterialLibrary.count != 0 then
+				(
+					print "salvando o matlib"
+					print "arg_path"
+					print arg_path[1]
+					makeDir (getFilenamePath arg_path[1])
+					saveMaterialLibrary arg_path[1]
+					setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[1]
+					if tyLibSave == "true" do
 					(
-						print "salvando o matlib"
-						print "arg_path"
-						print arg_path[1]
-						makeDir (getFilenamePath arg_path[1])
-						saveMaterialLibrary arg_path[1]
-						setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[1]
-						return "Success!"
+						Create_TyLibMaterial currentMaterialLibrary arg_path
 					)
-					else
-					(
-						return "ERROR: No material present to export"
-					)
-
-
-
-
-
+					return "Success!"
+				)
+				else
+				(
+					return "ERROR: No material present to export"
+				)
 			)
+
+
+
+
+	*/
+
+
+
+
+
+
 
 
 
