@@ -676,6 +676,7 @@ fn FN_UiUpdate_SelectionCheck =
 fn FN_Callback_SelectionChange =
 (
 	FN_UiUpdate_SelectionCheck()
+	nodeAsset = selection[1] -- TODO: ADDED THIS CHANGE TO UPDATE THE nodeAsset Global Variable
 	--clearlistener()
 )
 	
@@ -732,23 +733,128 @@ fn FN_collectAllChildren obj includeParent:true =
 )	
 	
 -- Load and apply the chosen material
-fn	FN_DoSwitch_Material arg arg2 = -- arg: the material file | arg2: the node to do the switch on
+fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMtl = -- arg: the material file | arg2: the node to do the switch on
 (
-	nodeAsset = arg2
-	curMaterialFile = arg
-		
+	--nodeAsset = arg2
+	--curMaterialFile = arg
+
+	-- Collect the entire family
+	theObjects = (FN_collectAllChildren nodeAsset includeParent:true) -- TODO: Changed the includeParent to TRUE to account for new mapping paradigm
+	theObjectsNames = (for obj in theObjects collect (obj.name))
+	MaterialMapArray = execute (getinisetting curMaterialMapFile "MaterialNodeMap" "MaterialMapArray") -- TODO: Used EXECUTE here... is there a better way?
 	-- Test to see if there is a file
 	if (doesfileexist curMaterialFile) then -- TODO: Remap all materials back to their objects (how.... name based?)
 	(
-		for i in 1 to currentMaterialLibrary.count do
+		--print curMaterialFile
+		if LoadtyLibMtl then
 		(
-			deleteItem currentMaterialLibrary 1
+			StartTimertyLib = timestamp()
+
+			/*
+
+			OriginalMatFile = substring curMaterialMapFile 1 (curMaterialMapFile.count - 3)
+			for i = 1 to currentMaterialLibrary.count do
+			(
+				deleteItem currentMaterialLibrary 1
+			)
+			loadMaterialLibrary OriginalMatFile
+			NumberMaterials = currentMaterialLibrary.count
+
+		*/
+			NumberMaterials = MaterialMapArray.count
+
+			--NumberMaterials = currentMaterialLibrary.count
+			for i = 1 to NumberMaterials do
+			(
+				--for j = 1 to currentMaterialLibrary.count do
+				--(
+				--	deleteItem currentMaterialLibrary 1
+				--)
+
+				LoadtyLibStart = timestamp()
+				loadMaterialLibrary curMaterialFile
+				print "currentMaterialLibrary[1]"
+				print currentMaterialLibrary[1]
+				loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
+				print "currentMaterialLibrary[1]"
+				print currentMaterialLibrary[1]
+				LoadtyLibEnd = timestamp()
+
+				print "Time Load tyLib"
+				print ((LoadtyLibEnd - LoadtyLibStart)*.001)
+
+				ObjectsToApplyMaterial = #()
+				print "ObjectsToApplyMaterial"
+				-- loops through all 
+				for CurrentObjectName in MaterialMapArray[i] do
+				(
+					print "CurrentObjectName"
+					print CurrentObjectName
+					ObjectIndex = findItem theObjectsNames CurrentObjectName
+					print "ObjectIndex"
+					print ObjectIndex
+					if ObjectIndex != 0 do
+					(
+						append ObjectsToApplyMaterial theObjects[ObjectIndex]
+					)
+				)
+				print "currentMaterialLibrary"
+				print currentMaterialLibrary
+				print "currentMaterialLibrary[1]"
+				print currentMaterialLibrary[1]
+				LoadedtyLibMtl = currentMaterialLibrary[1]
+				print "LoadedtyLibMtl.index"
+				print LoadedtyLibMtl.index
+				LoadedtyLibMtl.index = (i - 1)
+				print "LoadedtyLibMtl"
+				print LoadedtyLibMtl
+				ObjectsToApplyMaterial.material = LoadedtyLibMtl
+			)
+			EndTimertyLib = timestamp()
+			print "Total Time tyLib"
+			print ((EndTimertyLib - StartTimertyLib)*.001)
 		)
-		loadMaterialLibrary curMaterialFile
+		else
+		(
+			StartTimerMultSub = timestamp()
+			--for i = 1 to currentMaterialLibrary.count do
+			--(
+			--	deleteItem currentMaterialLibrary 1
+			--)
+			LoadMatLibStart = timestamp()
+			loadMaterialLibrary curMaterialFile -- TODO: If we load the materials inside this function, it will change at every iteration (meaning the material
+												-- will NOT be instanced across objects. Several objects will have the SAME material, with the SAME name, but with
+												-- potentially different values.
+			LoadMatLibEnd = timestamp()
+			print "Time Load MatLib"
+			print ((LoadMatLibEnd - LoadMatLibStart)*.001)
+			NumberMaterials = MaterialMapArray.count
+			for i = 1 to NumberMaterials do
+			(
+				ObjectsToApplyMaterial = #()
+				-- loops through all 
+				for CurrentObjectName in MaterialMapArray[i] do
+				(
+					ObjectIndex = findItem theObjectsNames CurrentObjectName
+					if ObjectIndex != 0 do
+					(
+						append ObjectsToApplyMaterial theObjects[ObjectIndex]
+					)
+				)
+				ObjectsToApplyMaterial.material = currentMaterialLibrary[i]
+			)
+			EndTimerMultSub = timestamp()
+			print "Total Time MultSub"
+			print ((EndTimerMultSub - StartTimerMultSub)*.001)
+		)
+		
+	)
+
+		/*
 		theMaterial = currentMaterialLibrary[1]
 				
 		-- Collect the entire family
-		theObjects = (FN_collectAllChildren nodeAsset includeParent:false)
+		theObjects = (FN_collectAllChildren nodeAsset includeParent:true) -- TODO: Changed the includeParent to TRUE to account for new mapping paradigm
 
 		-- Apply the material to the objects children
 		for i in 1 to theObjects.count do
@@ -760,9 +866,10 @@ fn	FN_DoSwitch_Material arg arg2 = -- arg: the material file | arg2: the node to
 	(
 
 	)
+	*/
 )
 	
-fn	FN_DoSwitch_Standard arg arg2= -- arg: the filepath to import | arg2: the node to do the switch on
+fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	-- set some stuff up
 	nodeAsset = arg2
@@ -966,6 +1073,14 @@ fn FN_DoSwitch =
 		
 	-- Prepare data for switch
 	curMaterialFile = (assetDir + @"Publish\Material\" + curMaterial + ".mat")
+	curMaterialMapFile = (assetDir + @"Publish\Material\" + curMaterial + ".matmap")
+	tyLibMtlSplice = findString curMaterialFile "tyLibMtl"
+	LoadtyLibMtl = false
+	if tyLibMtlSplice != undefined do
+	(
+		LoadtyLibMtl = true
+		curMaterialMapFile = (substring curMaterialMapFile 1 (tyLibMtlSplice - 1)) + (substring curMaterialMapFile (tyLibMtlSplice + 9) 1000)
+	)
 	curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
 	switchObjectsArray = (selection as array)
 	switchObjectsHandleArray = #()
@@ -1008,8 +1123,12 @@ fn FN_DoSwitch =
 		-- Test for if a material switch is desired, and do it if so			
 		if MAIN_AssetSwitchUI.chkbox_materials.checked == true then
 		(
-			print curMaterialFile
-			FN_DoSwitch_Material curMaterialFile switchObjectsArray[i]
+			FN_DoSwitch_Material curMaterialFile curMaterialMapFile switchObjectsArray[i] LoadtyLibMtl -- TODO: If we load the materials inside this function, it will 
+																						  -- change at every iteration (meaning the material will NOT be 
+																						  -- instanced across objects. Several objects will have the SAME 
+																						  -- material, with the SAME name, but with potentially different values.
+																						  -- To avoid this the materials should be defined BEFORE the loop on
+																						  -- line 1038 ("for i in 1 to switchObjectsArray.count do")
 		)
 		else   -- TODO: This ELSE is unecessary
 		(
@@ -1314,7 +1433,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		
 	button btn_SwitchAsset "<< Switch Asset! >>" height:25 width:282 align:#right --offset:[100, 15] -- w 336
 	button btn_PublishAsset "Publish" height:25 width:55 align:#left offset:[-8,-41]
-	checkbutton chkbtn_SwitchHold "Hold" height:25 width:40 align:#left offset:[329,-30] checked:true
+	checkbutton chkbtn_SwitchHold "Hold" height:25 width:40 align:#left offset:[329,-30] checked:false
 	button btn_Revert "Revert" height:25 width:60 align:#left offset:[370,-30] enabled:false
 	
 -- ===================
@@ -1370,8 +1489,11 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 				)
 					
 				-- call the switch function
+				SwtichStart = timestamp()
 				FN_DoSwitch()
-					
+				SwtichEnd = timestamp()
+				print "TotalTime to switch Material:"
+				print ((SwtichEnd - SwtichStart)*0.001)
 				enablesceneredraw()
 			)
 			catch

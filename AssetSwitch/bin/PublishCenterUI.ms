@@ -9,6 +9,10 @@
 --- version 1.6 : 06.26.2025  	>> Script modernization and features improvements
 --*****************************************************
 
+-- REPLACING nodeAssetForPublish for nodeAsset for less buggy operation (TENTATIVE!!!!!)
+-- Replaced nodeAssetForPublish for nodeAsset throughout this WHOLE script! Watch for possible bugs !!
+
+
 try (destroydialog ASSET_PublishCenterRollout) catch()
 
 struct ASSET_PublishOptions
@@ -152,26 +156,37 @@ struct ASSET_PublishOptions
 	-- Material File Options Rollout
 	fn materialfile tyLibMatExists =
 	(
-		rollout ASSET_Options_MaterialFile  "Publish Center Options" width:350 height:85
+		rollout ASSET_Options_MaterialFile  "Publish Center Options" width:350 height:185
 		(
-			groupbox grp "Material File Options" width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 40)
+			group "Material File Options" --width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
+			(
 				--TODO: Add the option to use tyLibMtl to store materials
 
 
-				checkbox TyLibMaterialCheckbox "Also save tyLibMtl material" pos:[25,25] enabled:tyLibMatExists --checked:tyLibMatChecked
+				checkbox TyLibMaterialCheckbox "Also save tyLibMtl material" enabled:tyLibMatExists --pos:[25,25] --checked:tyLibMatChecked
 				--label lab_nope "No options available to configure." pos:[25,25]
-
-
-
+			)
+			group "Material Conflict Options" --offset:[0,15] width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
+			(
+				--checkbox UseGlobalCheckbox "Prioritize Global Material" --pos:[25,80]
+				label GlobalChildrenConflict "Global and Children conflict:" offset:[-5,0] across:2
+				label ChildrenConflict "Children conflict:" offset:[-11,0]
+				radiobuttons GlobalChildrenRadiubutton "" labels:#("Save Global only", "Save Global and Children", "Ask per case") offsets:#([0,0], [0,5], [0,10]) default:3 across:2
+				radiobuttons ChildrenRadiubutton "" labels:#("Save all Children", "Ask per case")  offsets:#([0,0], [0,5]) default:2
+			)
 			button buttonOK "OK" pos:[(ASSET_Options_MaterialFile.width - 92),(ASSET_Options_MaterialFile.height - 30)]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
 			on buttonOK pressed do
 			(
+				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict" (GlobalChildrenRadiubutton.state as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict" (ChildrenRadiubutton.state as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" (TyLibMaterialCheckbox.checked as string)
 				destroydialog ASSET_Options_MaterialFile
 			)
 			on ASSET_Options_MaterialFile open do
 			(
+				try( GlobalChildrenRadiubutton.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict" )) )catch()
+				try( ChildrenRadiubutton.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict" )) )catch()
 				try( TyLibMaterialCheckbox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" )) )catch()
 			)
 			on buttonCancel pressed do ( destroydialog ASSET_Options_MaterialFile )
@@ -436,9 +451,11 @@ function FN_PublishCenter = -- asset: the current asset definition
 		(
 			print "---------------------------------------------- FETCH --------------------------------------------"
 			fetchMaxFile quiet:true
-			nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
-			assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
-			assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
+			--nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
+			--assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
+			--assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
+			assetDir = ( getFilenamePath (getUserProp nodeAsset "MAKE_Asset_Filepath"))
+			assetName = (getfilenamefile  (getUserProp nodeAsset "MAKE_Asset_Filepath"))
 
 		)
 		
@@ -570,7 +587,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		
 		
 		function FN_PUBhistSave = -- ASK_AARON - 
-								  -- This function is adding User Properties to the Global/Root of the asset, "nodeAssetForPublish" is the Global Variable that stores this object and this 
+								  -- This function is adding User Properties to the Global/Root of the asset, "nodeAsset" is the Global Variable that stores this object and this 
 								  -- variable is defined earlier at this script if the function FN_RestoreFromHold is invoked or, most likely, was already defined when the file 
 								  -- "PublishModulesStruct.ms" was loaded and executed by another file called "PublishCenter.ms". This "PublishCenter.ms" is defined to another Global
 								  -- Variable called "PublishCenterExecutable", which is defined on the "AssetSwitch_Launch.ms" located one folder up from where this very script is
@@ -582,17 +599,17 @@ function FN_PublishCenter = -- asset: the current asset definition
 								  -- 2. - Creates the Global Variable "PublishCenterExecutable", defined as the path to the "PublishCenter.ms" script.
 								  -- 3. - When the user clicks the Publish button ("btn_PublishAsset"), the "PublishCenterExecutable" variable is called (using FileIn)
 								  -- 4. - The "PublishCenterExecutable" calls the "PublishCenter.ms", which calls the "PublishModulesStruct.ms"
-								  -- 5. - The "PublishModulesStruct.ms" creates the "nodeAssetForPublish" Global Variable
+								  -- 5. - The "PublishModulesStruct.ms" creates the "nodeAsset" Global Variable
 								  --
-								  -- Worth noting that the "nodeAssetForPublish" depends on another Global Variable to be defined - "nodeAssetHandle". This later variable is initialized
+								  -- Worth noting that the "nodeAsset" depends on another Global Variable to be defined - "nodeAssetHandle". This later variable is initialized
 								  -- at the "PublishCenter.ms"
 		(
- 			--setUserProp nodeAssetForPublish "PUBhist_Material" edt_MaterialFile_Prefex.text
- 			setUserProp nodeAssetForPublish "MAKE_Asset_Material_Versions" spinner_MaterialFile_Number.value
- 			--setUserProp nodeAssetForPublish "PUBhist_MaxFile" edt_MaxFile_Prefex.text
- 			setUserProp nodeAssetForPublish "MAKE_Asset_Max_Versions" spinner_MaxFile_Number.value
- 			--setUserProp nodeAssetForPublish "PUBhist_Vrmesh" edt_vrmeshFile_Prefex.text
- 			setUserProp nodeAssetForPublish "MAKE_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
+ 			--setUserProp nodeAsset "PUBhist_Material" edt_MaterialFile_Prefex.text
+ 			setUserProp nodeAsset "MAKE_Asset_Material_Versions" spinner_MaterialFile_Number.value
+ 			--setUserProp nodeAsset "PUBhist_MaxFile" edt_MaxFile_Prefex.text
+ 			setUserProp nodeAsset "MAKE_Asset_Max_Versions" spinner_MaxFile_Number.value
+ 			--setUserProp nodeAsset "PUBhist_Vrmesh" edt_vrmeshFile_Prefex.text
+ 			setUserProp nodeAsset "MAKE_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
 
 
 
@@ -600,13 +617,13 @@ function FN_PublishCenter = -- asset: the current asset definition
 
 
 
- 			setUserProp nodeAssetForPublish "MAKE_Asset_TimeStamp" localTime           --------- ASK_AARON - This whole procedure can be faster if instead of using the
+ 			setUserProp nodeAsset "MAKE_Asset_TimeStamp" localTime           --------- ASK_AARON - This whole procedure can be faster if instead of using the
  																					-- "setUserProp" command, create the whole string with all the variables and
  																					-- their values and apply that string with the "setUserPropBuffer" command.
  																					-- the caveats is that using the latter command ALL THE USER PROPERTIES will
  																					-- be erased and replaced by the new one
- 			setUserProp nodeAssetForPublish "MAKE_Asset_Author" sysInfo.username
- 			setUserProp nodeAssetForPublish "MAKE_Asset_Computer" sysInfo.computername 
+ 			setUserProp nodeAsset "MAKE_Asset_Author" sysInfo.username
+ 			setUserProp nodeAsset "MAKE_Asset_Computer" sysInfo.computername 
 		)
 		
 		-- Enables / Disables UI items if that section is enabled
@@ -711,10 +728,12 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- MaterialFile
 		on button_MaterialFile_Options pressed do
 		(
-			tyLibMatExists = false
-			if FindItem material.classes tyLibMtl != 0 do
+			tyLibMatExists = true
+			if FindItem material.classes tyLibMtl == 0 do
 			(
-				tyLibMatExists = true
+				tyLibMatExists = false
+				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" "false"
+
 			)
 			ASSET_PublishOptions.materialfile tyLibMatExists
 		)
@@ -750,22 +769,22 @@ function FN_PublishCenter = -- asset: the current asset definition
 			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 
 			-- Update stored names 
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_MaxFile") as string ) -- TODO: Fix with the new UserProp values!!!!
+			curStr = ((getUserProp nodeAsset "PUBhist_MaxFile") as string ) -- TODO: Fix with the new UserProp values!!!!
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_MaxFile_Prefex.text = curStr
 
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Material") as string )  -- TODO: Fix with the new UserProp values!!!!
+			curStr = ((getUserProp nodeAsset "PUBhist_Material") as string )  -- TODO: Fix with the new UserProp values!!!!
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_MaterialFile_Prefex.text = curStr
 
-			curStr = ((getUserProp nodeAssetForPublish "PUBhist_Vrmesh") as string )  -- TODO: Fix with the new UserProp values!!!!
+			curStr = ((getUserProp nodeAsset "PUBhist_Vrmesh") as string )  -- TODO: Fix with the new UserProp values!!!!
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_vrmeshFile_Prefex.text = curStr
 			
 			-- Update stored interations
-			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAssetForPublish "MAKE_Asset_Max_Versions" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
-			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "MAKE_Asset_Material_Versions" ) 		as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
-			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAssetForPublish "MAKE_Asset_Vrmesh_Versions" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
+			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAsset "MAKE_Asset_Max_Versions" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
+			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAsset "MAKE_Asset_Material_Versions" ) 		as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
+			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAsset "MAKE_Asset_Vrmesh_Versions" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
 				
 			-- Update individual paths for each asset
 			FN_Update_3dsMaxFile()
@@ -800,9 +819,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 
 			FN_PUBhistSave()
 
-			try( setinisetting AssetFile "Global" "radius" 		(nodeAssetForPublish.radius as string)		) catch ()
-			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAssetForPublish.wirecolor as string)	) catch ()
-			try( setinisetting AssetFile "Global" "steps" 		(nodeAssetForPublish.steps as string)		) catch ()
+			try( setinisetting AssetFile "Global" "radius" 		(nodeAsset.radius as string)		) catch ()
+			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAsset.wirecolor as string)	) catch ()
+			try( setinisetting AssetFile "Global" "steps" 		(nodeAsset.steps as string)		) catch ()
 
 			max hold
 			

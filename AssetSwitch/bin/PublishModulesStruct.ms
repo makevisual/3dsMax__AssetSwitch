@@ -10,7 +10,12 @@
 
 global ASSET_PublishFunctions
 --global nodeAssetForPublish = (maxops.getnodebyhandle 16) --nodeAssetHandle)
-global nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
+
+-- REPLACING nodeAssetForPublish for nodeAsset for less buggy operation (TENTATIVE!!!!!)
+--Replaced nodeAssetForPublish for nodeAsset throughout this WHOLE script! Watch for possible bugs !!
+
+
+--global nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
 
 struct ASSET_PublishFunctions
 (
@@ -249,124 +254,110 @@ struct ASSET_PublishFunctions
 	(
 
 		MatCollection = #()
-		AllNodesArray = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
+		--AllNodesArray = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
+		AllNodesArray = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true
 		MaterialMapArray = FindChildrenMaterials AllNodesArray MatCollection
 		setinisetting ((substring arg_path[1] 1 (arg_path[1].count - 4)) + ".matmap") "MaterialNodeMap" "MaterialMapArray" (MaterialMapArray as string)
+		print "MatCollection"
+		print MatCollection
 		print "MaterialMapArray"
 		print MaterialMapArray
 		print MaterialMapArray.count
-		if MaterialMapArray.count > 1 then
+		-- If there is more than one material collected 
+		if MatCollection.count > 1 then
 		(
 			print "MaterialMapArray[1][1]"
 			print MaterialMapArray[1][1]
-			assetGlobalName = (getINISetting assetFile "Global" "name")
-			print "assetGlobalName"
-			print assetGlobalName
-			if MaterialMapArray[1][1] == assetGlobalName then
+			--assetGlobalName = (getINISetting assetFile "Global" "name")
+			--print "assetGlobalName"
+			--print assetGlobalName
+			--if MatCollection[1] == nodeAssetForPublish.material then
+			if MatCollection[1] == nodeAsset.material then
 			(
 				-- O Global tem material e alguns children tem materiais diferentes
-				print "entrou aqui"
-				IgnoreChilrend = yesNoCancelBox ("The Asset's Global and children nodes have different" +
-				"\nmaterials. It is RECOMMENDED to cancel and use the" +
-				"\nMultSubCreator tool on MakeToolbox to unify them." +
-				"\n\nIgnore children's material on material asset creation?" +
-				"\n\nYES - Use only Global's material." +
-				"\nNO  - Use the Global and children's materials." +
-				"\nCANCEL - Cancels publishing.") title:"AssetSwitch - Material Conflict"
-				print "IgnoreChilrend"
-				print IgnoreChilrend
-				case IgnoreChilrend of
+				GlobalChildrenConflict = (getINISetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict")
+				case GlobalChildrenConflict of
 				(
-					(#yes):
+					-- Defaults to Use only Global's material.
+					"1":
 					(
-						print "ignore"
-						print "MatCollection"
-						print MatCollection
-						print "NodeGlobalMal"
-						print (nodeAssetForPublish.material)
-						MatCollection = (#(nodeAssetForPublish.material))
-						print MatCollection
+						--MatCollection = (#(nodeAssetForPublish.material))
+						MatCollection = (#(nodeAsset.material))
 						return MatCollection
 					)
-					(#no):
+					-- Defaults to Use the Global and children's materials.
+					"2":
 					(
-						print "não ignore"
-						print "MatCollection"
-						print MatCollection
 						return MatCollection
 					)
-					(#cancel):
+					-- Defaults to open a yesNoCancelBox
+					"3":
 					(
-						print "cancele"
-						return (#())
+						IgnoreChilrend = yesNoCancelBox ("The Asset's Global and children nodes have different" +
+						"\nmaterials. It is RECOMMENDED to cancel and use the" +
+						"\nMultSubCreator tool on MakeToolbox to unify them." +
+						"\n\nIgnore children's material on material asset creation?" +
+						"\n\nYES - Use only Global's material." +
+						"\nNO  - Use the Global and children's materials." +
+						"\nCANCEL - Cancels publishing.") title:"AssetSwitch - Material Conflict"
+						case IgnoreChilrend of
+						(
+							(#yes):
+							(
+								--MatCollection = (#(nodeAssetForPublish.material))
+								MatCollection = (#(nodeAsset.material))
+								return MatCollection
+							)
+							(#no):
+							(
+								print "não ignore"
+								print "MatCollection"
+								print MatCollection
+								return MatCollection
+							)
+							(#cancel):
+							(
+								print "cancele"
+								return (#())
+							)
+						)
 					)
-
-
 				)
 			)
 			else
 			(
-				-- O Global não tem material, mas alguns children tem e eles são diferentes
-				queryBox ("The Asset's children have different materials" +
-				"\nIt is RECOMMENDED to cancel and use the" +
-				"\nMultSubCreator tool on MakeToolbox to unify them." +
-				"\n\nContinue anyway?" +
-				"\n\nYES - Collect children's materials as is." +
-				"\nNO  - Cancels publishing.") title:"AssetSwitch - Material Conflict"
-
-
-
-
-
-
-				--TODO: CONTINUE HERE WITH POSSIBLE OPTIONS!!!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+				-- O Global não tem material e alguns children tem materiais diferentes
+				ChildrenConflict = (getINISetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict")
+				if ChildrenConflict == "1" then
+				(
+					return MatCollection
+				)
+				else
+				(
+					-- O Global não tem material, mas alguns children tem e eles são diferentes
+					CollectAllChildrenMaterial = queryBox ("The Asset's children have different materials" +
+					"\nIt is RECOMMENDED to cancel and use the" +
+					"\nMultSubCreator tool on MakeToolbox to unify them." +
+					"\n\nContinue anyway?" +
+					"\n\nYES - Collect children's materials as is." +
+					"\nNO  - Cancels publishing.") title:"AssetSwitch - Material Conflict"
+					if CollectAllChildrenMaterial then
+					(
+						return MatCollection
+					)
+					else
+					(
+						return (#())
+					)
+				)
 			)
 		)
+		-- Only one (or none) material was collected 
 		else
 		(
+
+
+			/*
 			if MatCollection[1] == nodeAssetForPublish.material then
 			(
 				-- There's only ONE material on the asset and it is assigned to the Global
@@ -376,8 +367,18 @@ struct ASSET_PublishFunctions
 			(
 				-- There's only ONE material on the asset and it is not assigned to the Global
 			)
+			*/
+
+
+
+			return MatCollection
 		)
 		
+
+
+
+
+
 
 
 		-- TODO: Create a collection of materials from the child nodes
@@ -423,7 +424,8 @@ struct ASSET_PublishFunctions
 		try
 		(
 			-- Collect all child nodes in array
-			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
+			--saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:true
+			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true
 
 
 
@@ -490,7 +492,8 @@ struct ASSET_PublishFunctions
 			if VertexCapCount == ok 	do ( VertexCapCount = 200 )
 				
 			-- Collect all objects
-			objArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false
+			--objArr = ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false
+			objArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false
 			objArr = ASSET_PublishFunctions.ReduceToMeshes objArr
 				
 			if AttachAllElements
@@ -538,7 +541,8 @@ struct ASSET_PublishFunctions
 		append currentMaterialLibrary TylibMaterial
 
 		saveMaterialLibrary arg_path[2]
-		setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[2]
+		--setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[2]
+		setUserProp nodeAsset "MAKE_Asset_tylibMtl_File" arg_path[2]
 	),
 	function pub_MaterialFile arg_asset arg_path tyLibSave =
 	(
@@ -572,7 +576,8 @@ struct ASSET_PublishFunctions
 				print arg_path[1]
 				makeDir (getFilenamePath arg_path[1])
 				saveMaterialLibrary arg_path[1]
-				setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[1]
+				--setUserProp nodeAssetForPublish "MAKE_Asset_tylibMtl_File" arg_path[1]
+				setUserProp nodeAsset "MAKE_Asset_tylibMtl_File" arg_path[1]
 				if tyLibSave == "true" do
 				(
 					Create_TyLibMaterial currentMaterialLibrary arg_path
@@ -706,12 +711,16 @@ struct ASSET_PublishFunctions
 			else ( anim = off )
 			
 			-- collect the objects to export
-			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
+			--export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
+			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false)
 				
 			-- transform them to the origin, for proper export
-			nodeAssetForPublish.position = [0,0,0]
-			nodeAssetForPublish.rotation = quat 0 0 0 0
-			nodeAssetForPublish.scale = [1,1,1]
+			--nodeAssetForPublish.position = [0,0,0]
+			--nodeAssetForPublish.rotation = quat 0 0 0 0
+			--nodeAssetForPublish.scale = [1,1,1]
+			nodeAsset.position = [0,0,0]
+			nodeAsset.rotation = quat 0 0 0 0
+			nodeAsset.scale = [1,1,1]
 
 			-- Converts all renderable geometry to edit polys, and deletes the rest
 			export_arr = ASSET_PublishFunctions.ReduceToMeshes export_arr
@@ -750,9 +759,12 @@ struct ASSET_PublishFunctions
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
 				
 			-- transform them to the origin, for proper export
-			nodeAssetForPublish.position = [0,0,0]
-			nodeAssetForPublish.rotation = quat 0 0 0 0
-			nodeAssetForPublish.scale = [1,1,1]
+			--nodeAssetForPublish.position = [0,0,0]
+			--nodeAssetForPublish.rotation = quat 0 0 0 0
+			--nodeAssetForPublish.scale = [1,1,1]
+			nodeAsset.position = [0,0,0]
+			nodeAsset.rotation = quat 0 0 0 0
+			nodeAsset.scale = [1,1,1]
 				
 			-- Prepare directory for .vrmesh file
 			dataDir = ((getFilenamePath arg_path) + @"data\")
@@ -763,8 +775,8 @@ struct ASSET_PublishFunctions
 			obj = vrayMeshExport meshFile:dataDir autoCreateProxies:true exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
 			
 			-- integrate the .vrmesh to the scene
-			obj.parent = nodeAssetForPublish
-			
+			--obj.parent = nodeAssetForPublish
+			obj.parent = nodeAsset
 			-- Publish as 3dsMax File
 			ASSET_PublishFunctions.pub_3dsMaxFile "asset" arg_path
 			
@@ -803,13 +815,17 @@ struct ASSET_PublishFunctions
 			)
 
 			-- Collects objects for export
-			children_arr = 	( ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)			
+			--children_arr = 	( ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)			
+			children_arr = 	( ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false)	
 			export_arr = 	( ASSET_PublishFunctions.FilterToClass children_arr geometryclass )
 				
 			-- transform them to the origin, for proper export
-			nodeAssetForPublish.position = [0,0,0]
-			nodeAssetForPublish.rotation = quat 0 0 0 0
-			nodeAssetForPublish.scale = [1,1,1]
+			--nodeAssetForPublish.position = [0,0,0]
+			--nodeAssetForPublish.rotation = quat 0 0 0 0
+			--nodeAssetForPublish.scale = [1,1,1]
+			nodeAsset.position = [0,0,0]
+			nodeAsset.rotation = quat 0 0 0 0
+			nodeAsset.scale = [1,1,1]
 
 			-- Filters the array to only renderable geometry
 			export_arr = ASSET_PublishFunctions.FilterToMeshes export_arr
@@ -899,13 +915,17 @@ struct ASSET_PublishFunctions
 			)
 
 			-- Collects objects for export
-			children_arr = 	( ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)			
+			--children_arr = 	( ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
+			children_arr = 	( ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false)				
 			export_arr = 	( ASSET_PublishFunctions.FilterToClass children_arr geometryclass )	
 				
 			-- transform them to the origin, for proper export
-			nodeAssetForPublish.position = [0,0,0]
-			nodeAssetForPublish.rotation = quat 0 0 0 0
-			nodeAssetForPublish.scale = [1,1,1]
+			--nodeAssetForPublish.position = [0,0,0]
+			--nodeAssetForPublish.rotation = quat 0 0 0 0
+			--nodeAssetForPublish.scale = [1,1,1]
+			nodeAsset.position = [0,0,0]
+			nodeAsset.rotation = quat 0 0 0 0
+			nodeAsset.scale = [1,1,1]
 
 			-- Prepare directories and channels
 			makeDir (getFilenamePath arg_path + @"data\")
@@ -961,7 +981,8 @@ struct ASSET_PublishFunctions
 			-- Replace the original objects with .xmesh objects
 			delete export_arr
 			filein ((getFilenamePath arg_path) + @"data\" +"Create.MS")
-			selection[1].parent = nodeAssetForPublish
+			--selection[1].parent = nodeAssetForPublish
+			selection[1].parent = nodeAsset
 			clearselection()	
 			
 			ASSET_PublishFunctions.pub_3dsMaxFile "asset" arg_path
