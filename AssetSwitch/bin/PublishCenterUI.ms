@@ -451,7 +451,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		(
 			print "---------------------------------------------- FETCH --------------------------------------------"
 			fetchMaxFile quiet:true
-			--nodeAssetForPublish = (maxops.getnodebyhandle nodeAssetHandle)
+			nodeAsset = (maxops.getnodebyhandle nodeAssetHandle) -- TODO: Changed the name "nodeAssetForPublish" to "nodeAsset"
 			--assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
 			--assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
 			assetDir = ( getFilenamePath (getUserProp nodeAsset "MAKE_Asset_Filepath"))
