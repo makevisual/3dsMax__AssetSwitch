@@ -30,67 +30,46 @@ fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 		
 	-- .MAX Test
 	curFiles = getfiles (arg + @"\*.max")
-	if curFiles.count > 0 then
+	if curFiles.count > 0 do
 	(
 		curTypeImporter = 1
 		curMaterialFile
 		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 		return "Max File Merge"
 	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
-	)
-		
 	-- .VRMESH Test
 	curFiles = getfiles (arg + @"\*.vrmesh")
-	if curFiles.count > 0 then
+	if curFiles.count > 0 do
 	(
 		curTypeImporter = 2
 		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 		return "V-Ray Mesh Loader"
 	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
-	)
 	-- .XMeshTest
 	curFiles =  getfiles (arg + @"\*.ms")
-	if curFiles.count > 0 then
+	if curFiles.count > 0 do
 	(
 		curTypeImporter = 3
 		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 		return "XMesh Loader"
 	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
-	)
 
 	-- PRT Test
 	curFiles =  getfiles (arg + @"\*.prt")
-	if curFiles.count > 0 then
+	if curFiles.count > 0 do
 	(
 		curTypeImporter = 4
 		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 		return "PRT Loader"
 	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
-	)
 
 	-- Point Cache Test
 	curFiles =  getfiles (arg + @"\*.mc")
-	if curFiles.count > 0 then
+	if curFiles.count > 0 do
 	(
 		curTypeImporter = 5
 		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 		return "Point Cache Modifer"
-	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
 	)
 		
 	curTypeImporter = undefined
@@ -107,13 +86,9 @@ fn FN_GetMtlsInDIr =
 	(
 		join matNames #((getFilenameFile matArr[i]))
 	)
-	if matNames.count == 0 then
+	if matNames.count == 0 do
 	(
 		matNames = #(" No Materials Found")
-	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
 	)
 	curMaterial = matNames[1]
 	return matNames
@@ -128,22 +103,14 @@ fn FN_GetObjectsInDir =
 	(
 		foldersArr = filterstring typeArr[i] @"\"
 		curFolder = #(foldersArr[foldersArr.count])
-		if curFolder[1] == "Material" then  -- TODO: This THEN is unecessary if the test expression is changed to !=
-		(
-
-		)
-		else
+		if curFolder[1] != "Material" do
 		(
 			join typeNames curFolder
 		)
 	)
-	if typeNames.count == 0 then
+	if typeNames.count == 0 do
 	(
 		typeNames = #(" No Types Found")
-	)
-	else -- TODO: This ELSE is unecessary
-	(
-
 	)
 	curType = typeNames[1]
 	return typeNames
@@ -159,16 +126,14 @@ fn FN_GetVersionsInDir = -- arg: curType
 		for i in 1 to versionArr.count do
 		(
 			foldersArr = filterstring versionArr[i] @"\"
-			curFolder = #(foldersArr[foldersArr.count]) -- TODO: Review the name of this variable as it actually points to an asset verion name rather than a folder
+			curFolder = #(foldersArr[foldersArr.count])
+			print "curFolder"
+			print curFolder
 			join versionNames curFolder
 		)
-		if versionNames.count == 0 then
+		if versionNames.count == 0 do
 		(
 			versionNames = #(" No Versions Found")
-		)
-		else  -- TODO: This ELSE is unecessary
-		(
-
 		)
 		curVersion = versionNames[1]
 		return versionNames
@@ -188,11 +153,7 @@ fn FN_ChangeAsset =
 	types:"Asset Files (*.asset)|*.asset|"
 
 	-- gracefully exit no choice, or set data if valid choice
-	if newAsset == undefined then   -- TODO: This THEN is unecessary if the test expression is changed to !=
-	(
-
-	)
-	else
+	if newAsset != undefined do
 	(
 		assetFile = newAsset
 		assetName = (getFilenameFile assetFile)
@@ -201,14 +162,10 @@ fn FN_ChangeAsset =
 		-- Read and test if there is a valid 'Global' name in the .asset file
 		assetGlobalName = (getINISetting assetFile "Global" "name")
 
-		if assetGlobalName == "" then
+		if assetGlobalName == "" do
 		(
 			messagebox " This asset has not yet been initalized, you must choose a name for the global "
 			FN_setup_Initalize()
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 
 		-- Set userprops for first instance:
@@ -222,15 +179,11 @@ fn FN_ChangeAsset =
 
 
 		-- If there are no objects selected, then create a new global, with the correct properties 
-		if selectionArray.count == 0 then
+		if selectionArray.count == 0 do
 		(
 			newGlobal = circle radius:50 wirecolor:blue steps:1
 			select newGlobal
 			selectionArray = (selection as array)
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 
 		for i in 1 to selectionArray.count do
@@ -473,13 +426,9 @@ fn FN_UiUpdate_Versions =
 	curVersionArr =	FN_GetVersionsInDir()
 	for i in 1 to curVersionArr.count do
 	(
-		if curVersion == curVersionArr[i] then
+		if curVersion == curVersionArr[i] do
 		(
 			MAIN_AssetSwitchUI.ddl_versionDropdown.selection = i
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 	)
 		
@@ -514,38 +463,26 @@ fn FN_UiUpdate =
 		
 	for i in 1 to curMaterialsArr.count do
 	(
-		if curMaterial == curMaterialsArr[i] then
+		if curMaterial == curMaterialsArr[i] do
 		(
 			MAIN_AssetSwitchUI.ddl_matDropdown.selection = i
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 	)
 		
 	for i in 1 to curTypesArr.count do
 	(
-		if curType == curTypesArr[i] then
+		if curType == curTypesArr[i] do
 		(
 			MAIN_AssetSwitchUI.ddl_objDropdown.selection = i
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 	)
 	
 	curVersionArr =	FN_GetVersionsInDir()
 	for i in 1 to curVersionArr.count do
 	(
-		if curVersion == curVersionArr[i] then
+		if curVersion == curVersionArr[i] do
 		(
 			MAIN_AssetSwitchUI.ddl_versionDropdown.selection = i
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 	)
 		
@@ -643,13 +580,9 @@ fn FN_UiUpdate_SelectionCheck =
 					-- Loop throught the possible choices and set it if the prefferd choice is there
 					for i in 1 to curVersionArr.count do
 					(
-						if curVersion_temp == curVersionArr[i] then
+						if curVersion_temp == curVersionArr[i] do
 						(
 							MAIN_AssetSwitchUI.ddl_versionDropdown.selection = i
-						)
-						else   -- TODO: This ELSE is unecessary
-						(
-
 						)
 					)
 					curMaterialFile = (assetDir + @"Publish\Material\" + curMaterial + ".mat")
@@ -735,49 +668,22 @@ fn FN_collectAllChildren obj includeParent:true =
 -- Load and apply the chosen material
 fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMtl = -- arg: the material file | arg2: the node to do the switch on
 (
-	--nodeAsset = arg2
-	--curMaterialFile = arg
-
 	-- Collect the entire family
-	theObjects = (FN_collectAllChildren nodeAsset includeParent:true) -- TODO: Changed the includeParent to TRUE to account for new mapping paradigm
+	theObjects = (FN_collectAllChildren nodeAsset includeParent:true)
 	theObjectsNames = (for obj in theObjects collect (obj.name))
-	MaterialMapArray = execute (getinisetting curMaterialMapFile "MaterialNodeMap" "MaterialMapArray") -- TODO: Used EXECUTE here... is there a better way?
+	MaterialMapArray = execute (getinisetting curMaterialMapFile "MaterialNodeMap" "MaterialMapArray")
 	-- Test to see if there is a file
-	if (doesfileexist curMaterialFile) then -- TODO: Remap all materials back to their objects (how.... name based?)
+	if (doesfileexist curMaterialFile) then
 	(
-		--print curMaterialFile
 		if LoadtyLibMtl then
 		(
 			StartTimertyLib = timestamp()
-
-			/*
-
-			OriginalMatFile = substring curMaterialMapFile 1 (curMaterialMapFile.count - 3)
-			for i = 1 to currentMaterialLibrary.count do
-			(
-				deleteItem currentMaterialLibrary 1
-			)
-			loadMaterialLibrary OriginalMatFile
-			NumberMaterials = currentMaterialLibrary.count
-
-		*/
 			NumberMaterials = MaterialMapArray.count
-
-			--NumberMaterials = currentMaterialLibrary.count
 			for i = 1 to NumberMaterials do
 			(
-				--for j = 1 to currentMaterialLibrary.count do
-				--(
-				--	deleteItem currentMaterialLibrary 1
-				--)
-
 				LoadtyLibStart = timestamp()
 				loadMaterialLibrary curMaterialFile
-				print "currentMaterialLibrary[1]"
-				print currentMaterialLibrary[1]
 				loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
-				print "currentMaterialLibrary[1]"
-				print currentMaterialLibrary[1]
 				LoadtyLibEnd = timestamp()
 
 				print "Time Load tyLib"
@@ -817,10 +723,6 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 		else
 		(
 			StartTimerMultSub = timestamp()
-			--for i = 1 to currentMaterialLibrary.count do
-			--(
-			--	deleteItem currentMaterialLibrary 1
-			--)
 			LoadMatLibStart = timestamp()
 			loadMaterialLibrary curMaterialFile -- TODO: If we load the materials inside this function, it will change at every iteration (meaning the material
 												-- will NOT be instanced across objects. Several objects will have the SAME material, with the SAME name, but with
@@ -847,26 +749,7 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 			print "Total Time MultSub"
 			print ((EndTimerMultSub - StartTimerMultSub)*.001)
 		)
-		
 	)
-
-		/*
-		theMaterial = currentMaterialLibrary[1]
-				
-		-- Collect the entire family
-		theObjects = (FN_collectAllChildren nodeAsset includeParent:true) -- TODO: Changed the includeParent to TRUE to account for new mapping paradigm
-
-		-- Apply the material to the objects children
-		for i in 1 to theObjects.count do
-		(
-			theObjects[i].material = theMaterial
-		)
-	)
-	else   -- TODO: This ELSE is unecessary
-	(
-
-	)
-	*/
 )
 	
 fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
@@ -1106,7 +989,7 @@ fn FN_DoSwitch =
 	for i in 1 to switchObjectsArray.count do
 	(
 		-- Test for if an object switch is desired, and do it if so
-		if MAIN_AssetSwitchUI.chkbox_objects.checked == true then
+		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
 			switchObjectsArray[i].name = assetGlobalName
 			
@@ -1115,13 +998,9 @@ fn FN_DoSwitch =
 			
 			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
 		)
-		else   -- TODO: This ELSE is unecessary
-		(
-			
-		)
 		
 		-- Test for if a material switch is desired, and do it if so			
-		if MAIN_AssetSwitchUI.chkbox_materials.checked == true then
+		if MAIN_AssetSwitchUI.chkbox_materials.checked == true do
 		(
 			FN_DoSwitch_Material curMaterialFile curMaterialMapFile switchObjectsArray[i] LoadtyLibMtl -- TODO: If we load the materials inside this function, it will 
 																						  -- change at every iteration (meaning the material will NOT be 
@@ -1129,10 +1008,6 @@ fn FN_DoSwitch =
 																						  -- material, with the SAME name, but with potentially different values.
 																						  -- To avoid this the materials should be defined BEFORE the loop on
 																						  -- line 1038 ("for i in 1 to switchObjectsArray.count do")
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 	)
 	
@@ -1190,16 +1065,11 @@ fn FN_publish_Selected =
 			)
 
 			-- If a valid filename was chosen, and the user did not cancel out, proceed to save
-			if saveName == undefined then    -- TODO: The next ELSE is unecessary if we change the IF test to != and copy the ELSE result to the IF clause
-			(
-
-			)
-			else
+			if saveName != undefined do    -- TODO: The next ELSE is unecessary if we change the IF test to != and copy the ELSE result to the IF clause
 			(
 				saveNodes saveArr saveName
 				messagebox (saveName + " Published successfully!")
 			)
-			
 		)
 	)
 	else
@@ -1229,14 +1099,10 @@ fn FN_publish_Material =
 		-- Get the save filename, and save the temporary library
 		curFileName = undefined
 		curFileName = getSaveFileName types:"Material(*.mat)|*.mat"
-		if curFileName != undefined then
+		if curFileName != undefined do
 		(
 			saveMaterialLibrary curFileName
 			setUserProp selection[1] "multiMaterial_file" curFileName
-		)
-		else   -- TODO: This ELSE is unecessary
-		(
-
 		)
 	)
 )
@@ -1261,11 +1127,7 @@ fn FN_setup_Initalize  =
 			initAssetFile =  getOpenFileName \
 			types:"Asset Files (*.asset)|*.asset|"
 				
-			if initAssetFile == undefined then     -- TODO: The next ELSE is unecessary if we change the IF test to != and copy the ELSE result to the IF clause
-			(
-
-			)
-			else
+			if initAssetFile != undefined do
 			(
 				initAssetGlobalName = (getINISetting initAssetFile "Global" "name")
 				txt_NameAsset.text = initAssetGlobalName
@@ -1279,11 +1141,7 @@ fn FN_setup_Initalize  =
 			initAssetFile =  getSaveFileName \
 			types:"Asset Files (*.asset)|*.asset|"
 				
-			if initAssetFile == undefined then     -- TODO: The next ELSE is unecessary if we change the IF test to != and copy the ELSE result to the IF clause
-			(
-
-			)
-			else
+			if initAssetFile != undefined do
 			(
 				initAssetGlobalName = (setINISetting initAssetFile "Global" "name" txt_NameAsset.text)
 				DestroyDialog ROLL_AssetSwitch_Initalize
@@ -1296,13 +1154,9 @@ fn FN_setup_Initalize  =
 		-- Launch the Asset Switch Initializer ( loads selected objects name into the global field )
 		on ROLL_AssetSwitch_Initalize open do
 		(
-			if selection.count == 1 then
+			if selection.count == 1 do
 			(
 				txt_NameAsset.text = selection[1].name
-			)
-			else     -- TODO: The next ELSE is unecessary
-			(
-
 			)
 		)
 	)

@@ -319,7 +319,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 					tyLibSave = ((ASSET_PublishOptions()).tylibMtl_test())
 					if tyLibSave == "true" then
 					(
-						tylib_comboString = (@"\" + curClassName + @"\" + curAssetName + "tyLibMtl_" + nameVer + curClassExtension )
+						tylib_comboString = (@"\" + curClassName + @"\" + curAssetName + nameVer + "_tyLibMtl" + curClassExtension )
 						return #(comboString, tylib_comboString)
 					)
 					else
@@ -823,7 +823,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAsset.wirecolor as string)	) catch ()
 			try( setinisetting AssetFile "Global" "steps" 		(nodeAsset.steps as string)		) catch ()
 
-			max hold
+			max hold -- TODO: Let's try to get rid of this HOLD....
 			
 			-- individual publish operations, and progressbar updates
 			if chk_MaxFile.checked then 

@@ -252,19 +252,19 @@ struct ASSET_Functions
 	
 	function CreateNewAsset arg_Path arg_Class arg_Name arg_Dialog =
 	(
-		newDir 				= ( arg_Path + @"\Assets\" + arg_Class + @"\" ) -- TODO: This should be called RootAssetDir for readability?
-		newDir2 			= ( newDir + arg_Name + @"\" )					-- TODO: This should be called CurrentAssetDir for readability?
+		RootAssetDir 				= ( arg_Path + @"\Assets\" + arg_Class + @"\" ) -- TODO: This should be called RootAssetDir for readability?
+		CurrentAssetDir 			= ( RootAssetDir + arg_Name + @"\" )					-- TODO: This should be called CurrentAssetDir for readability?
 		
-		newAssetFilename 	= ( newDir + arg_Name + @"\" + arg_Name + ".asset" )
-		newSaveFileName 	= (	newDir2 + @"Build\Model\" + arg_Name +"_Model_001.max" ) -- TODO: This line is never creating a file because there is no folder structure that has "Build/Model". Should it be fixed?
+		newAssetFilename 	= ( RootAssetDir + arg_Name + @"\" + arg_Name + ".asset" )
+		newSaveFileName 	= (	CurrentAssetDir + @"Build\Model\" + arg_Name +"_Model_001.max" ) -- TODO: This line is never creating a file because there is no folder structure that has "Build/Model". Should it be fixed?
 		
-		if ( doesfileexist newDir2 ) then
+		if ( doesfileexist CurrentAssetDir ) then
 		(
 			messagebox "Asset Already Exists"
 		)
 		else
 		(
-			makedir newDir2
+			makedir CurrentAssetDir
 			-- TODO: This following commented section does not seem to impact the script's ability to create assets...
 			-- It was supposed to:
 			-- Copy all the folders inside "U:\Pitches\[Project]\Assets\Characters\[Asset3D]" into the Current Asset Directory, namely
@@ -281,15 +281,15 @@ struct ASSET_Functions
 			-- There are subfolders that account for a total of 17 folders. Do we need this folder structure? Or when a [Project] template folder is
 			-- copied over this structure is already present?
 
-			--copyFolder = ("xcopy " + "\"" + @"U:\Pitches\[Project]\Assets\Characters\[Asset3D]" + "\"" + " " + "\"" + newDir2 + "\"" + " /E")
+			--copyFolder = ("xcopy " + "\"" + @"U:\Pitches\[Project]\Assets\Characters\[Asset3D]" + "\"" + " " + "\"" + CurrentAssetDir + "\"" + " /E")
  			--hiddendoscommand copyFolder
  			
 			--renameFile ( newDir + "[Asset3D]" ) ( newDir + arg_Name + @"\" ) -- This line is also returning FALSE
-			--renameFile ( newDir2 + @"\" + "[Object_A].asset" ) newAssetFilename -- This line is also returning FALSE
+			--renameFile ( CurrentAssetDir + @"\" + "[Object_A].asset" ) newAssetFilename -- This line is also returning FALSE
 			
 			newNode = ASSET_Functions.CreateNewAsset_Node arg_Class arg_Name
 			ASSET_Functions.Asset_Initialize newNode newAssetFilename
-			ASSET_FolderStructure.InitializeFolderStrucure newDir2
+			ASSET_FolderStructure.InitializeFolderStrucure CurrentAssetDir
 			
 			saveMaxFile newSaveFileName quiet:true
 
