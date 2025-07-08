@@ -1065,7 +1065,7 @@ fn FN_publish_Selected =
 			)
 
 			-- If a valid filename was chosen, and the user did not cancel out, proceed to save
-			if saveName != undefined do    -- TODO: The next ELSE is unecessary if we change the IF test to != and copy the ELSE result to the IF clause
+			if saveName != undefined do
 			(
 				saveNodes saveArr saveName
 				messagebox (saveName + " Published successfully!")
@@ -1286,7 +1286,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		bitmap bmp_preview filename:"" width:82 height:82 align:#right offset:[-5,-90] visible:false
 		
 	button btn_SwitchAsset "<< Switch Asset! >>" height:25 width:282 align:#right --offset:[100, 15] -- w 336
-	button btn_PublishAsset "Publish" height:25 width:55 align:#left offset:[-8,-41]
+	button btn_Open_Publish_Center "Publish" height:25 width:55 align:#left offset:[-8,-41]
 	checkbutton chkbtn_SwitchHold "Hold" height:25 width:40 align:#left offset:[329,-30] checked:false
 	button btn_Revert "Revert" height:25 width:60 align:#left offset:[370,-30] enabled:false
 	
@@ -1294,7 +1294,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 -- EVENT HANDLERS
 -- ===================
 
-	on btn_PublishAsset pressed do -- TODO: This button should be renamed for Open_Publish_Window or Open_Publish_Center for clarity
+	on btn_Open_Publish_Center pressed do
 	(
 		doPublish = true
 		nodeAsset = selection[1]
@@ -1435,7 +1435,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 	on MAIN_AssetSwitchUI resized arg do
 	(
 		btn_SwitchAsset.pos = [60,(MAIN_AssetSwitchUI.height - 30)]
-		btn_PublishAsset.pos = [5,(MAIN_AssetSwitchUI.height - 30)]
+		btn_Open_Publish_Center.pos = [5,(MAIN_AssetSwitchUI.height - 30)]
 		chkbtn_SwitchHold.pos = [342,(MAIN_AssetSwitchUI.height - 30)]
 		btn_Revert.pos = [383,(MAIN_AssetSwitchUI.height - 30)]
 	)

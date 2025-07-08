@@ -160,15 +160,10 @@ struct ASSET_PublishOptions
 		(
 			group "Material File Options" --width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
 			(
-				--TODO: Add the option to use tyLibMtl to store materials
-
-
 				checkbox TyLibMaterialCheckbox "Also save tyLibMtl material" enabled:tyLibMatExists --pos:[25,25] --checked:tyLibMatChecked
-				--label lab_nope "No options available to configure." pos:[25,25]
 			)
 			group "Material Conflict Options" --offset:[0,15] width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
 			(
-				--checkbox UseGlobalCheckbox "Prioritize Global Material" --pos:[25,80]
 				label GlobalChildrenConflict "Global and Children conflict:" offset:[-5,0] across:2
 				label ChildrenConflict "Children conflict:" offset:[-11,0]
 				radiobuttons GlobalChildrenRadiubutton "" labels:#("Save Global only", "Save Global and Children", "Ask per case") offsets:#([0,0], [0,5], [0,10]) default:3 across:2
@@ -450,10 +445,12 @@ function FN_PublishCenter = -- asset: the current asset definition
 		function FN_RestoreFromHold =
 		(
 			print "---------------------------------------------- FETCH --------------------------------------------"
-			fetchMaxFile quiet:true
+
+			--------------------------REMOVE HOLD/FETCH--------------------------
+			--fetchMaxFile quiet:true
+			--------------------------REMOVE HOLD/FETCH--------------------------
+
 			nodeAsset = (maxops.getnodebyhandle nodeAssetHandle) -- TODO: Changed the name "nodeAssetForPublish" to "nodeAsset"
-			--assetDir = ( getFilenamePath (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
-			--assetName = (getfilenamefile  (getUserProp nodeAssetForPublish "MAKE_Asset_Filepath"))
 			assetDir = ( getFilenamePath (getUserProp nodeAsset "MAKE_Asset_Filepath"))
 			assetName = (getfilenamefile  (getUserProp nodeAsset "MAKE_Asset_Filepath"))
 
@@ -485,27 +482,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 			-- Call the publish function
 			result = ASSET_PublishFunctions.pub_3dsMaxFile "asset" publish_filepath
 				
-			-- Report result of the Publish
-			FN_ReportResult result timestart_minor
-		)
-		
-		-- Publisher for the Optimized MaxOptimizedFile class <-- ASK_AARON - MAYBE THIS IS DEPRECATED AND CAN BE REMOVED?
-		function FN_Publish_MaxOptimizedFile =
-		(
-			local publish_filepath = ( assetDir + "\Publish" + (FN_Update_MaxOptimizedFile()))
-			
-			-- Prepare to publish
-			timestart_minor = timestamp()
-			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing Optimized 3dsMax File >>>")
-			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath )
-			lab_Status.text = " Status: Publishing Optimized 3dsMax File"
-			
-			-- Call the publish function
-			result = ASSET_PublishFunctions.pub_MaxOptimizedFile "asset" publish_filepath
-				
-			-- Restore the scene file
-			FN_RestoreFromHold()
-
 			-- Report result of the Publish
 			FN_ReportResult result timestart_minor
 		)
@@ -576,9 +552,16 @@ function FN_PublishCenter = -- asset: the current asset definition
 			lab_Status.text = " Status: Publishing vrmesh File"
 			
 			-- Call the publish function
+			print "Initial Transform"
+			print nodeAsset.transform
+			NodeTemporaryTransform = nodeAsset.transform
+			print NodeTemporaryTransform
 			result = ASSET_PublishFunctions.pub_vrmeshFile "asset" publish_filepath
-				
+			nodeAsset.transform = NodeTemporaryTransform
+			print "Final Transform"
+			print nodeAsset.transform
 			-- Restore the scene file
+			-- NEED A NEW METHOD SINCE WE ARE NOT USING HOLD/FETCH ANYMORE!
 			FN_RestoreFromHold()
 		
 			-- Report result of the Publish
@@ -761,6 +744,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- UI Update triggers for when the main rollout first opens
 		on ASSET_PublishCenterRollout open do
 		(
+			print "Entrou no ASSET_PublishCenterRollout"
 			-- Loads previous settings, if settings had been set
 			try( chk_MaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled")) )catch()
 			try( chk_MaxOptimizedFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
@@ -769,7 +753,10 @@ function FN_PublishCenter = -- asset: the current asset definition
 			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 
 			-- Update stored names 
-			curStr = ((getUserProp nodeAsset "PUBhist_MaxFile") as string ) -- TODO: Fix with the new UserProp values!!!!
+			curStr = ((getUserProp nodeAsset "PUBhist_MaxFile") as string ) -- TODO: Fix with the new UserProp values OR ignore those completely as they serve only
+																			-- to add 3 letter string on the name of a new published version (e.g. "VER").
+			print "curStr"
+			print curStr
 			if curStr == "undefined" then( curStr = "ver" )
 			edt_MaxFile_Prefex.text = curStr
 
@@ -823,29 +810,38 @@ function FN_PublishCenter = -- asset: the current asset definition
 			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAsset.wirecolor as string)	) catch ()
 			try( setinisetting AssetFile "Global" "steps" 		(nodeAsset.steps as string)		) catch ()
 
-			max hold -- TODO: Let's try to get rid of this HOLD....
-			
-			-- individual publish operations, and progressbar updates
-			if chk_MaxFile.checked then 
-			(
-				errorcount += FN_Publish_MaxFile() -- ASK_AARON - How is the error count updated by this function?? Ask Aaron about this!
-				countCurrent += 1
-				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
-			)
 
-			if chk_MaterialFile.checked then
+
+			--------------------------REMOVE HOLD/FETCH--------------------------
+
+			-- max hold -- TODO: Let's try to get rid of this HOLD.... With a whole UNDO..
+
+			--------------------------REMOVE HOLD/FETCH--------------------------
+
+
+			Undo "PublishOperation" on
 			(
-				errorcount += FN_Publish_MaterialFile()
-				countCurrent += 1
-				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+			-- individual publish operations, and progressbar updates
+				if chk_MaxFile.checked then 
+				(
+					errorcount += FN_Publish_MaxFile() -- ASK_AARON - How is the error count updated by this function?? Ask Aaron about this!
+					countCurrent += 1
+					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+				)
+
+				if chk_MaterialFile.checked then
+				(
+					errorcount += FN_Publish_MaterialFile()
+					countCurrent += 1
+					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+				)
+				if chk_vrmeshFile.checked then
+				(
+					errorcount += FN_Publish_vrmeshFile()
+					countCurrent += 1
+					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+				)
 			)
-			if chk_vrmeshFile.checked then
-			(
-				errorcount += FN_Publish_vrmeshFile()
-				countCurrent += 1
-				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
-			)
-		
 
 			-- report the results of the publishing operations
 			FN_ReportEnd errorcount timestart

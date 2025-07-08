@@ -158,21 +158,30 @@ struct ASSET_PublishFunctions
 		resultArr = #()
 		delArr = #()
 		
+
+		-- Since the goal is get rid of HOLD/FETCH, investigate the possibility to create the VRAYMESH by combining the other meshes using either the regular
+		-- MESHER object or TyMesher (or both for future proofing).
+
+
+
+
+
 		-- loop through the other objects in the array
 		for i in 1 to (arg_Arr.count) do
 		(
 			-- if the object is geometry class
-			if ( iskindof arg_Arr[i] geometryclass )
+			if ( iskindof arg_Arr[i] geometryclass ) then
 			-- convert and join it
-			then
 			(
-				if (classof arg_Arr[i] ) != BoneGeometry
-				then
+				if (classof arg_Arr[i] ) != BoneGeometry then
 				(
 					converttopoly arg_Arr[i]
 					join resultArr #(arg_Arr[i])
 				)
-				else (join delArr #(arg_Arr[i]))
+				else
+				(
+					join delArr #(arg_Arr[i])
+				)
 			)
 			-- collect for deletion
 			else (join delArr #(arg_Arr[i]))
@@ -714,13 +723,11 @@ struct ASSET_PublishFunctions
 			--export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false)
 				
-			-- transform them to the origin, for proper export
-			--nodeAssetForPublish.position = [0,0,0]
-			--nodeAssetForPublish.rotation = quat 0 0 0 0
-			--nodeAssetForPublish.scale = [1,1,1]
+			
 			nodeAsset.position = [0,0,0]
 			nodeAsset.rotation = quat 0 0 0 0
 			nodeAsset.scale = [1,1,1]
+			
 
 			-- Converts all renderable geometry to edit polys, and deletes the rest
 			export_arr = ASSET_PublishFunctions.ReduceToMeshes export_arr
@@ -729,7 +736,7 @@ struct ASSET_PublishFunctions
 			select export_arr
 			makeDir (getFilenamePath arg_path)
 			vrayMeshExport meshFile:arg_path autoCreateProxies:false exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
-			
+			--nodeAsset.transform = NodeTemporaryTransform
 			return "Success!"
 		)
 		Catch(return "ERROR: vrmesh Publish failed")
