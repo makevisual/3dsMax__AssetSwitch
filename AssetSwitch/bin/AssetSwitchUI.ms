@@ -808,7 +808,7 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	nodeAsset = arg2
-	
+	-- New method that imports all VRMesh files in a selected folder
 	-- Collect all the children of the nodeAsset, and delete them
 	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
 	delete deleteMe
@@ -987,7 +987,7 @@ fn FN_DoSwitch =
 	if tyLibMtlSplice != undefined do
 	(
 		LoadtyLibMtl = true
-		curMaterialMapFile = (substring curMaterialMapFile 1 (tyLibMtlSplice - 1)) + (substring curMaterialMapFile (tyLibMtlSplice + 9) 1000)
+		curMaterialMapFile = ((substring curMaterialMapFile 1 (tyLibMtlSplice - 2)) + ".matmap")
 	)
 	curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
 	switchObjectsArray = (selection as array)

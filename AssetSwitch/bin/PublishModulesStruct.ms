@@ -706,6 +706,8 @@ struct ASSET_PublishFunctions
 				
 			-- select the objects and export them
 			-- select export_arr
+
+			-- TODO: SHOULD EVERYTIME BOTH VERSIONS BE PUBLISHED? THE COMBINED AND THE PARTS VERSION TO AVOID CONFUSION?
 			if CombineAllMeshes then
 			(
 				makeDir (getFilenamePath arg_path)
