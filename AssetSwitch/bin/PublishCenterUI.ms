@@ -164,24 +164,24 @@ struct ASSET_PublishOptions
 			)
 			group "Material Conflict Options" --offset:[0,15] width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
 			(
-				label GlobalChildrenConflict "Global and Children conflict:" offset:[-5,0] across:2
-				label ChildrenConflict "Children conflict:" offset:[-11,0]
-				radiobuttons GlobalChildrenRadiubutton "" labels:#("Save Global only", "Save Global and Children", "Ask per case") offsets:#([0,0], [0,5], [0,10]) default:3 across:2
-				radiobuttons ChildrenRadiubutton "" labels:#("Save all Children", "Ask per case")  offsets:#([0,0], [0,5]) default:2
+				label GlobalChildrenConflict_Label "Global and Children conflict:" offset:[-5,0] across:2
+				label ChildrenConflict_Label "Children conflict:" offset:[-11,0]
+				radiobuttons GlobalChildren_Radiobutton "" labels:#("Save Global only", "Save Global and Children", "Ask per case") offsets:#([0,0], [0,5], [0,10]) default:3 across:2
+				radiobuttons Children_Radiobutton "" labels:#("Save all Children", "Ask per case")  offsets:#([0,0], [0,5]) default:2
 			)
 			button buttonOK "OK" pos:[(ASSET_Options_MaterialFile.width - 92),(ASSET_Options_MaterialFile.height - 30)]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
 			on buttonOK pressed do
 			(
-				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict" (GlobalChildrenRadiubutton.state as string)
-				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict" (ChildrenRadiubutton.state as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict" (GlobalChildren_Radiobutton.state as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict" (Children_Radiobutton.state as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" (TyLibMaterialCheckbox.checked as string)
 				destroydialog ASSET_Options_MaterialFile
 			)
 			on ASSET_Options_MaterialFile open do
 			(
-				try( GlobalChildrenRadiubutton.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict" )) )catch()
-				try( ChildrenRadiubutton.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict" )) )catch()
+				try( GlobalChildren_Radiobutton.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "GlobalChildrenConflict" )) )catch()
+				try( Children_Radiobutton.state = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "ChildrenConflict" )) )catch()
 				try( TyLibMaterialCheckbox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "tyLibMtl" )) )catch()
 			)
 			on buttonCancel pressed do ( destroydialog ASSET_Options_MaterialFile )
@@ -192,24 +192,34 @@ struct ASSET_PublishOptions
 	-- VRMESH File Options Rollout
 	fn vrmeshfile =
 	(
-		rollout ASSET_Options_vrmeshFile  "Publish Center Options" width:350 height:105
+		rollout ASSET_Options_vrmeshFile  "Publish Center Options" width:350 height:125
 		(
-			groupbox grp "VRMESH File Options" width:(ASSET_Options_vrmeshFile.width - 25) height:(ASSET_Options_vrmeshFile.height - 40)
-				checkbox chk_exportAnimation "Export Animation" pos:[25,25]
-				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[150,-19]
-				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[240,-20]
+			group  "VRMESH File Options" --width:(ASSET_Options_vrmeshFile.width - 25) height:(ASSET_Options_vrmeshFile.height - 40)
+			(
+				checkbox chk_CombineAllMeshes "Combine all meshes" --checked:true
+				checkbox chk_exportAnimation "Export Animation" across:3 --pos:[25,25] 
+				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[51,1]
+				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[20,1]
 				
-				spinner spn_facecount "Number of faces in preview mesh: " align:#left range:[1,50000,1000] type:#integer offset:[15,0] width:105
-				
+				spinner spn_facecount "Number of faces in preview mesh: " align:#left range:[1,50000,1000] type:#integer offset:[15,0] width:100
+			)
 			button buttonOK "OK" pos:[(ASSET_Options_vrmeshFile.width - 92),(ASSET_Options_vrmeshFile.height - 30)]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
-				
+			
+			on chk_exportAnimation changed state do
+			(
+				spn_from.enabled = spn_to.enabled = state
+			)
 			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
 			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
 			
 			on ASSET_Options_vrmeshFile open do
 			(
-				try( chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" )) )catch()
+				try(chk_CombineAllMeshes.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" )))catch()
+				try(
+				chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" ))
+				spn_from.enabled = spn_to.enabled = chk_exportAnimation.checked
+				)catch()
 				try( spn_from.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameStart" )) )catch()
 				try( spn_to.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameEnd" )) )catch()
 				try( spn_facecount.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "Facecount" )) )catch()
@@ -217,6 +227,7 @@ struct ASSET_PublishOptions
 				
 			on buttonOK pressed do
 			(
+				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" (chk_CombineAllMeshes.checked as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" (chk_exportAnimation.checked as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameStart" (spn_from.value as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameEnd" (spn_to.value as string)
@@ -471,7 +482,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- Publisher for the 3dsMaxFile class
 		function FN_Publish_MaxFile =
 		(
-			local publish_filepath = ( assetDir + @"\Publish" + (FN_Update_3dsMaxFile())) -- ASK_AARON - Maybe add @ on this string?
+			local publish_filepath = ( assetDir + @"Publish" + (FN_Update_3dsMaxFile())) -- ASK_AARON - Maybe add @ on this string?
 			
 			-- Prepare to publish
 			timestart_minor = timestamp()
@@ -543,7 +554,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		-- Publisher for the vrmeshFile class
 		function FN_Publish_vrmeshFile =
 		(
-			publish_filepath = ( assetDir + "\Publish" + (FN_Update_vrmeshFile())) -- ASK_AARON - Maybe add @ on this string?
+			publish_filepath = ( assetDir + "Publish" + (FN_Update_vrmeshFile())) -- ASK_AARON - Maybe add @ on this string?
 			
 			-- Prepare to publish
 			timestart_minor = timestamp()
@@ -552,14 +563,16 @@ function FN_PublishCenter = -- asset: the current asset definition
 			lab_Status.text = " Status: Publishing vrmesh File"
 			
 			-- Call the publish function
-			print "Initial Transform"
-			print nodeAsset.transform
-			NodeTemporaryTransform = nodeAsset.transform
-			print NodeTemporaryTransform
+			--print "Initial Transform"
+			--print nodeAsset.transform
+			--NodeTemporaryTransform = nodeAsset.transform
+			--print NodeTemporaryTransform
+			print "publish_filepath"
+			print publish_filepath
 			result = ASSET_PublishFunctions.pub_vrmeshFile "asset" publish_filepath
-			nodeAsset.transform = NodeTemporaryTransform
-			print "Final Transform"
-			print nodeAsset.transform
+			--nodeAsset.transform = NodeTemporaryTransform
+			--print "Final Transform"
+			--print nodeAsset.transform
 			-- Restore the scene file
 			-- NEED A NEW METHOD SINCE WE ARE NOT USING HOLD/FETCH ANYMORE!
 			FN_RestoreFromHold()

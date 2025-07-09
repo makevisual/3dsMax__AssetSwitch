@@ -812,6 +812,26 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 	-- Collect all the children of the nodeAsset, and delete them
 	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
 	delete deleteMe
+	FilesInFolder = getFiles ((pathConfig.removePathLeaf arg) + @"\*.vrmesh")
+	for VRMeshFile in FilesInFolder do
+	(
+		newProxy = VRayProxy()
+		newProxy.display = 3
+		newProxy.wirecolor = black
+		newProxy.transform = nodeAsset.transform
+		newProxy.parent = nodeAsset
+		newProxy.filename = VRMeshFile
+		newProxy.name = ((getFilenameFile VRMeshFile) + "_VRMESH" )
+	)
+
+
+
+	/*
+	nodeAsset = arg2
+	
+	-- Collect all the children of the nodeAsset, and delete them
+	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
+	delete deleteMe
 		
 	newProxy = VRayProxy()
 	newProxy.display = 3
@@ -820,6 +840,11 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 	newProxy.parent = nodeAsset
 	newProxy.filename = arg
 	newProxy.name = ((getFilenameFile arg) + "_VRMESH" )
+
+	*/
+
+
+
 )
 
 -- Load in the xMesh file	-- TODO : DELETE SECTION!
@@ -936,7 +961,7 @@ fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | ar
 fn FN_Revert =
 (
 	-- Fetch the held file without interruption
-	fetchMaxFile quiet:true
+	--fetchMaxFile quiet:true
 		
 	-- Reset the selection to match what it was at the beginning of the switch
 	clearselection()

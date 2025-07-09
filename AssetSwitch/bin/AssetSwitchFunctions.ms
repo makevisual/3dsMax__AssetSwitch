@@ -234,11 +234,11 @@ struct ASSET_Functions
 		createDialog CreateNewAsset_Dialog
 	),
 	
-	function CreateNewAsset_Node arg_class arg_name =
+	function CreateNewAsset_Node arg_Class arg_Name =
 	(
 		newNode = circle wirecolor:blue radius:20 renderable:off steps:1 optimize:false
 		
-		filteredName = filterstring arg_name "_"
+		filteredName = filterstring arg_Name "_"
 		globalName = (arg_Class[1] + "_" + filteredName[1] + "_Global")
 		newNode.name = globalName
 		
@@ -253,10 +253,10 @@ struct ASSET_Functions
 	function CreateNewAsset arg_Path arg_Class arg_Name arg_Dialog =
 	(
 		RootAssetDir 				= ( arg_Path + @"\Assets\" + arg_Class + @"\" ) -- TODO: This should be called RootAssetDir for readability?
-		CurrentAssetDir 			= ( RootAssetDir + arg_Name + @"\" )					-- TODO: This should be called CurrentAssetDir for readability?
+		CurrentAssetDir 			= ( RootAssetDir + arg_Class[1] + "_" + arg_Name + @"\" )					-- TODO: This should be called CurrentAssetDir for readability?
 		
-		newAssetFilename 	= ( RootAssetDir + arg_Name + @"\" + arg_Name + ".asset" )
-		newSaveFileName 	= (	CurrentAssetDir + @"Build\Model\" + arg_Name +"_Model_001.max" ) -- TODO: This line is never creating a file because there is no folder structure that has "Build/Model". Should it be fixed?
+		newAssetFilename 	= ( CurrentAssetDir + arg_Class[1] + "_" + arg_Name + ".asset" )
+		newSaveFileName 	= (	CurrentAssetDir + @"Build\Model\" + arg_Class[1] + "_" + arg_Name +"_Model_001.max" )
 		
 		if ( doesfileexist CurrentAssetDir ) then
 		(

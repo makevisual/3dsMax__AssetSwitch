@@ -153,43 +153,20 @@ struct ASSET_PublishFunctions
 	(
 		-- change the command panel to create mode, for performance
 		max create mode 
-		
+
 		-- prepare the base object, and delete set
 		resultArr = #()
-		delArr = #()
-		
-
-		-- Since the goal is get rid of HOLD/FETCH, investigate the possibility to create the VRAYMESH by combining the other meshes using either the regular
-		-- MESHER object or TyMesher (or both for future proofing).
-
-
-
-
-
 		-- loop through the other objects in the array
 		for i in 1 to (arg_Arr.count) do
 		(
-			-- if the object is geometry class
-			if ( iskindof arg_Arr[i] geometryclass ) then
-			-- convert and join it
+			ObjClass = (classof arg_Arr[i])
+			if (((classof ObjClass) == geometryclass) AND (ObjClass != Biped_Object) AND (ObjClass != BoneGeometry) AND (ObjClass != HubObject)
+				(ObjClass != CATBone)) do
 			(
-				if (classof arg_Arr[i] ) != BoneGeometry then
-				(
-					converttopoly arg_Arr[i]
-					join resultArr #(arg_Arr[i])
-				)
-				else
-				(
-					join delArr #(arg_Arr[i])
-				)
+				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:(getUserProp arg_Arr[i] "MAKE_NodeName")
+				append resultArr MesherObj
 			)
-			-- collect for deletion
-			else (join delArr #(arg_Arr[i]))
 		)
-		
-		-- delete non geometry objects
-		delete delArr
-		
 		return resultArr
 	),
 
@@ -221,14 +198,8 @@ struct ASSET_PublishFunctions
 			-- collect for deletion
 			else (join delArr #(arg_Arr[i]))
 		)
-
 		return resultArr
 	),
-
-
-
-
-
 
 	function FindChildrenMaterials ChildrenNodes &MatCollection =
 	(
@@ -704,11 +675,12 @@ struct ASSET_PublishFunctions
 	(
 		try(
 			-- read settings from the .INI file
+			CombineAllMeshes =	(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" ))
 			ExportAnimation =	(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" ))
 			FrameStart =		(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameStart" ))
 			FrameEnd = 			(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameEnd" ))
 			Facecount = 		(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "Facecount" ))
-				
+			
 			if ExportAnimation == ok 	do ( ExportAnimation= false )
 			if FrameStart == ok 		do ( FrameStart  = 0 )
 			if FrameEnd == ok 			do ( FrameEnd = 10 )
@@ -722,8 +694,8 @@ struct ASSET_PublishFunctions
 			-- collect the objects to export
 			--export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false)
-				
-			
+			-- Temporarily storing the Asset's tranform				
+			NodeTemporaryTransform = nodeAsset.transform
 			nodeAsset.position = [0,0,0]
 			nodeAsset.rotation = quat 0 0 0 0
 			nodeAsset.scale = [1,1,1]
@@ -733,10 +705,32 @@ struct ASSET_PublishFunctions
 			export_arr = ASSET_PublishFunctions.ReduceToMeshes export_arr
 				
 			-- select the objects and export them
-			select export_arr
-			makeDir (getFilenamePath arg_path)
-			vrayMeshExport meshFile:arg_path autoCreateProxies:false exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
-			--nodeAsset.transform = NodeTemporaryTransform
+			-- select export_arr
+			if CombineAllMeshes then
+			(
+				makeDir (getFilenamePath arg_path)
+				vrayMeshExport meshFile:arg_path nodes:export_arr autoCreateProxies:false exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
+			)
+			else
+			(
+				PartsDirectory = ((pathConfig.removePathLeaf(getFilenamePath arg_path)) + @"\" + ((pathConfig.stripPathToLeaf (pathConfig.removePathLeaf arg_path)) + @"_Parts\"))
+				CurrentAssetName = ((substring (pathConfig.stripPathToLeaf arg_path) 1 ((pathConfig.stripPathToLeaf arg_path).count - 7)))
+				PartsPartialName = PartsDirectory + CurrentAssetName + "_"
+				print "PartsDirectory"
+				print PartsDirectory
+				makeDir PartsDirectory
+				for NodetoExport in export_arr do
+				(
+					NodetoExportPath = PartsPartialName + NodetoExport.name + ".vrmesh"
+					print "NodetoExportPath"
+					print NodetoExportPath
+					vrayMeshExport meshFile:NodetoExportPath nodes:NodetoExport autoCreateProxies:false exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
+				)
+
+			)
+			delete export_arr
+			-- Temporarily storing the Asset's tranform	reverting the asset back to its original position
+			nodeAsset.transform = NodeTemporaryTransform
 			return "Success!"
 		)
 		Catch(return "ERROR: vrmesh Publish failed")
