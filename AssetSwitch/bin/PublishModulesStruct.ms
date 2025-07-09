@@ -163,7 +163,7 @@ struct ASSET_PublishFunctions
 			if (((classof ObjClass) == geometryclass) AND (ObjClass != Biped_Object) AND (ObjClass != BoneGeometry) AND (ObjClass != HubObject)
 				(ObjClass != CATBone)) do
 			(
-				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:(getUserProp arg_Arr[i] "MAKE_NodeName")
+				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name
 				append resultArr MesherObj
 			)
 		)
