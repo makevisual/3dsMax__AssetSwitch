@@ -192,11 +192,14 @@ struct ASSET_PublishOptions
 	-- VRMESH File Options Rollout
 	fn vrmeshfile =
 	(
-		rollout ASSET_Options_vrmeshFile  "Publish Center Options" width:350 height:125
+		rollout ASSET_Options_vrmeshFile  "Publish Center Options" width:350 height:105
 		(
 			group  "VRMESH File Options" --width:(ASSET_Options_vrmeshFile.width - 25) height:(ASSET_Options_vrmeshFile.height - 40)
 			(
-				checkbox chk_CombineAllMeshes "Combine all meshes" --checked:true
+				--checkbox chk_CombineAllMeshes "Combine all meshes" --checked:true
+
+
+
 				checkbox chk_exportAnimation "Export Animation" across:3 --pos:[25,25] 
 				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[51,1]
 				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[20,1]
@@ -215,7 +218,10 @@ struct ASSET_PublishOptions
 			
 			on ASSET_Options_vrmeshFile open do
 			(
-				try(chk_CombineAllMeshes.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" )))catch()
+				--try(chk_CombineAllMeshes.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" )))catch()
+
+
+
 				try(
 				chk_exportAnimation.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" ))
 				spn_from.enabled = spn_to.enabled = chk_exportAnimation.checked
@@ -227,7 +233,10 @@ struct ASSET_PublishOptions
 				
 			on buttonOK pressed do
 			(
-				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" (chk_CombineAllMeshes.checked as string)
+				--setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" (chk_CombineAllMeshes.checked as string)
+
+
+
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" (chk_exportAnimation.checked as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameStart" (spn_from.value as string)
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameEnd" (spn_to.value as string)
@@ -282,6 +291,22 @@ function FN_PublishCenter = -- asset: the current asset definition
 				button button_vrmeshFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
 				label lab_vrmeshFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 
+
+
+
+
+		groupbox grp_vrmeshPartsFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
+			checkbox chk_vrmeshPartsFile ".vrmesh Parts" align:#left offset:[0,((grp_vrmeshFile.height * -1) - 5)] -- enabled:false
+				dropdownlist ddl_vrmeshPartsFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]
+				edittext edt_vrmeshPartsFile_Prefex "" text: "ver" width:60 align:#left offset:[55,-25]
+				spinner spinner_vrmeshPartsFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[114,-21]
+				button button_vrmeshPartsFile_Options "Options" offset:[0,-25] align:#right
+				--label lab_vrmeshPartsAnimFrames "frames:0" enabled:false align:#left offset:[180,-20]
+				--button button_vrmeshPartsFileRefresh "R" align:#left offset:[160,-21] width:18 height:18
+				label lab_vrmeshPartsFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
+
+
+
 		groupbox grp_PublishAsset "Publish Asset" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:120
 			label lab_PublishAssetDir  "" style_sunkenedge:true align:#left width:(ASSET_PublishCenterRollout.width - 68) height:16 offset:[0,((grp_PublishAsset.height * -1) + 10)]
 				button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23]
@@ -296,7 +321,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 		function FN_UpdateLocalPath target curClass arg1 arg2 arg3 = -- target:target label | curClass:class of publish | edittext arg1: name | arg2: prefix | arg3:version
 		(
 			nameVer = arg2 + "_" + (substring ((arg3 + 1000)as string) 2 4) 
-			
 			case arg1 of
 			(
 				1:(curAssetName = (assetName + "_" ))
@@ -341,10 +365,10 @@ function FN_PublishCenter = -- asset: the current asset definition
 					curClassName = "Vrmesh"
 					curClassExtension = ".vrmesh"
 				)
-				5: -- vrmeshAsMaxFile
+				5: -- vrmesh Parts
 				(
-					curClassName = "VrmeshAsMax"     -- TODO: Reevaluate (maybe turn to VrayRig - Rigid objects only)
-					curClassExtension = ".max"
+					curClassName = "VrmeshParts"     -- TODO: Reevaluate (maybe turn to VrayRig - Rigid objects only)
+					curClassExtension = ".vrmesh"
 				)
 				6: -- xmeshFile
 				(
@@ -443,7 +467,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 		function FN_Update_3dsMaxFile =				(FN_UpdateLocalPath lab_MaxFile 1 ddl_MaxFile_Name.selection edt_MaxFile_Prefex.text spinner_MaxFile_Number.value)
 		function FN_Update_Material_Lib_File =		(FN_UpdateLocalPath lab_MaterialFile 3 ddl_MaterialFile_Name.selection edt_MaterialFile_Prefex.text spinner_MaterialFile_Number.value)
 		function FN_Update_vrmeshFile =				(FN_UpdateLocalPath lab_vrmeshFile 4 ddl_vrmeshFile_Name.selection edt_vrmeshFile_Prefex.text spinner_vrmeshFile_Number.value)
-			
+		function FN_Update_vrmeshPartsFile =		(FN_UpdateLocalPath lab_vrmeshPartsFile 5 ddl_vrmeshPartsFile_Name.selection edt_vrmeshPartsFile_Prefex.text spinner_vrmeshPartsFile_Number.value)
+
 		function FN_ReportResult arg_result arg_timestart_minor = -- arg_result : the string returned from the publisher  | arg_timestart : the start time of the operation
 		(
 			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [   TASK RESULT   ] : " + arg_result )
@@ -569,7 +594,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			--print NodeTemporaryTransform
 			print "publish_filepath"
 			print publish_filepath
-			result = ASSET_PublishFunctions.pub_vrmeshFile "asset" publish_filepath
+			result = ASSET_PublishFunctions.pub_vrmeshFile "asset" publish_filepath true
 			--nodeAsset.transform = NodeTemporaryTransform
 			--print "Final Transform"
 			--print nodeAsset.transform
@@ -578,6 +603,25 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_RestoreFromHold()
 		
 			-- Report result of the Publish
+			FN_ReportResult result timestart_minor
+		)
+
+		function FN_Publish_vrmeshPartsFile =
+		(
+			publish_filepath = ( assetDir + "Publish" + (FN_Update_vrmeshPartsFile()))
+
+			-- Prepare to publish
+			timestart_minor = timestamp()
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing vrmesh Parts File >>>")
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath)
+			lab_Status.text = " Status: Publishing vrmesh Parts File"
+
+
+			print "publish_filepath"
+			print publish_filepath
+
+			result = ASSET_PublishFunctions.pub_vrmeshFile "asset" publish_filepath false
+			FN_RestoreFromHold()
 			FN_ReportResult result timestart_minor
 		)
 		
@@ -645,6 +689,20 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_vrmeshFile_Number.enabled = bool
 			edt_vrmeshFile_Prefex.enabled = bool
 			ddl_vrmeshFile_Name.enabled = bool
+
+			-- vrmeshPartsFile
+			bool = chk_vrmeshPartsFile.checked
+			lab_vrmeshPartsFile.enabled = bool
+			spinner_vrmeshPartsFile_Number.enabled = bool
+			edt_vrmeshPartsFile_Prefex.enabled = bool
+			ddl_vrmeshPartsFile_Name.enabled = bool
+
+
+
+
+
+
+
 		)
 		
 		function FN_CountEnabled =
@@ -653,6 +711,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			if chk_MaxFile.checked then 			(count += 1)
 			if chk_MaterialFile.checked then 		(count += 1)
 			if chk_vrmeshFile.checked then 			(count += 1)
+			if chk_vrmeshPartsFile.checked then 	(count += 1)
 			return count
 		)
 		
@@ -676,6 +735,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			--FN_Update_MaxOptimizedFile() ----> ASK_AARON - Deprecated?
 			FN_Update_Material_Lib_File()
 			FN_Update_vrmeshFile()
+			FN_Update_vrmeshPartsFile()
 			--FN_Update_vrmeshAsMaxFile() ----> ASK_AARON - Deprecated?
 
 		)
@@ -753,16 +813,26 @@ function FN_PublishCenter = -- asset: the current asset definition
 		on spinner_vrmeshFile_Number changed state do FN_Update_vrmeshFile()
 		on edt_vrmeshFile_Prefex changed state do FN_Update_vrmeshFile()
 		on ddl_vrmeshFile_Name selected state do FN_Update_vrmeshFile()
+
+		-- vrmeshPartsFile
+		on chk_vrmeshPartsFile changed state do
+		(
+			setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshPartsFile" "OutputEnabled" (chk_vrmeshPartsFile.checked as string)
+			FN_CategoryToggle() 
+		)
+		on spinner_vrmeshPartsFile_Number changed state do FN_Update_vrmeshPartsFile()
+		on edt_vrmeshPartsFile_Prefex changed state do FN_Update_vrmeshPartsFile()
+		on ddl_vrmeshPartsFile_Name selected state do FN_Update_vrmeshPartsFile()
 			
 		-- UI Update triggers for when the main rollout first opens
 		on ASSET_PublishCenterRollout open do
 		(
-			print "Entrou no ASSET_PublishCenterRollout"
 			-- Loads previous settings, if settings had been set
 			try( chk_MaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled")) )catch()
 			try( chk_MaxOptimizedFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 			try( chk_MaterialFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled")) )catch()
 			try( chk_vrmeshFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "OutputEnabled")) )catch()
+			try( chk_vrmeshPartsFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshPartsFile" "OutputEnabled")) )catch()
 			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 
 			-- Update stored names 
@@ -790,7 +860,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_Update_3dsMaxFile()
 			FN_Update_Material_Lib_File()
 			FN_Update_vrmeshFile()
-				
+			FN_Update_vrmeshPartsFile()
 			--arg_enabled: if animation is enabled | arg_source: either scene or predefined range | arg_label: the UI element to update
 			FN_UpdateFrameRange lab_vrmeshAnimFrames "vrmeshFile"
 				
@@ -819,7 +889,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 
 			FN_PUBhistSave()
 
-			try( setinisetting AssetFile "Global" "radius" 		(nodeAsset.radius as string)		) catch ()
+			try( setinisetting AssetFile "Global" "radius" 		(nodeAsset.radius as string)	) catch ()
 			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAsset.wirecolor as string)	) catch ()
 			try( setinisetting AssetFile "Global" "steps" 		(nodeAsset.steps as string)		) catch ()
 
@@ -832,8 +902,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 			--------------------------REMOVE HOLD/FETCH--------------------------
 
 
-			Undo "PublishOperation" on
-			(
+			--Undo "PublishOperation" on
+			--(
 			-- individual publish operations, and progressbar updates
 				if chk_MaxFile.checked then 
 				(
@@ -854,7 +924,17 @@ function FN_PublishCenter = -- asset: the current asset definition
 					countCurrent += 1
 					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
 				)
-			)
+				if chk_vrmeshPartsFile.checked then
+				(
+					errorcount += FN_Publish_vrmeshPartsFile()
+					countCurrent += 1
+					prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+				)
+
+
+
+
+			--)
 
 			-- report the results of the publishing operations
 			FN_ReportEnd errorcount timestart
@@ -877,7 +957,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			ASSET_PublishFunctions.LOGopen()
 		)
 	)
-	createDialog ASSET_PublishCenterRollout 380 430 --modal:true -- added a fixed size for this dialog
+	createDialog ASSET_PublishCenterRollout 380 500 --modal:true -- added a fixed size for this dialog
 
 
 )

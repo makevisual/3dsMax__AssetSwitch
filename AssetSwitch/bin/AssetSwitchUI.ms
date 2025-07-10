@@ -41,9 +41,19 @@ fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 	curFiles = getfiles (arg + @"\*.vrmesh")
 	if curFiles.count > 0 do
 	(
-		curTypeImporter = 2
-		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
-		return "V-Ray Mesh Loader"
+		AddFiles = getfiles (arg + @"\*.vpmap")
+		if AddFiles.count > 0 then
+		(
+			curTypeImporter = 2
+			MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+			return "V-Ray Parts Loader"
+		)
+		else
+		(
+			curTypeImporter = 2
+			MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+			return "V-Ray Mesh Loader"
+		)
 	)
 	-- .XMeshTest
 	curFiles =  getfiles (arg + @"\*.ms")
@@ -645,7 +655,7 @@ fn FN_UiToggleInformationTest arg =
 -- ================================
 	
 -- Function for recursivly selecting all of the children of an inital object
-fn FN_collectAllChildren obj includeParent:true =
+fn FN_collectAllChildren obj includeParent:true MeshObjOnly:false =
 (
 	-- start collecting direct children of <obj>
 	allChildren = #(obj)
@@ -660,7 +670,17 @@ fn FN_collectAllChildren obj includeParent:true =
 
 	-- remove initial object if <includeParent> == false
 	if not includeParent then deleteitem allChildren 1
-
+	if MeshObjOnly do
+	(
+		for i = allChildren.count to 1 by -1 do
+		(
+			ChildSuperClass = (superClassOf allChildren[i])
+			if ChildSuperClass != GeometryClass do
+			(
+				deleteitem allChildren i
+			)
+		)
+	)
 	-- return array containing children
 	allChildren
 )	
@@ -810,19 +830,100 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 	nodeAsset = arg2
 	-- New method that imports all VRMesh files in a selected folder
 	-- Collect all the children of the nodeAsset, and delete them
-	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
-	delete deleteMe
-	FilesInFolder = getFiles ((pathConfig.removePathLeaf arg) + @"\*.vrmesh")
-	for VRMeshFile in FilesInFolder do
+	--NodesToDelete = (FN_collectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
+	--delete NodesToDelete
+	NodesToDelete = #()
+	NodesToDeleteNames = #()
+	NodesToLinkNames = #()
+	HierarchyNodes = (FN_collectAllChildren nodeAsset includeParent:true MeshObjOnly:false)
+	for i = (HierarchyNodes.count) to 1 by -1 do
+	(
+		NodeSuperClass = (superClassOf HierarchyNodes[i])
+		if NodeSuperClass == GeometryClass then
+		(
+			append NodesToDelete HierarchyNodes[i]
+			append NodesToDeleteNames HierarchyNodes[i].name
+			deleteItem HierarchyNodes i
+		)
+		else
+		(
+			NodesToLinkNames[i] = HierarchyNodes[i].name
+		)
+	)
+	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
+	ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
+	ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
+	ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
+	FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
+	NumberOfFiles = FilesInFolder.count
+	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
 		newProxy.display = 3
 		newProxy.wirecolor = black
-		newProxy.transform = nodeAsset.transform
-		newProxy.parent = nodeAsset
-		newProxy.filename = VRMeshFile
-		newProxy.name = ((getFilenameFile VRMeshFile) + "_VRMESH" )
+		newProxy.filename = FilesInFolder[i]
+		newProxy.name = ((getFilenameFile FilesInFolder[i]) + "_VRMESH" )
+
+
+		NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
+		if NodeToReplaceIndex == 0 then
+		(
+			print "NodeToReplaceIndex"
+			print NodeToReplaceIndex
+			NodeToReplaceIndex = FindItem NodesToLinkNames ExportedNodesNames[i]
+			print "NodeToReplaceIndex"
+			print NodeToReplaceIndex
+			NodeToReplace = HierarchyNodes[NodeToReplaceIndex]
+		)
+		else
+		(
+			NodeToReplace = NodesToDelete[NodeToReplaceIndex]
+		)
+		print "ProxyName"
+		print ExportedNodesNames[i]
+		
+		print "ProxyToLoad"
+		print FilesInFolder[i]
+		print "NodeToReplace"
+		print NodeToReplace
+		newProxy.transform = NodeToReplace.transform
+		NodeToLinkIndex = FindItem NodesToLinkNames ExportedNodesParents[i]
+		NodeToLink = HierarchyNodes[NodeToLinkIndex]
+		newProxy.parent = NodeToLink
+
+		/*
+		if NumberOfFiles > 1 then
+		(
+			NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
+			print "ProxyName"
+			print ExportedNodesNames[i]
+			NodeToReplace = NodesToDelete[NodeToReplaceIndex]
+			print "ProxyToLoad"
+			print FilesInFolder[i]
+			print "NodeToReplace"
+			print NodeToReplace
+			newProxy.transform = NodeToReplace.transform
+			NodeToLinkIndex = FindItem NodesToLinkNames ExportedNodesParents[i]
+			NodeToLink = HierarchyNodes[NodeToLinkIndex]
+			newProxy.parent = NodeToLink
+		)
+		else
+		(
+			newProxy.transform = nodeAsset.transform
+			newProxy.parent = nodeAsset
+		)
+		*/
 	)
+	--nodeAsset.transform = NodeTemporaryTransform
+
+
+
+	delete NodesToDelete
+
+
+
+
+
 
 
 
@@ -926,7 +1027,11 @@ fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | ar
 		2:
 		(
 			vrayMeshFileArr = getfiles (arg2 + @"*.vrmesh")
+			print "vrayMeshFileArr"
+			print vrayMeshFileArr
 			parsedFile = (vrayMeshFileArr[vrayMeshFileArr.count])
+			print "parsedFile"
+			print parsedFile
 			if arg4 == true
 			then(FN_DoSwitch_vRay parsedFile arg3)
 			else(return parsedFile)

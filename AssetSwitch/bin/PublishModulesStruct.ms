@@ -69,7 +69,7 @@ struct ASSET_PublishFunctions
 	),
 	
 	-- Function for recursivly selecting all of the children of an inital object
-	function CollectAllChildren obj includeParent:true =
+	function CollectAllChildren obj includeParent:true MeshObjOnly:false =
 	(
 		-- start collecting direct children of <obj>
 		allChildren = #(obj)
@@ -85,9 +85,59 @@ struct ASSET_PublishFunctions
 		-- remove initial object if <includeParent> == false
 		if not includeParent then deleteitem allChildren 1
 
+
+		if MeshObjOnly do
+		(
+			for i = allChildren.count to 1 by -1 do
+			(
+				ChildSuperClass = (superClassOf allChildren[i])
+				if ChildSuperClass != GeometryClass do
+				(
+					deleteitem allChildren i
+				)
+			)
+		)
 		-- return array containing children
 		allChildren
-	),	
+	),
+
+	function CollectMeshOnlyChildren obj includeParent:true =
+	(
+		-- start collecting direct children of <obj>
+		allChildren = #(obj)
+
+		-- add children and their children etc recursively  ----- VERY CLEVER SOLUTION!
+		i = 0
+		while i < allChildren.count do
+		(
+			i += 1
+			join allChildren allChildren[i].children
+		)
+
+		-- remove initial object if <includeParent> == false
+		if not includeParent then deleteitem allChildren 1
+
+		-- Routine to remove ALL non-geometric objects
+
+		for i = allChildren.count to 1 by -1 do
+		(
+			ChildSuperClass = (superClassOf allChildren[i])
+			if ChildSuperClass != GeometryClass do
+			(
+				deleteitem allChildren i
+			)
+		)
+		-- return array containing children
+		allChildren
+	),
+
+
+
+
+
+
+
+
 
 	-- attach all geometry objects in passed array, deletes anything else
 	function AttachAll arg_Arr =
@@ -163,7 +213,7 @@ struct ASSET_PublishFunctions
 			if (((classof ObjClass) == geometryclass) AND (ObjClass != Biped_Object) AND (ObjClass != BoneGeometry) AND (ObjClass != HubObject)
 				(ObjClass != CATBone)) do
 			(
-				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name
+				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name parent:arg_Arr[i].parent
 				append resultArr MesherObj
 			)
 		)
@@ -671,11 +721,11 @@ struct ASSET_PublishFunctions
 	),
 	
 	-- Publish a vrmeshFile	
-	function pub_vrmeshFile arg_asset arg_path =
+	function pub_vrmeshFile arg_asset arg_path CombineAllMeshes =
 	(
 		try(
 			-- read settings from the .INI file
-			CombineAllMeshes =	(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" ))
+			--CombineAllMeshes =	(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "CombineMeshes" ))
 			ExportAnimation =	(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" ))
 			FrameStart =		(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameStart" ))
 			FrameEnd = 			(execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "FrameEnd" ))
@@ -693,7 +743,9 @@ struct ASSET_PublishFunctions
 			
 			-- collect the objects to export
 			--export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAssetForPublish includeParent:false)
-			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false)
+			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
+			print "export_arr"
+			print export_arr
 			-- Temporarily storing the Asset's tranform				
 			NodeTemporaryTransform = nodeAsset.transform
 			nodeAsset.position = [0,0,0]
@@ -703,7 +755,18 @@ struct ASSET_PublishFunctions
 
 			-- Converts all renderable geometry to edit polys, and deletes the rest
 			export_arr = ASSET_PublishFunctions.ReduceToMeshes export_arr
-				
+			ExportedNodesNames = #()
+			if CombineAllMeshes then
+			(
+				ExportedNodesNames[1] = undefined
+			)
+			else
+			(
+				ExportedNodesNames[export_arr.count] = undefined
+			)
+			ExportedNodesFilePath = deepCopy ExportedNodesNames
+			ExportedNodesParents = deepCopy ExportedNodesNames
+			ExportedNodesTransforms = deepCopy ExportedNodesNames
 			-- select the objects and export them
 			-- select export_arr
 
@@ -712,24 +775,35 @@ struct ASSET_PublishFunctions
 			(
 				makeDir (getFilenamePath arg_path)
 				vrayMeshExport meshFile:arg_path nodes:export_arr autoCreateProxies:false exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
+				ExportedNodesNames[1] = nodeAsset.name
+				ExportedNodesFilePath[1] = arg_path
+				ExportedNodesTransforms[1] = export_arr[1].transform
+				ExportedNodesParents[1] = nodeAsset.name
+				MapIniName = (substring arg_path 1 (arg_path.count - 7)) + ".vpmap"
 			)
 			else
 			(
 				PartsDirectory = ((pathConfig.removePathLeaf(getFilenamePath arg_path)) + @"\" + ((pathConfig.stripPathToLeaf (pathConfig.removePathLeaf arg_path)) + @"_Parts\"))
 				CurrentAssetName = ((substring (pathConfig.stripPathToLeaf arg_path) 1 ((pathConfig.stripPathToLeaf arg_path).count - 7)))
-				PartsPartialName = PartsDirectory + CurrentAssetName + "_"
-				print "PartsDirectory"
-				print PartsDirectory
+				PartsPartialName = PartsDirectory + CurrentAssetName
 				makeDir PartsDirectory
-				for NodetoExport in export_arr do
-				(
-					NodetoExportPath = PartsPartialName + NodetoExport.name + ".vrmesh"
-					print "NodetoExportPath"
-					print NodetoExportPath
-					vrayMeshExport meshFile:NodetoExportPath nodes:NodetoExport autoCreateProxies:false exportMultiple:false maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
-				)
 
+
+				for i = 1 to export_arr.count do
+				(
+					NodetoExportPath = PartsPartialName + "_" + export_arr[i].name + ".vrmesh"
+					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:false exportMultiple:true maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
+					ExportedNodesNames[i] = export_arr[i].name
+					ExportedNodesFilePath[i] = NodetoExportPath
+					ExportedNodesTransforms[i] = export_arr[i].transform
+					ExportedNodesParents[i] = (export_arr[i].parent).name
+				)
+				MapIniName = PartsPartialName + "_Parts.vpmap"
 			)
+			setinisetting (MapIniName) "NodesNames" "NodesNamesArray" (ExportedNodesNames as string)
+			setinisetting (MapIniName) "NodesPath" "NodesFilePath" (ExportedNodesFilePath as string)
+			setinisetting (MapIniName) "NodesTransform" "NodesTranformArray" (ExportedNodesTransforms as string)
+			setinisetting (MapIniName) "NodesParent" "NodesParentArray" (ExportedNodesParents as string)
 			delete export_arr
 			-- Temporarily storing the Asset's tranform	reverting the asset back to its original position
 			nodeAsset.transform = NodeTemporaryTransform
