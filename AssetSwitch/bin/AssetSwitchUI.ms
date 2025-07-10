@@ -730,6 +730,9 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 -- Load in the chosen vray proxy	
 fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
+	ASSET_PublishFunctions.LOGclear()
+	VrayLoadErrorCount = 0
+	VrayLoadErrorLog = #()
 	nodeAsset = arg2
 	NodesToDelete = #()
 	NodesToDeleteNames = #()
@@ -750,8 +753,11 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		)
 	)
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
+
 	ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
+
 	ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
+
 	ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
 	FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
 	NumberOfFiles = FilesInFolder.count
@@ -762,13 +768,22 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		newProxy.wirecolor = black
 		newProxy.filename = FilesInFolder[i]
 		newProxy.name = ((getFilenameFile FilesInFolder[i]) + "_VRMESH" )
-
-
 		NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
 		if NodeToReplaceIndex == 0 then
 		(
 			NodeToReplaceIndex = FindItem NodesToLinkNames ExportedNodesNames[i]
-			NodeToReplace = HierarchyNodes[NodeToReplaceIndex]
+			if NodeToReplaceIndex == 0 then -- If the node is not found, it means it is absent from the currently loaded asset. Uses the Asset Global as replacement.
+			(
+				NodeToReplace = nodeAsset
+				VrayLoadErrorCount += 1
+				append VrayLoadErrorLog "[ ERROR FINDING VRAY ASSETS' TRANSFORM SUBSTITUTION NODE ]"
+				append VrayLoadErrorLog ("Node " + ExportedNodesNames[i] + " used to position " + newProxy.name + " was not found. Using Asset's Global transforms.")
+				append VrayLoadErrorLog ""
+			)
+			else
+			(
+				NodeToReplace = HierarchyNodes[NodeToReplaceIndex]
+			)
 		)
 		else
 		(
@@ -776,10 +791,29 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		)
 		newProxy.transform = NodeToReplace.transform
 		NodeToLinkIndex = FindItem NodesToLinkNames ExportedNodesParents[i]
-		NodeToLink = HierarchyNodes[NodeToLinkIndex]
+		if NodeToLinkIndex == 0 then -- If the parent of this VrayProxy is not found, revert back to the Asset Global as default.
+		(
+			NodeToLink = nodeAsset
+			VrayLoadErrorCount += 1
+			append VrayLoadErrorLog "[ ERROR FINDING VRAY ASSETS' PARENT NODE ]"
+			append VrayLoadErrorLog ("Original parent of " + newProxy.name + " was not found. Linking to Asset's Global")
+			append VrayLoadErrorLog ""
+		)
+		else
+		(
+			NodeToLink = HierarchyNodes[NodeToLinkIndex]
+		)
 		newProxy.parent = NodeToLink
 	)
 	delete NodesToDelete
+	if VrayLoadErrorCount != 0 do
+	(
+		for CurrentError in VrayLoadErrorLog do
+		(
+			ASSET_PublishFunctions.LOGwrite CurrentError
+		)
+		ASSET_PublishFunctions.LOGopen()
+	)
 )
 
 -- Select the correct importer, and find the filename/type for the selected importer

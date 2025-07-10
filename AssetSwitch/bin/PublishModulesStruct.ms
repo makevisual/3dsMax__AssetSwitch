@@ -103,7 +103,7 @@ struct ASSET_PublishFunctions
 			if (((classof ObjClass) == geometryclass) AND (ObjClass != Biped_Object) AND (ObjClass != BoneGeometry) AND (ObjClass != HubObject)
 				(ObjClass != CATBone)) do
 			(
-				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name parent:arg_Arr[i].parent
+				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name parent:arg_Arr[i].parent material:arg_Arr[i].material
 				append resultArr MesherObj
 			)
 		)
@@ -363,7 +363,7 @@ struct ASSET_PublishFunctions
 				for i = 1 to export_arr.count do
 				(
 					NodetoExportPath = PartsPartialName + "_" + export_arr[i].name + ".vrmesh"
-					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:false exportMultiple:true maxPreviewFaces:Facecount animation:anim animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
+					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:false exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
 					ExportedNodesNames[i] = export_arr[i].name
 					ExportedNodesFilePath[i] = NodetoExportPath
 					ExportedNodesTransforms[i] = export_arr[i].transform
