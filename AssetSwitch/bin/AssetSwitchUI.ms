@@ -14,6 +14,10 @@
 --- version 1.4.1 : 02.10.2015  >> Fixed character asset creation overwrite bug
 --					>> Fixed asset publish nothing selected bug
 --- version 1.4.2 : 02.10.2015  >> Added xmesh name tweak
+--- version 1.7.0 : 07.10.2025  >> Major functionality changes:
+--								>> Removed XREF, PRT and POINT CACHE modes
+--								>> Added publishing VrayProxies individual parts
+--								>> Added MultiMaterial publishing and tyLibMtl support
 --*****************************************************
 
 try(DestroyDialog MAIN_AssetSwitchUI)catch()
@@ -26,7 +30,6 @@ try(DestroyDialog MAIN_AssetSwitchUI)catch()
 fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 (
 	importType = undefined
-	print arg
 		
 	-- .MAX Test
 	curFiles = getfiles (arg + @"\*.max")
@@ -55,33 +58,6 @@ fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 			return "V-Ray Mesh Loader"
 		)
 	)
-	-- .XMeshTest
-	curFiles =  getfiles (arg + @"\*.ms")
-	if curFiles.count > 0 do
-	(
-		curTypeImporter = 3
-		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
-		return "XMesh Loader"
-	)
-
-	-- PRT Test
-	curFiles =  getfiles (arg + @"\*.prt")
-	if curFiles.count > 0 do
-	(
-		curTypeImporter = 4
-		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
-		return "PRT Loader"
-	)
-
-	-- Point Cache Test
-	curFiles =  getfiles (arg + @"\*.mc")
-	if curFiles.count > 0 do
-	(
-		curTypeImporter = 5
-		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
-		return "Point Cache Modifer"
-	)
-		
 	curTypeImporter = undefined
 	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = false
 	return "no valid files found"
@@ -137,8 +113,6 @@ fn FN_GetVersionsInDir = -- arg: curType
 		(
 			foldersArr = filterstring versionArr[i] @"\"
 			curFolder = #(foldersArr[foldersArr.count])
-			print "curFolder"
-			print curFolder
 			join versionNames curFolder
 		)
 		if versionNames.count == 0 do
@@ -204,7 +178,6 @@ fn FN_ChangeAsset =
 			setUserProp selectionArray[i] "MAKE_Asset_Loaded_Version" initalVer
 
 			assetGlobalName = (getINISetting newAsset "Global" "name")				
-			print assetGlobalName
 			selectionArray[i].name = assetGlobalName
 
 			-- Try and set the paramaters of the global
@@ -348,38 +321,6 @@ fn FN_UiInformationUpdate =
 		(
 			curFileExtension =@"*.vrmesh"
 			targetFrameRangeparsed = "unknown"
-		)
-		-- XMesh Import
-		3:
-		(
-			curFileExtension =@"*.ms"
-			
-			XMSH_FileArr = (getfiles (searchDir + @"*.xmesh"))
-			startFile = getfilenamefile XMSH_FileArr[1]
-			endFile = getfilenamefile XMSH_FileArr[(XMSH_FileArr.count)]
-			startVal = ((substring startFile (startFile.count - 3) startFile.count) as integer)
-			endVal = ((substring endFile (endFile.count - 3) endFile.count) as integer)
-			targetFrameRange = #(startVal,endVal)
-			targetFrameRangeparsed = ((targetFrameRange[1] as string)+" to "+(targetFrameRange[2] as string))
-		)
-		-- PRT Importer
-		4:
-		(
-			curFileExtension =@"*.prt"
-			
-			PRT_FileArr = (getfiles (searchDir + @"*.prt"))
-			startFile = getfilenamefile PRT_FileArr[1]
-			endFile = getfilenamefile PRT_FileArr[(PRT_FileArr.count)]
-			startVal = ((substring startFile (startFile.count - 3) startFile.count) as integer)
-			endVal = ((substring endFile (endFile.count - 3) endFile.count) as integer)
-			targetFrameRange = #(startVal,endVal)
-			targetFrameRangeparsed = ((targetFrameRange[1] as string)+" to "+(targetFrameRange[2] as string))
-		)
-		-- Point Cache Importer
-		5:
-		(
-			targetFrameRangeparsed = "unknown"
-			-- todo:
 		)
 	)
 		
@@ -564,8 +505,6 @@ fn FN_UiUpdate_SelectionCheck =
 				failCase = "mismatch"
 			)
 		)
-		print "AssetArray"
-		print assetArray
 		
 		-- Calls the correct UI update based on 'failCase'
 		case failCase of
@@ -697,59 +636,30 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 	(
 		if LoadtyLibMtl then
 		(
-			StartTimertyLib = timestamp()
 			NumberMaterials = MaterialMapArray.count
 			for i = 1 to NumberMaterials do
 			(
-				LoadtyLibStart = timestamp()
 				loadMaterialLibrary curMaterialFile
 				loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
-				LoadtyLibEnd = timestamp()
-
-				print "Time Load tyLib"
-				print ((LoadtyLibEnd - LoadtyLibStart)*.001)
 
 				ObjectsToApplyMaterial = #()
-				print "ObjectsToApplyMaterial"
 				-- loops through all 
 				for CurrentObjectName in MaterialMapArray[i] do
 				(
-					print "CurrentObjectName"
-					print CurrentObjectName
 					ObjectIndex = findItem theObjectsNames CurrentObjectName
-					print "ObjectIndex"
-					print ObjectIndex
 					if ObjectIndex != 0 do
 					(
 						append ObjectsToApplyMaterial theObjects[ObjectIndex]
 					)
 				)
-				print "currentMaterialLibrary"
-				print currentMaterialLibrary
-				print "currentMaterialLibrary[1]"
-				print currentMaterialLibrary[1]
 				LoadedtyLibMtl = currentMaterialLibrary[1]
-				print "LoadedtyLibMtl.index"
-				print LoadedtyLibMtl.index
 				LoadedtyLibMtl.index = (i - 1)
-				print "LoadedtyLibMtl"
-				print LoadedtyLibMtl
 				ObjectsToApplyMaterial.material = LoadedtyLibMtl
 			)
-			EndTimertyLib = timestamp()
-			print "Total Time tyLib"
-			print ((EndTimertyLib - StartTimertyLib)*.001)
 		)
 		else
 		(
-			StartTimerMultSub = timestamp()
-			LoadMatLibStart = timestamp()
-			loadMaterialLibrary curMaterialFile -- TODO: If we load the materials inside this function, it will change at every iteration (meaning the material
-												-- will NOT be instanced across objects. Several objects will have the SAME material, with the SAME name, but with
-												-- potentially different values.
-			LoadMatLibEnd = timestamp()
-			print "Time Load MatLib"
-			print ((LoadMatLibEnd - LoadMatLibStart)*.001)
+			loadMaterialLibrary curMaterialFile
 			NumberMaterials = MaterialMapArray.count
 			for i = 1 to NumberMaterials do
 			(
@@ -765,9 +675,6 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 				)
 				ObjectsToApplyMaterial.material = currentMaterialLibrary[i]
 			)
-			EndTimerMultSub = timestamp()
-			print "Total Time MultSub"
-			print ((EndTimerMultSub - StartTimerMultSub)*.001)
 		)
 	)
 )
@@ -783,14 +690,10 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 	-- Put all objects named the same in an array
 	for i in 1 to allObjectsArr.count do
 	(
-		if allObjectsArr[i].name == heroName then
+		if allObjectsArr[i].name == heroName do
 		(
 			join nameDuplicatesArr #(allObjectsArr[i])
 		)		
-		else
-		(
-
-		)
 	)
 	
 	-- Set all of the names to HERONAME_temp, except the chosen node
@@ -828,10 +731,6 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	nodeAsset = arg2
-	-- New method that imports all VRMesh files in a selected folder
-	-- Collect all the children of the nodeAsset, and delete them
-	--NodesToDelete = (FN_collectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
-	--delete NodesToDelete
 	NodesToDelete = #()
 	NodesToDeleteNames = #()
 	NodesToLinkNames = #()
@@ -868,147 +767,21 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
 		if NodeToReplaceIndex == 0 then
 		(
-			print "NodeToReplaceIndex"
-			print NodeToReplaceIndex
 			NodeToReplaceIndex = FindItem NodesToLinkNames ExportedNodesNames[i]
-			print "NodeToReplaceIndex"
-			print NodeToReplaceIndex
 			NodeToReplace = HierarchyNodes[NodeToReplaceIndex]
 		)
 		else
 		(
 			NodeToReplace = NodesToDelete[NodeToReplaceIndex]
 		)
-		print "ProxyName"
-		print ExportedNodesNames[i]
-		
-		print "ProxyToLoad"
-		print FilesInFolder[i]
-		print "NodeToReplace"
-		print NodeToReplace
 		newProxy.transform = NodeToReplace.transform
 		NodeToLinkIndex = FindItem NodesToLinkNames ExportedNodesParents[i]
 		NodeToLink = HierarchyNodes[NodeToLinkIndex]
 		newProxy.parent = NodeToLink
-
-		/*
-		if NumberOfFiles > 1 then
-		(
-			NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
-			print "ProxyName"
-			print ExportedNodesNames[i]
-			NodeToReplace = NodesToDelete[NodeToReplaceIndex]
-			print "ProxyToLoad"
-			print FilesInFolder[i]
-			print "NodeToReplace"
-			print NodeToReplace
-			newProxy.transform = NodeToReplace.transform
-			NodeToLinkIndex = FindItem NodesToLinkNames ExportedNodesParents[i]
-			NodeToLink = HierarchyNodes[NodeToLinkIndex]
-			newProxy.parent = NodeToLink
-		)
-		else
-		(
-			newProxy.transform = nodeAsset.transform
-			newProxy.parent = nodeAsset
-		)
-		*/
 	)
-	--nodeAsset.transform = NodeTemporaryTransform
-
-
-
 	delete NodesToDelete
-
-
-
-
-
-
-
-
-	/*
-	nodeAsset = arg2
-	
-	-- Collect all the children of the nodeAsset, and delete them
-	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
-	delete deleteMe
-		
-	newProxy = VRayProxy()
-	newProxy.display = 3
-	newProxy.wirecolor = black
-	newProxy.transform = nodeAsset.transform
-	newProxy.parent = nodeAsset
-	newProxy.filename = arg
-	newProxy.name = ((getFilenameFile arg) + "_VRMESH" )
-
-	*/
-
-
-
 )
 
--- Load in the xMesh file	-- TODO : DELETE SECTION!
-fn	FN_DoSwitch_xMesh arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
-(
-	nodeAsset = arg2
-		
-	-- Collect all the children of the nodeAsset, and delete them
-	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
-	delete deleteMe
-		
- 	filein arg
-	newXMESH = selection[1]
-	clearSelection()
-	newXMESH.wirecolor = black
-	newXMESH.transform = nodeAsset.transform
-	newXMESH.parent = nodeAsset
--- 	newXMESH.name = ((substring (getFilenameFile arg) 12 9999) + "_XMESH" )
-	newXMESH.name = ( (substring newXMESH.parent.name 1 (newXMESH.parent.name.count - 6) ) + "XMESH")
-)
-	
-fn	FN_DoSwitch_PRT arg arg2= -- arg: the filepath to import | arg2: the node to do the switch on
-(
-	nodeAsset = arg2
-		
-	-- Collect all the children of the nodeAsset, and delete them
-	deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
-	delete deleteMe
-		
-	-- Create the new Prt Loader and set its common properties
-	newPRTLoader = KrakatoaPRTLoader ViewportParticleColorSource:4 pos:[-20.9197,-31.3314,0] isSelected:off iconSize:50 gizmoBoxX:100 gizmoBoxY:100 gizmoBoxZ:100
-	newPRTLoader.fileList.count = 1
-	newPRTLoader.fileList[1] = arg
-	newPRTLoader.fileListFlags.count = 1
-	newPRTLoader.fileListFlags[1] = 3
-	newPRTLoader.wirecolor = black
-	newPRTLoader.transform = nodeAsset.transform
-	newPRTLoader.parent = nodeAsset
-		
-	-- read and set the display range, and get the frame range from the files
-	newPRTLoader.limitToRange = on
-	PRT_FileArr = (getfiles ((getfilenamepath arg) + @"\*.prt"))
-	startFile = getfilenamefile PRT_FileArr[1]
-	endFile = getfilenamefile PRT_FileArr[(PRT_FileArr.count)]
-	startVal = ((substring startFile (startFile.count - 3) startFile.count) as integer)
-	endVal = ((substring endFile (endFile.count - 3) endFile.count) as integer)
-	newPRTLoader.rangeStartFrame = startVal
-	newPRTLoader.rangeEndFrame = endVal
-		
-	-- Calculate renaming
-	s = (getFilenameFile arg) 	-- creates a string from the filename of the loaded file
-	ss = substring s 5 9999		-- trinms off the "PRT_" at the beginning of the fileneame
-	sa = filterstring ss @"_"	-- breaks it up into an array of strings broken up by the character "_"
-	ns=""								-- creates a new empty string
-	if sa.count > 2 then (sc = (sa.count - 2))else(sc = 1)	-- sets the number of elements from the filtered array to use, differing cases for diferent length arrays, this removes the last bit of garbage "part 1 of 2" etc...
-	for i in 1 to sc do(ns = (ns + sa[i] + "_"))						-- stitches back together the relevant parts of the string, with the underscores put back in
-	newPRTLoader.name = (ns + "PRT")								-- adds the "PRT" onto the end, and assigns it to the object
-		
-	-- Toggles a display property to make the particles show up in viewport
-	newPRTLoader.ignoreMaterial = true
-	newPRTLoader.ignoreMaterial = false
-)
-	
 -- Select the correct importer, and find the filename/type for the selected importer
 fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | arg2: the filepath to import | arg3: the node to do the switch on | arg4: import (true) return name (false)
 (
@@ -1027,37 +800,10 @@ fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | ar
 		2:
 		(
 			vrayMeshFileArr = getfiles (arg2 + @"*.vrmesh")
-			print "vrayMeshFileArr"
-			print vrayMeshFileArr
 			parsedFile = (vrayMeshFileArr[vrayMeshFileArr.count])
-			print "parsedFile"
-			print parsedFile
 			if arg4 == true
 			then(FN_DoSwitch_vRay parsedFile arg3)
 			else(return parsedFile)
-		)
-		-- XMesh Import
-		3:
-		(
-			xMeshFileArr = getfiles (arg2 + @"*.ms")
-			parsedFile = (xMeshFileArr[xMeshFileArr.count])
-			if arg4 == true
-			then(FN_DoSwitch_xMesh parsedFile arg3)
-			else(return parsedFile)
-		)
-		-- PRT Importer
-		4:
-		(
-			PRT_FileArr = getfiles (arg2 + @"*.prt")
-			parsedFile = (PRT_FileArr[PRT_FileArr.count])
-			if arg4 == true
-			then(FN_DoSwitch_PRT parsedFile arg3)
-			else(return parsedFile)
-		)
-		-- Point Cache Importer
-		5:
-		(
-			
 		)
 	)
 )
@@ -1066,13 +812,14 @@ fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | ar
 fn FN_Revert =
 (
 	-- Fetch the held file without interruption
-	--fetchMaxFile quiet:true
+	fetchMaxFile quiet:true
 		
 	-- Reset the selection to match what it was at the beginning of the switch
 	clearselection()
 	for i in 1 to switchObjectsHandleArray.count do
 	(
-		selectmore (maxOps.getNodeByHandle switchObjectsHandleArray[i]))  --- TODO: Better method than SelectMore?
+		selectmore (maxOps.getNodeByHandle switchObjectsHandleArray[i])
+	)
 )
 	
 -- Prepare all chosen data, and apply it to the selected node ( THE MAIN ACTION )
@@ -1122,10 +869,6 @@ fn FN_DoSwitch =
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
 			switchObjectsArray[i].name = assetGlobalName
-			
-			print curTypeImporter
-			print curVersionFile
-			
 			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
 		)
 		
@@ -1167,75 +910,6 @@ fn FN_setup_RemoveInfo node prop = if getUserProp node prop != undefined do
 )
 	
 -- Collects selected files, and prompts user with a directory to save them into
-fn FN_publish_Selected =
-(
-	if selection.count == 1 and selection[1].scale == [1,1,1] then
-	(
-		if assetFile == undefined then
-		(
-			messagebox " no asset file loaded "
-		)
-		else
-		(
-			saveArr = FN_collectAllChildren selection[1] includeParent:true
-			saveLocation = (assetDir + @"\Publish\")
-
-			if (doesFileExist saveLocation) then
-			(
-				-- Save Dialog for VALID save location
-				saveName = getSaveFileName \
-				filename:saveLocation \
-				types:"3ds max scene file (*.max)|*.max|"
-			)
-			else
-			(
-				-- Save Dialog for INVALID save location
-				saveName = getSaveFileName\
-				types:"3ds max scene file (*.max)|*.max|"
-			)
-
-			-- If a valid filename was chosen, and the user did not cancel out, proceed to save
-			if saveName != undefined do
-			(
-				saveNodes saveArr saveName
-				messagebox (saveName + " Published successfully!")
-			)
-		)
-	)
-	else
-	(
-		messagebox " you may only export by selecting a (1) global, the children will be exported automatically "
-	)
-)
-	
-fn FN_publish_Material =
-(
-	--clearlistener()
-	
-	if selection.count != 1 then
-	(
-		messagebox "Select exactly 1 object"
-	)
-	else
-	(
-		theObj = selection[1]
-		theMaterial = theObj.material
-		
-		-- Clear the temporary library and add the current material to it
-		for i in 1 to currentMaterialLibrary.count do (deleteItem currentMaterialLibrary 1)
-		loadDefaultMatLib()
-		append currentMaterialLibrary theMaterial
-		
-		-- Get the save filename, and save the temporary library
-		curFileName = undefined
-		curFileName = getSaveFileName types:"Material(*.mat)|*.mat"
-		if curFileName != undefined do
-		(
-			saveMaterialLibrary curFileName
-			setUserProp selection[1] "multiMaterial_file" curFileName
-		)
-	)
-)
 	
 fn FN_setup_Initalize  = 
 (
@@ -1300,10 +974,10 @@ fn FN_help_About =
 	try(DestroyDialog ROLL_AssetSwitch_Help)catch()
 
 	L1 = ("Asset Switch v" + (versionNumber as string) + "")
-	L2 = "4/29/2014"
-	L0 = ""
-	L3 = "Publish obj tool fixed"
-	L4 = "Publish material added"
+	L2 = "7/10/2025"
+	L0 = "Major ovewhaul"
+	L3 = "Removed xref"
+	L4 = "Added Vray and Material improvements"
 
 	global helptext = #(L1,L2,L0,L3,L4)
 		
@@ -1334,12 +1008,7 @@ rcMenu rc_MainMenu
 		menuItem	MI_asset_Choose	"Choose Asset"
 		menuItem	MI_asset_Explore	"Open Asset Directory"
 	)
--- 	subMenu		"Publish"
--- 		(
--- 		menuItem MI_publishCenter "Launch 'Publish Center'"
-	-- 		menuItem	MI_publish_Selected	"Publish object"	
-	-- 		menuItem	MI_publish_Selected_Material	"Publish material"	
--- 		)
+
 	subMenu		"Help"
 	(
 		menuItem	MI_help_About	"About"	
@@ -1347,25 +1016,6 @@ rcMenu rc_MainMenu
 
 	on MI_setup_CreateAsset picked do ( ASSET_Functions.CreateNewAsset_UI() )
 		
-	on MI_publishCenter picked do
-	(
-		nodeAsset = selection[1]
-			
-		global assetName
-		global assetDir
-		global nodeAsset
-		
-		try
-			(
-				getUserProp selection[1] "MAKE_Asset_Filepath"
-				filein @"U:\Make_Tools\AssetSwitch\Release\bin\PublishCenter.ms"
-			)
-		catch
-			(
-				messagebox "you must select a node with a valid asset definition"
-			)
-	)
-	
 	on MI_setup_Initalize picked do ( FN_setup_Initalize() )
 	-- Loop through selected objects and remove any user defined properties that start with "Make_Asset_Filepath"
 	on MI_setup_RemoveInfo picked do ( for i in 1 to selection.count do	( FN_setup_RemoveInfo selection[i] "MAKE_Asset_Filepath" ) )
@@ -1373,15 +1023,11 @@ rcMenu rc_MainMenu
 	on MI_asset_Choose picked do ( FN_ChangeAsset() )
 		
 	on MI_asset_Explore picked do (	try( shelllaunch assetDir "") catch	( messagebox "no asset file loaded") )
-	
-	on MI_publish_Selected picked do ( FN_publish_Selected() )
-		
-	on MI_publish_Selected_Material picked do ( FN_publish_Material() )
 		
 	on MI_help_About picked do ( FN_help_About() )
 	
 )
-	
+
 rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 (
 	groupbox grp_Asset "Asset" height:71 width:438 pos:[5,5]-- offset:[-8,8]
@@ -1415,7 +1061,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		label lab_versionInfo_Date "Date Created: N/A" align:#left offset:[3,0] visible:false
 		bitmap bmp_preview filename:"" width:82 height:82 align:#right offset:[-5,-90] visible:false
 		
-	button btn_SwitchAsset "<< Switch Asset! >>" height:25 width:282 align:#right --offset:[100, 15] -- w 336
+	button btn_SwitchAsset "<< Switch Asset! >>" height:25 width:282 align:#right pos:[60,(MAIN_AssetSwitchUI.height - 30)]--offset:[100, 15] -- w 336
 	button btn_Open_Publish_Center "Publish" height:25 width:55 align:#left offset:[-8,-41]
 	checkbutton chkbtn_SwitchHold "Hold" height:25 width:40 align:#left offset:[329,-30] checked:false
 	button btn_Revert "Revert" height:25 width:60 align:#left offset:[370,-30] enabled:false
@@ -1473,11 +1119,8 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 				)
 					
 				-- call the switch function
-				SwtichStart = timestamp()
 				FN_DoSwitch()
 				SwtichEnd = timestamp()
-				print "TotalTime to switch Material:"
-				print ((SwtichEnd - SwtichStart)*0.001)
 				enablesceneredraw()
 			)
 			catch
@@ -1488,7 +1131,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 				if chkbtn_SwitchHold.checked == true then
 				(
 					Messagebox "Unhandled exception! attempting to revert scene..."
-					FN_Revert()
+					try ( FN_Revert() )	catch (Messagebox "Unhandled exception, sorry! -David")
 				)
 				else
 				(
@@ -1507,7 +1150,6 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 	on ddl_matDropdown selected arg do
 	(
 		curMaterial = ddl_matDropdown.items[arg]
-		print curMaterial
 		FN_UiInformationUpdate()
 	)
 	
@@ -1560,8 +1202,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 	-- When the Info Group Checkbox is toggled hide/unhide the contents of the information group
 	on chkbox_info changed state do(FN_UiToggleInformationTest state)
 	
-	-- TODO: The dialog is not resizable, should this be sacked?
-	-- When the main rollout windows size is changed, reposition the 'switch asset' buttons along the bottom
+	-- This is to rearrange and distribute the UI elements. A Rewrite of this whole tool can make this thing more streamlined
 	on MAIN_AssetSwitchUI resized arg do
 	(
 		btn_SwitchAsset.pos = [60,(MAIN_AssetSwitchUI.height - 30)]
@@ -1569,7 +1210,8 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		chkbtn_SwitchHold.pos = [342,(MAIN_AssetSwitchUI.height - 30)]
 		btn_Revert.pos = [383,(MAIN_AssetSwitchUI.height - 30)]
 	)
-		
+
+
 	-- When the window is opened, perform a selection check, and register the selection check callback
 	on MAIN_AssetSwitchUi open do
 	(
