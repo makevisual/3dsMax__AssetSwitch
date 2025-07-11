@@ -27,7 +27,8 @@ versionNumber = "1.7.0"
 	AssetSwitchDirectory = (pathConfig.removePathLeaf (getSourceFileName()))
 	global PublishCenterExecutable = AssetSwitchDirectory +  @"\bin\PublishCenter.ms"
 
+	filein (AssetSwitchDirectory + @"\bin\PublishModulesStruct.ms")
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFunctions.ms")
-	filein (AssetSwitchDirectory + @"\bin\AssetSwitchUI.ms")
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFolderStructure.ms")
+	filein (AssetSwitchDirectory + @"\bin\AssetSwitchUI.ms")
 )

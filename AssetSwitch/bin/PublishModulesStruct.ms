@@ -263,9 +263,8 @@ struct ASSET_PublishFunctions
 		TylibMaterial = (tylibMtl())
 		TylibMaterial.filename = arg_path[1]
 		append currentMaterialLibrary TylibMaterial
-
 		saveMaterialLibrary arg_path[2]
-		setUserProp nodeAsset "MAKE_Asset_tylibMtl_File" arg_path[2]
+		--setUserProp nodeAsset "MAKE_Asset_tylibMtl_File" arg_path[2]
 	),
 	function pub_MaterialFile arg_asset arg_path tyLibSave =
 	(
@@ -286,7 +285,6 @@ struct ASSET_PublishFunctions
 			(
 				makeDir (getFilenamePath arg_path[1])
 				saveMaterialLibrary arg_path[1]
-				setUserProp nodeAsset "MAKE_Asset_tylibMtl_File" arg_path[1]
 				if tyLibSave == "true" do
 				(
 					Create_TyLibMaterial currentMaterialLibrary arg_path

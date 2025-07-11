@@ -628,51 +628,43 @@ fn FN_collectAllChildren obj includeParent:true MeshObjOnly:false =
 fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMtl = -- arg: the material file | arg2: the node to do the switch on
 (
 	-- Collect the entire family
+	Original_Mesh_Names = #()
 	theObjects = (FN_collectAllChildren nodeAsset includeParent:true)
 	theObjectsNames = (for obj in theObjects collect (obj.name))
+	LoadedType = getUserProp nodeAsset "MAKE_Asset_Loaded_Filetype"
+	if (LoadedType == "VrmeshParts") OR (LoadedType == "Vrmesh") do
+	(
+		Original_Mesh_Names = (for obj in theObjects collect (getUserProp obj "MAKE_Asset_Original_Mesh"))
+	)
 	MaterialMapArray = execute (getinisetting curMaterialMapFile "MaterialNodeMap" "MaterialMapArray")
 	-- Test to see if there is a file
 	if (doesfileexist curMaterialFile) then
 	(
-		if LoadtyLibMtl then
+		loadMaterialLibrary curMaterialFile
+		loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
+		NumberMaterials = MaterialMapArray.count
+		for i = 1 to NumberMaterials do
 		(
-			NumberMaterials = MaterialMapArray.count
-			for i = 1 to NumberMaterials do
+			ObjectsToApplyMaterial = #()
+			-- loops through all 
+			for CurrentObjectName in MaterialMapArray[i] do
 			(
-				loadMaterialLibrary curMaterialFile
-				loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
-
-				ObjectsToApplyMaterial = #()
-				-- loops through all 
-				for CurrentObjectName in MaterialMapArray[i] do
+				for j = 1 to theObjectsNames.count do
 				(
-					ObjectIndex = findItem theObjectsNames CurrentObjectName
-					if ObjectIndex != 0 do
+					if (theObjectsNames[j] == CurrentObjectName) OR (Original_Mesh_Names[j] == CurrentObjectName) do
 					(
-						append ObjectsToApplyMaterial theObjects[ObjectIndex]
+						append ObjectsToApplyMaterial theObjects[j]
 					)
 				)
-				LoadedtyLibMtl = currentMaterialLibrary[1]
+			)
+			if LoadtyLibMtl then
+			(
+				LoadedtyLibMtl = copy currentMaterialLibrary[1]
 				LoadedtyLibMtl.index = (i - 1)
 				ObjectsToApplyMaterial.material = LoadedtyLibMtl
 			)
-		)
-		else
-		(
-			loadMaterialLibrary curMaterialFile
-			NumberMaterials = MaterialMapArray.count
-			for i = 1 to NumberMaterials do
+			else
 			(
-				ObjectsToApplyMaterial = #()
-				-- loops through all 
-				for CurrentObjectName in MaterialMapArray[i] do
-				(
-					ObjectIndex = findItem theObjectsNames CurrentObjectName
-					if ObjectIndex != 0 do
-					(
-						append ObjectsToApplyMaterial theObjects[ObjectIndex]
-					)
-				)
 				ObjectsToApplyMaterial.material = currentMaterialLibrary[i]
 			)
 		)
@@ -738,24 +730,22 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 	NodesToDeleteNames = #()
 	NodesToLinkNames = #()
 	HierarchyNodes = (FN_collectAllChildren nodeAsset includeParent:true MeshObjOnly:false)
+	-- Removes all the objects that are of geometry class from the hierachy array, leaving only helpers, splines, etc
 	for i = (HierarchyNodes.count) to 1 by -1 do
 	(
 		NodeSuperClass = (superClassOf HierarchyNodes[i])
-		if NodeSuperClass == GeometryClass then
+		if NodeSuperClass == GeometryClass do
 		(
 			append NodesToDelete HierarchyNodes[i]
 			append NodesToDeleteNames HierarchyNodes[i].name
 			deleteItem HierarchyNodes i
 		)
-		else
-		(
-			NodesToLinkNames[i] = HierarchyNodes[i].name
-		)
 	)
+	NodesToLinkNames = (for RigNode in HierarchyNodes collect RigNode.name)
+
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
 
 	ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
-
 	ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
 
 	ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
@@ -768,7 +758,9 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		newProxy.wirecolor = black
 		newProxy.filename = FilesInFolder[i]
 		newProxy.name = ((getFilenameFile FilesInFolder[i]) + "_VRMESH" )
+		setUserProp newProxy "MAKE_Asset_Original_Mesh" ExportedNodesNames[i]
 		NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
+		
 		if NodeToReplaceIndex == 0 then
 		(
 			NodeToReplaceIndex = FindItem NodesToLinkNames ExportedNodesNames[i]
@@ -883,7 +875,7 @@ fn FN_DoSwitch =
 	-- Set selection as inode handles for use in fetching, and store the currently chosen settings
 	for i in 1 to switchObjectsArray.count do
 	(
-		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Material" curMaterial
+		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Material" (curMaterial + ".mat")
 		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Filetype" curType
 		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Version" curVersion
 
@@ -1157,6 +1149,8 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 				SwtichEnd = timestamp()
 				enablesceneredraw()
 			)
+
+			
 			catch
 			(
 				enablesceneredraw()
@@ -1172,6 +1166,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 					Messagebox "Unhandled exception, sorry! -Aaron"
 				)
 			)
+			
 		)
 		
 	-- Revert to scene / selection from before last switch
