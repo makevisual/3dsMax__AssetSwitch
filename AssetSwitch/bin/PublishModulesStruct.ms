@@ -364,7 +364,7 @@ struct ASSET_PublishFunctions
 					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:false exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
 					ExportedNodesNames[i] = export_arr[i].name
 					ExportedNodesFilePath[i] = NodetoExportPath
-					ExportedNodesTransforms[i] = export_arr[i].transform
+					ExportedNodesTransforms[i] = (export_arr[i].transform*(inverse export_arr[i].parent.transform)) -- new method for safe asset replace in case the replacement node is absent
 					ExportedNodesParents[i] = (export_arr[i].parent).name
 				)
 				MapIniName = PartsPartialName + "_Parts.vpmap"

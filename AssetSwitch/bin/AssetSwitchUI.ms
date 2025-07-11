@@ -759,34 +759,45 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		newProxy.filename = FilesInFolder[i]
 		newProxy.name = ((getFilenameFile FilesInFolder[i]) + "_VRMESH" )
 		setUserProp newProxy "MAKE_Asset_Original_Mesh" ExportedNodesNames[i]
-		NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i]
+
+		-- checks to see if the original node the proxy is to replace exists
+		NodeToReplaceIndex = FindItem NodesToDeleteNames ExportedNodesNames[i] 
 		
-		if NodeToReplaceIndex == 0 then
+		if NodeToReplaceIndex == 0 then -- Node to replace not found among the geometry nodes on the current asset
 		(
+			-- in case the node to replace does not exist, checks if this node is part of the hierarchy by any chance
 			NodeToReplaceIndex = FindItem NodesToLinkNames ExportedNodesNames[i]
-			if NodeToReplaceIndex == 0 then -- If the node is not found, it means it is absent from the currently loaded asset. Uses the Asset Global as replacement.
+			if NodeToReplaceIndex == 0 then -- Node to replace not found among the hierarchy nodes on the current asset
 			(
-				NodeToReplace = nodeAsset
+				NodeToReplace = undefined
 				VrayLoadErrorCount += 1
-				append VrayLoadErrorLog "[ ERROR FINDING VRAY ASSETS' TRANSFORM SUBSTITUTION NODE ]"
-				append VrayLoadErrorLog ("Node " + ExportedNodesNames[i] + " used to position " + newProxy.name + " was not found. Using Asset's Global transforms.")
+				append VrayLoadErrorLog "[ VRAY ASSETS' TRANSFORM SUBSTITUTION NODE NOT FOUND ]"
+				append VrayLoadErrorLog ("Node " + ExportedNodesNames[i] + " used to position " + newProxy.name + " was not found. Trying to use the Asset's original Transform Matrix...")
+				append VrayLoadErrorLog "If no additional errors are shown, setting the Proxy's tranforms based on the baked Transform Matrix was successful!"
 				append VrayLoadErrorLog ""
 			)
 			else
 			(
 				NodeToReplace = HierarchyNodes[NodeToReplaceIndex]
+				NodeToReplaceTransform = NodeToReplace.transform
 			)
 		)
 		else
 		(
 			NodeToReplace = NodesToDelete[NodeToReplaceIndex]
+			NodeToReplaceTransform = NodeToReplace.transform
 		)
-		newProxy.transform = NodeToReplace.transform
+
 		NodeToLinkIndex = FindItem NodesToLinkNames ExportedNodesParents[i]
+
 		if NodeToLinkIndex == 0 then -- If the parent of this VrayProxy is not found, revert back to the Asset Global as default.
 		(
 			NodeToLink = nodeAsset
+			NodeToReplaceTransform = nodeAsset.transform
 			VrayLoadErrorCount += 1
+			append VrayLoadErrorLog "[ ERROR FINDING VRAY ASSETS' TRANSFORM SUBSTITUTION NODE ]"
+			append VrayLoadErrorLog ("Node " + ExportedNodesNames[i] + " used to position " + newProxy.name + " was not found. Using Asset's Global transforms.")
+			append VrayLoadErrorLog ""
 			append VrayLoadErrorLog "[ ERROR FINDING VRAY ASSETS' PARENT NODE ]"
 			append VrayLoadErrorLog ("Original parent of " + newProxy.name + " was not found. Linking to Asset's Global")
 			append VrayLoadErrorLog ""
@@ -794,7 +805,12 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		else
 		(
 			NodeToLink = HierarchyNodes[NodeToLinkIndex]
+			if NodeToReplace == undefined do
+			(
+				NodeToReplaceTransform = ExportedNodesTransform[i]*(NodeToLink.transform)
+			)
 		)
+		newProxy.transform = NodeToReplaceTransform
 		newProxy.parent = NodeToLink
 	)
 	delete NodesToDelete
