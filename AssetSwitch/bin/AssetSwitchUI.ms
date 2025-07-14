@@ -35,28 +35,28 @@ fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 	curFiles = getfiles (arg + @"\*.max")
 	if curFiles.count > 0 do
 	(
-		curTypeImporter = 1
-		curMaterialFile
-		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
-		return "Max File Merge"
-	)
-	-- .VRMESH Test
-	curFiles = getfiles (arg + @"\*.vrmesh")
-	if curFiles.count > 0 do
-	(
-		AddFiles = getfiles (arg + @"\*.vpmap")
-		if AddFiles.count > 0 then
+		VrmeshPartFiles = getfiles (arg + @"\*.vrmesh")
+		if VrmeshPartFiles.count > 0 then
 		(
-			curTypeImporter = 2
+			curTypeImporter = 3
 			MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 			return "V-Ray Parts Loader"
 		)
 		else
 		(
-			curTypeImporter = 2
+			curTypeImporter = 1
+			curMaterialFile
 			MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
-			return "V-Ray Mesh Loader"
+			return "Max File Merge"
 		)
+	)
+	-- .VRMESH Test
+	curFiles = getfiles (arg + @"\*.vrmesh")
+	if curFiles.count > 0 do
+	(
+		curTypeImporter = 2
+		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+		return "V-Ray Mesh Loader"
 	)
 	curTypeImporter = undefined
 	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = false
@@ -769,6 +769,8 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 			NodeToReplaceIndex = FindItem NodesToLinkNames ExportedNodesNames[i]
 			if NodeToReplaceIndex == 0 then -- Node to replace not found among the hierarchy nodes on the current asset
 			(
+				-- Setting the "NodeToReplace" to undefined will make the algorithm to use the stored proxy's transform matrix in relation to its parent
+				-- to place the proxy into the scene
 				NodeToReplace = undefined
 				VrayLoadErrorCount += 1
 				append VrayLoadErrorLog "[ VRAY ASSETS' TRANSFORM SUBSTITUTION NODE NOT FOUND ]"
@@ -845,6 +847,15 @@ fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | ar
 			parsedFile = (vrayMeshFileArr[vrayMeshFileArr.count])
 			if arg4 == true
 			then(FN_DoSwitch_vRay parsedFile arg3)
+			else(return parsedFile)
+		)
+		-- V-Ray Mesh Parts Import
+		3:
+		(
+			maxFileArr = getfiles (arg2 + @"*.max")
+			parsedFile = (maxFileArr[maxFileArr.count])
+			if arg4 == true
+			then(FN_DoSwitch_Standard parsedFile arg3)
 			else(return parsedFile)
 		)
 	)
@@ -1201,6 +1212,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 	-- Triggers on OBJECT selection, from its dropdown		
 	on ddl_objDropdown selected arg do
 	(
+
 		curType = ddl_ObjDropdown.items[arg]
 		FN_UiUpdate_Objects()
 	)

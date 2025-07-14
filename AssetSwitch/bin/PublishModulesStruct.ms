@@ -321,6 +321,13 @@ struct ASSET_PublishFunctions
 			
 			-- collect the objects to export
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
+			hierarchy_Array = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:false)
+			for obj in export_arr do
+			(
+				IndexToDelete = FindItem hierarchy_Array obj
+				DeleteItem hierarchy_Array IndexToDelete
+			)
+			print hierarchy_Array
 			-- Temporarily storing the Asset's tranform				
 			NodeTemporaryTransform = nodeAsset.transform
 			nodeAsset.position = [0,0,0]
@@ -361,7 +368,7 @@ struct ASSET_PublishFunctions
 				for i = 1 to export_arr.count do
 				(
 					NodetoExportPath = PartsPartialName + "_" + export_arr[i].name + ".vrmesh"
-					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:false exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
+					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:true exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
 					ExportedNodesNames[i] = export_arr[i].name
 					ExportedNodesFilePath[i] = NodetoExportPath
 					ExportedNodesTransforms[i] = (export_arr[i].transform*(inverse export_arr[i].parent.transform)) -- new method for safe asset replace in case the replacement node is absent
@@ -373,9 +380,12 @@ struct ASSET_PublishFunctions
 			setinisetting (MapIniName) "NodesPath" "NodesFilePath" (ExportedNodesFilePath as string)
 			setinisetting (MapIniName) "NodesTransform" "NodesTranformArray" (ExportedNodesTransforms as string)
 			setinisetting (MapIniName) "NodesParent" "NodesParentArray" (ExportedNodesParents as string)
-			delete export_arr
 			-- Temporarily storing the Asset's tranform	reverting the asset back to its original position
 			nodeAsset.transform = NodeTemporaryTransform
+			Max_nodes_to_Save = export_arr + hierarchy_Array
+			print Max_nodes_to_Save
+			saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max" )
+			delete export_arr
 			return "Success!"
 		)
 		Catch(return "ERROR: vrmesh Publish failed")
