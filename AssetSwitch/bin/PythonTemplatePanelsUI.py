@@ -31,42 +31,68 @@ class PyMaxDialog(QtWidgets.QDialog):
         # Prevent 3ds Max from stealing keyboard focus from the widget
         qtmax.DisableMaxAcceleratorsOnFocus(self, True)
 
+    def Page_Change_Resize(self, index):
+        if index == 0:
+            self.setFixedSize(484, 300)
+        else:
+            self.setFixedSize(484, 450)
 
     def initUI(self):
         """Builds the user interface for the widget."""
         # --- 1. Main Horizontal Layout ---
         # The main layout is now horizontal to hold the side panel and content area.
-        main_layout = QtWidgets.QHBoxLayout(self) # Set layout directly on the dialog
+        main_layout = QtWidgets.QVBoxLayout(self) # Set layout directly on the dialog
         main_layout.setContentsMargins(2, 2, 2, 2) # Remove spacing around the window edges
 
         # --- 2. Side Panel (Navigation) ---
         # A QListWidget is perfect for a vertical list of selectable items.
-        self.side_panel = QtWidgets.QListWidget()
-        self.side_panel.setFixedWidth(120) # Give the side panel a fixed width
+        self.top_panel = QtWidgets.QListWidget()
+        self.top_panel.setFlow(QtWidgets.QListView.LeftToRight)
+        self.top_panel.setFixedHeight(30)
+        self.top_panel.setWrapping(False)
+
         
-        # Add items to the side panel
-        self.side_panel.addItem("Asset Creation")
-        self.side_panel.addItem("Asset Publishing")
-        self.side_panel.addItem("Asset Switch")
-        
-        # Apply a stylesheet for a modern look
-        self.side_panel.setStyleSheet("""
+        # Create items with centered text alignment
+        item1 = QtWidgets.QListWidgetItem("Asset Creation")
+        item1.setTextAlignment(QtCore.Qt.AlignCenter)
+
+        item2 = QtWidgets.QListWidgetItem("Asset Publishing")
+        item2.setTextAlignment(QtCore.Qt.AlignCenter)
+
+        item3 = QtWidgets.QListWidgetItem("Asset Switch")
+        item3.setTextAlignment(QtCore.Qt.AlignCenter)
+
+        # Add the configured items to the panel
+        self.top_panel.addItem(item1)
+        self.top_panel.addItem(item2)
+        self.top_panel.addItem(item3)
+        self.top_panel.setStyleSheet("""
             QListWidget {
-                background-color: #3C3C3C;
+                background-color: #2B2B2B;
                 border: none;
                 color: white;
                 font-size: 13px;
                 outline: 0;
             }
             QListWidget::item {
-                padding: 10px;
+                padding: 5px;
+                background-color: #2B2B2B;
+                width: 150px;
+                /* text-align: center; */
+                /* border-right: 1px solid #222222; */
+                /* border-left: 1px solid #222222; */
+            }
+            QListWidget::item:middle {
+                border-left: 1px solid #222222;
+                border-right: 1px solid #222222;
             }
             QListWidget::item:selected {
-                background-color: #5A94F6; /* A highlight color for the selected item */
+                background-color: #444444; /* A highlight color for the selected item */
                 color: white;
             }
         """)
-        main_layout.addWidget(self.side_panel)
+
+        main_layout.addWidget(self.top_panel)
 
 
         # --- 3. Main Content Area (Stacked Pages) ---
@@ -88,13 +114,15 @@ class PyMaxDialog(QtWidgets.QDialog):
         # --- 5. Connect the side panel to the main content ---
         # This is the key part: when the selected row changes in the side panel,
         # it calls the setCurrentIndex method on the stacked widget, changing the visible page.
-        self.side_panel.currentRowChanged.connect(self.main_content.setCurrentIndex)
+        self.top_panel.currentRowChanged.connect(self.main_content.setCurrentIndex)
         
+
+        self.main_content.currentChanged.connect(self.Page_Change_Resize)
         # Start with the first item selected
-        self.side_panel.setCurrentRow(0)
+        self.top_panel.setCurrentRow(0)
         
         # Set the initial size of the dialog
-        self.resize(600, 400)
+        self.setFixedSize(484, 300)
 
     # --- Helper methods to create the content for each page ---
     def _create_page_one(self):
@@ -134,7 +162,7 @@ class PyMaxDialog(QtWidgets.QDialog):
         page = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(page)
         
-        label = QtWidgets.QLabel("Settings Page")
+        label = QtWidgets.QLabel("Asset Switch Page")
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("font-size: 20px; font-weight: bold;")
         
