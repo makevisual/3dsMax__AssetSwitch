@@ -229,7 +229,7 @@ class PyMaxDialog(QtWidgets.QDialog):
             folder_path = folder_path.replace('/','\\')
             print(f"Selected path: {folder_path}")
             self.CurrentProjectPath = folder_path
-            display_path = self.Truncate_Text(folder_path, 40)
+            display_path = self.Truncate_Text(folder_path, 38)
             self.project_path_label.setText(display_path)
             # --- SET THE TOOLTIP TO THE FULL PATH ---
             #self.project_path_label.setToolTip(folder_path)

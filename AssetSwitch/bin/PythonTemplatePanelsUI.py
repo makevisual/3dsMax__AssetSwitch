@@ -10,7 +10,7 @@ import qtmax
 from pymxs import runtime as rt
 
 # --- Define a unique name for our widget to find it later ---
-WIDGET_OBJECT_NAME = "AssetSwitchTabPanel"
+WIDGET_OBJECT_NAME = "AssetSwitchTabbedUI"
 
 class PyMaxDialog(QtWidgets.QDialog):
     """A custom floating dialog for 3ds Max with a side panel."""
@@ -22,7 +22,7 @@ class PyMaxDialog(QtWidgets.QDialog):
 
         # Set window properties
         self.setWindowFlags(QtCore.Qt.Tool)
-        self.setWindowTitle('Asset Switch')
+        self.setWindowTitle('Asset Switch v2.0')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
         # Initialize the UI
@@ -33,9 +33,9 @@ class PyMaxDialog(QtWidgets.QDialog):
 
     def Page_Change_Resize(self, index):
         if index == 0:
-            self.setFixedSize(484, 300)
+            self.setFixedSize(394, 300)
         else:
-            self.setFixedSize(484, 450)
+            self.setFixedSize(394, 450)
 
     def initUI(self):
         """Builds the user interface for the widget."""
@@ -53,13 +53,13 @@ class PyMaxDialog(QtWidgets.QDialog):
 
         
         # Create items with centered text alignment
-        item1 = QtWidgets.QListWidgetItem("Asset Creation")
+        item1 = QtWidgets.QListWidgetItem("Create")
         item1.setTextAlignment(QtCore.Qt.AlignCenter)
 
-        item2 = QtWidgets.QListWidgetItem("Asset Publishing")
+        item2 = QtWidgets.QListWidgetItem("Publish")
         item2.setTextAlignment(QtCore.Qt.AlignCenter)
 
-        item3 = QtWidgets.QListWidgetItem("Asset Switch")
+        item3 = QtWidgets.QListWidgetItem("Switch")
         item3.setTextAlignment(QtCore.Qt.AlignCenter)
 
         # Add the configured items to the panel
@@ -77,7 +77,7 @@ class PyMaxDialog(QtWidgets.QDialog):
             QListWidget::item {
                 padding: 5px;
                 background-color: #2B2B2B;
-                width: 150px;
+                width: 120px;
                 /* text-align: center; */
                 /* border-right: 1px solid #222222; */
                 /* border-left: 1px solid #222222; */
@@ -122,7 +122,7 @@ class PyMaxDialog(QtWidgets.QDialog):
         self.top_panel.setCurrentRow(0)
         
         # Set the initial size of the dialog
-        self.setFixedSize(484, 300)
+        self.setFixedSize(394, 300)
 
     # --- Helper methods to create the content for each page ---
     def _create_page_one(self):
