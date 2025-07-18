@@ -49,7 +49,7 @@ class PyMaxDialog(QtWidgets.QDialog):
         self.top_panel = QtWidgets.QListWidget()
         self.top_panel.setFlow(QtWidgets.QListView.LeftToRight)
         self.top_panel.setFixedHeight(30)
-        self.top_panel.setWrapping(False)
+        #self.top_panel.setWrapping(False)
 
         
         # Create items with centered text alignment
