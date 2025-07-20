@@ -25,7 +25,48 @@ from pymxs import runtime as rt
 Widget_Name = "AssetSwitchUI"
 AssetSwitchUI_Version = "v2.0"
 
+# Creates a new Spinner Class to make QSpinBox behave like regular 3dsMax spinners
+# Based on Spencer's solution posted on StackOverflow on this page https://stackoverflow.com/questions/20922836/increases-decreases-qspinbox-value-when-click-drag-mouse-python-pyside
+class MaxSpinner(QtWidgets.QSpinBox):
+	def __init__(self, parent = None): #ask why the parent has to be equal to none
+		super().__init__(parent)
+		self.Mouse_Start_PosY = 0
+		self.Spinner_Start_Value = 0
+		self.LeftButtonPressed = True
+
+	def mousePressEvent(self, event):
+		super().mousePressEvent(event)
+		if event.button() == QtCore.Qt.RightButton:
+			self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+			self.setValue(self.minimum())
+			self.LeftButtonPressed = False
+			return
+		else:
+			self.LeftButtonPressed = True
+			self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+			self.Mouse_Start_PosY = event.pos().y()
+			self.Spinner_Start_Value = self.value()
+	def mouseMoveEvent(self, event):
+		if self.LeftButtonPressed:
+			self.setCursor(QtCore.Qt.SizeVerCursor)
+			multiplier = 0.5
+			ValueOffset = int((self.Mouse_Start_PosY - event.pos().y())*multiplier)
+			self.setValue(self.Spinner_Start_Value + ValueOffset)
+	def mouseReleaseEvent(self, event):
+		super().mouseReleaseEvent(event)
+		self.unsetCursor()
+
+
+
+# Creates the AssetSwitchDialog Class, based on the QDialog parent Class
 class AssetSwitchDialog(QtWidgets.QDialog):
+	PROGRESS_BAR_DEFAULT_COLOR = "#0078D7"
+	PROGRESS_BAR_SUCCESS_COLOR = "#1C6940"
+	PROGRESS_BAR_FAILURE_COLOR = "#7B0A18"
+	PUBLISH_PROGRESSBAR_STYLESHEET = """
+		QProgressBar {{ max-height: 16px; font: 11px; border: none; background-color: #2B2B2B; }}
+		QProgressBar::chunk {{ background-color: {chunk_color}; }}
+	"""
 	def __init__(self, parent = None):
 		# If there is no parent
 		if parent is None:
@@ -66,7 +107,7 @@ class AssetSwitchDialog(QtWidgets.QDialog):
 			case 0: # Create Tab selected
 				self.setFixedSize(325, 250)
 			case 1: # Publish Tab selected
-				self.setFixedSize(325, 450)
+				self.setFixedSize(325, 520)
 			case 2: # Switch Tab selected
 				self.setFixedSize(325, 300)
 
@@ -162,7 +203,7 @@ class AssetSwitchDialog(QtWidgets.QDialog):
 		self.Top_Panel.currentRowChanged.connect(self.UI_Resizer)
 
 		# Sets the first tab to be selected at launch to be tab 0 (the first one)
-		self.Top_Panel.setCurrentRow(0)
+		self.Top_Panel.setCurrentRow(1)
 
 		#Adds the Top_Panel QListWidget() to the Main_Layout's QVBoxLayout
 		Main_Layout.addWidget(self.Top_Panel)
@@ -306,20 +347,175 @@ class AssetSwitchDialog(QtWidgets.QDialog):
 		Page = QtWidgets.QWidget()
 		# Creates a QVBoxLayout (vertical) layout based on the default QWidget to house the UI elements to be created
 		Layout = QtWidgets.QVBoxLayout(Page)
-		Label = QtWidgets.QLabel("Publish Page")
-		Layout.addWidget(Label, alignment=QtCore.Qt.AlignCenter)
+
+		# 3dsMax File Group
+		Max_GroupBox = QtWidgets.QGroupBox("3dsMax File")
+		Max_GroupBox.setCheckable(True)
+		Max_GroupBox_Layout = QtWidgets.QVBoxLayout(Max_GroupBox)
+		Max_GroupBox_Version_Layout = QtWidgets.QHBoxLayout()
+		Max_Label_Version = QtWidgets.QLabel("Version:")
+		Max_Version_Spinner = MaxSpinner()
+		Max_Version_Spinner.setFixedHeight(18)
+		Max_Version_Spinner.setMinimum(1)
+		Max_Version_Spinner.setMaximum(999)
+		Max_GroupBox_Version_Layout.addWidget(Max_Label_Version)
+		Max_GroupBox_Version_Layout.addWidget(Max_Version_Spinner)
+		Max_GroupBox_Version_Layout.addStretch()
+		Max_Path_Label = QtWidgets.QLabel("Default\\Max\\Path", alignment = QtCore.Qt.AlignCenter, styleSheet = "border: 1px solid gray; padding: 2px; max-height: 12px;")
+		Max_GroupBox_Layout.addLayout(Max_GroupBox_Version_Layout)
+		Max_GroupBox_Layout.addWidget(Max_Path_Label)
+
+		# Animation File Group
+		Animation_GroupBox = QtWidgets.QGroupBox("Animation File")
+		Animation_GroupBox.setCheckable(True)
+		Animation_GroupBox_Layout = QtWidgets.QVBoxLayout(Animation_GroupBox)
+		Animation_GroupBox_Version_Layout = QtWidgets.QHBoxLayout()
+		Animation_Label_Version = QtWidgets.QLabel("Version:")
+		Animation_Version_Spinner = MaxSpinner()
+		Animation_Version_Spinner.setFixedHeight(18)
+		Animation_Version_Spinner.setMinimum(1)
+		Animation_Version_Spinner.setMaximum(999)
+		Animation_GroupBox_Version_Layout.addWidget(Animation_Label_Version)
+		Animation_GroupBox_Version_Layout.addWidget(Animation_Version_Spinner)
+		Animation_GroupBox_Version_Layout.addStretch()
+		Max_Path_Label = QtWidgets.QLabel("Default\\Animation\\Path", alignment = QtCore.Qt.AlignCenter, styleSheet = "border: 1px solid gray; padding: 2px; max-height: 12px;")
+		Animation_GroupBox_Layout.addLayout(Animation_GroupBox_Version_Layout)
+		Animation_GroupBox_Layout.addWidget(Max_Path_Label)
+
+		# Material File Group
+		Material_GroupBox = QtWidgets.QGroupBox("Material File")
+		Material_GroupBox.setCheckable(True)
+		Material_GroupBox_Layout = QtWidgets.QVBoxLayout(Material_GroupBox)
+		Material_GroupBox_Version_Layout = QtWidgets.QHBoxLayout()
+		Material_Label_Version = QtWidgets.QLabel("Version:")
+		Material_Version_Spinner = MaxSpinner()
+		Material_Version_Spinner.setFixedHeight(18)
+		Material_Version_Spinner.setMinimum(1)
+		Material_Version_Spinner.setMaximum(999)
+		Material_GroupBox_Version_Layout.addWidget(Material_Label_Version)
+		Material_GroupBox_Version_Layout.addWidget(Material_Version_Spinner)
+		Material_GroupBox_Version_Layout.addStretch()
+		Max_Path_Label = QtWidgets.QLabel("Default\\Material\\Path", alignment = QtCore.Qt.AlignCenter, styleSheet = "border: 1px solid gray; padding: 2px; max-height: 12px;")
+		Material_GroupBox_Layout.addLayout(Material_GroupBox_Version_Layout)
+		Material_GroupBox_Layout.addWidget(Max_Path_Label)
+
+		# VrayMesh File Group
+		VRayMesh_GroupBox = QtWidgets.QGroupBox("VRayMesh File")
+		VRayMesh_GroupBox.setCheckable(True)
+		VRayMesh_GroupBox_Layout = QtWidgets.QVBoxLayout(VRayMesh_GroupBox)
+		VRayMesh_GroupBox_Version_Layout = QtWidgets.QHBoxLayout()
+		VRayMesh_Label_Version = QtWidgets.QLabel("Version:")
+		VRayMesh_Version_Spinner = MaxSpinner()
+		VRayMesh_Version_Spinner.setFixedHeight(18)
+		VRayMesh_Version_Spinner.setMinimum(1)
+		VRayMesh_Version_Spinner.setMaximum(999)
+		VRayMesh_GroupBox_Version_Layout.addWidget(VRayMesh_Label_Version)
+		VRayMesh_GroupBox_Version_Layout.addWidget(VRayMesh_Version_Spinner)
+		VRayMesh_GroupBox_Version_Layout.addStretch()
+		Max_Path_Label = QtWidgets.QLabel("Default\\VRayMesh\\Path", alignment = QtCore.Qt.AlignCenter, styleSheet = "border: 1px solid gray; padding: 2px; max-height: 12px;")
+		VRayMesh_GroupBox_Layout.addLayout(VRayMesh_GroupBox_Version_Layout)
+		VRayMesh_GroupBox_Layout.addWidget(Max_Path_Label)
+
+		# VrayMeshParts File Group
+		VRayMeshParts_GroupBox = QtWidgets.QGroupBox("VRayMeshParts File")
+		VRayMeshParts_GroupBox.setCheckable(True)
+		VRayMeshParts_GroupBox_Layout = QtWidgets.QVBoxLayout(VRayMeshParts_GroupBox)
+		VRayMeshParts_GroupBox_Version_Layout = QtWidgets.QHBoxLayout()
+		VRayMeshParts_Label_Version = QtWidgets.QLabel("Version:")
+		VRayMeshParts_Version_Spinner = MaxSpinner()
+		VRayMeshParts_Version_Spinner.setFixedHeight(18)
+		VRayMeshParts_Version_Spinner.setMinimum(1)
+		VRayMeshParts_Version_Spinner.setMaximum(999)
+		VRayMeshParts_GroupBox_Version_Layout.addWidget(VRayMeshParts_Label_Version)
+		VRayMeshParts_GroupBox_Version_Layout.addWidget(VRayMeshParts_Version_Spinner)
+		VRayMeshParts_GroupBox_Version_Layout.addStretch()
+		Max_Path_Label = QtWidgets.QLabel("Default\\VRayMeshParts\\Path", alignment = QtCore.Qt.AlignCenter, styleSheet = "border: 1px solid gray; padding: 2px; max-height: 12px;")
+		VRayMeshParts_GroupBox_Layout.addLayout(VRayMeshParts_GroupBox_Version_Layout)
+		VRayMeshParts_GroupBox_Layout.addWidget(Max_Path_Label)
+
+		Layout.addWidget(Max_GroupBox)
+		Layout.addWidget(Animation_GroupBox)
+		Layout.addWidget(Material_GroupBox)
+		Layout.addWidget(VRayMesh_GroupBox)
+		Layout.addWidget(VRayMeshParts_GroupBox)
+		#Label = QtWidgets.QLabel("Publish Page")
+		#Layout.addWidget(Label, alignment=QtCore.Qt.AlignCenter)
+
 
 		Publish_GroupBox = QtWidgets.QGroupBox("Publish Settings")
-		GroupBox_Layout = QtWidgets.QVBoxLayout(Publish_GroupBox)
+		Publish_GroupBox_Layout = QtWidgets.QVBoxLayout(Publish_GroupBox)
 
-		Label_GroupBox = QtWidgets.QLabel("Label Inside GroupBox!")
-		Button_GroupBox = QtWidgets.QPushButton("Button Inside GroupBox!")
-		Button_GroupBox.setFixedSize(140, 30)
-		GroupBox_Layout.addWidget(Label_GroupBox, alignment=QtCore.Qt.AlignCenter)
-		GroupBox_Layout.addWidget(Button_GroupBox, alignment=QtCore.Qt.AlignCenter)
+		Publish_Label = QtWidgets.QLabel("Label Inside GroupBox!", alignment = QtCore.Qt.AlignCenter, styleSheet = "border: 1px solid gray; padding: 2px; min-height: 12px;")
+		Publish_Button = QtWidgets.QPushButton("Publish (N) Assets")
+		self.Publish_ProgressBar = QtWidgets.QProgressBar(alignment = QtCore.Qt.AlignCenter)
+		self.Publish_ProgressBar.setFormat("Status: ready %p%")
+		self.Publish_ProgressBar.reset()
+		self.Publish_ProgressBar.valueChanged.connect(self.Publish_ProgressBar_Update_Function)
+		self.Publish_ProgressBar.setValue(90)
+		#Publish_Status_GroupBox = QtWidgets.QLabel("Status: ready", alignment = QtCore.Qt.AlignCenter, styleSheet = "max-height: 12px; font: 11px; background: #334052;padding-bottom: 2px;")
+		Publish_Button.setFixedSize(180, 40)
+
+
+
+
+
+
+		Publish_GroupBox_Layout.addWidget(Publish_Label)
+		Publish_GroupBox_Layout.addWidget(Publish_Button, alignment=QtCore.Qt.AlignCenter)
+		Publish_GroupBox_Layout.addWidget(self.Publish_ProgressBar)
+		#Publish_GroupBox_Layout.addWidget(Publish_Status_GroupBox)
 
 		Layout.addWidget(Publish_GroupBox)
 		return Page
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	def Publish_ProgressBar_Update_Function(self, Value):
+		match Value:
+			case 0:
+				self.Publish_ProgressBar.setFormat("Status: ready")
+				Publish_StyleSheet = self.PUBLISH_PROGRESSBAR_STYLESHEET.format(chunk_color = self.PROGRESS_BAR_DEFAULT_COLOR)
+			case 100:
+				self.Publish_ProgressBar.setFormat("Status: done")
+				Publish_StyleSheet = self.PUBLISH_PROGRESSBAR_STYLESHEET.format(chunk_color = self.PROGRESS_BAR_SUCCESS_COLOR)
+			case _:
+				self.Publish_ProgressBar.setFormat("Status: %p%")
+				Publish_StyleSheet = self.PUBLISH_PROGRESSBAR_STYLESHEET.format(chunk_color = self.PROGRESS_BAR_DEFAULT_COLOR)
+		self.Publish_ProgressBar.setStyleSheet(Publish_StyleSheet)
+
+
+
+
 
 
 	def Asset_Label_Renamer_Function(self, Category_Part, Tag_Part, Name_Part):
