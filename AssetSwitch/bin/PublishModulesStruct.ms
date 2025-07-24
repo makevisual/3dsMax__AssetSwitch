@@ -321,8 +321,6 @@ struct ASSET_PublishFunctions
 			
 			-- collect the objects to export
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
-			print "export_arr"
-			print export_arr
 			hierarchy_Array = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:false)
 			for obj in export_arr do
 			(
