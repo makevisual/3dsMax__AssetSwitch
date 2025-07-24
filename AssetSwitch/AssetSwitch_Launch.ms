@@ -21,14 +21,14 @@ global FN_setup_Initalize
 global ASSET_Functions
 global ASSET_FolderStructure
 
-versionNumber = "1.6.1"
+versionNumber = "1.7.0"
 (local 
 
 	AssetSwitchDirectory = (pathConfig.removePathLeaf (getSourceFileName()))
 	global PublishCenterExecutable = AssetSwitchDirectory +  @"\bin\PublishCenter.ms"
 
+	filein (AssetSwitchDirectory + @"\bin\PublishModulesStruct.ms")
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFunctions.ms")
-	filein (AssetSwitchDirectory + @"\bin\AssetSwitchUI.ms")
 	filein (AssetSwitchDirectory + @"\bin\AssetSwitchFolderStructure.ms")
+	filein (AssetSwitchDirectory + @"\bin\AssetSwitchUI.ms")
 )
-print (pathConfig.removePathLeaf (getSourceFileName()))
