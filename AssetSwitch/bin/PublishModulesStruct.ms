@@ -375,16 +375,16 @@ struct ASSET_PublishFunctions
 					ExportedNodesParents[i] = (export_arr[i].parent).name
 				)
 				MapIniName = PartsPartialName + "_Parts.vpmap"
+				Max_nodes_to_Save = export_arr + hierarchy_Array
+				print Max_nodes_to_Save
+				saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max" )
 			)
 			setinisetting (MapIniName) "NodesNames" "NodesNamesArray" (ExportedNodesNames as string)
 			setinisetting (MapIniName) "NodesPath" "NodesFilePath" (ExportedNodesFilePath as string)
 			setinisetting (MapIniName) "NodesTransform" "NodesTranformArray" (ExportedNodesTransforms as string)
 			setinisetting (MapIniName) "NodesParent" "NodesParentArray" (ExportedNodesParents as string)
-			-- Temporarily storing the Asset's tranform	reverting the asset back to its original position
+			-- reverting the asset back to its original transform
 			nodeAsset.transform = NodeTemporaryTransform
-			Max_nodes_to_Save = export_arr + hierarchy_Array
-			print Max_nodes_to_Save
-			saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max" )
 			delete export_arr
 			return "Success!"
 		)
