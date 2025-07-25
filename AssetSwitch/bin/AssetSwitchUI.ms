@@ -628,6 +628,7 @@ fn FN_collectAllChildren obj includeParent:true MeshObjOnly:false =
 fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMtl = -- arg: the material file | arg2: the node to do the switch on
 (
 	-- Collect the entire family
+
 	Original_Mesh_Names = #()
 	theObjects = (FN_collectAllChildren nodeAsset includeParent:true)
 	theObjectsNames = (for obj in theObjects collect (obj.name))
@@ -636,38 +637,50 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 	(
 		Original_Mesh_Names = (for obj in theObjects collect (getUserProp obj "MAKE_Asset_Original_Mesh"))
 	)
-	MaterialMapArray = execute (getinisetting curMaterialMapFile "MaterialNodeMap" "MaterialMapArray")
-	-- Test to see if there is a file
-	if (doesfileexist curMaterialFile) then
+	loadMaterialLibrary curMaterialFile
+	loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
+	-- Test to assess if the material being loaded was created before or after version 1.7 (where the concept of matmap was introduced)
+	if (doesfileexist curMaterialMapFile) then
 	(
-		loadMaterialLibrary curMaterialFile
-		loadMaterialLibrary curMaterialFile -- TODO: This is a HACK because tyLibMtl for some reason has to be called TWICE in order to be loaded properly on the first time...
-		NumberMaterials = MaterialMapArray.count
-		for i = 1 to NumberMaterials do
+		-- TODO Take in account scenarios where the matmap (curMaterialMapFile) file does not exist
+		MaterialMapArray = execute (getinisetting curMaterialMapFile "MaterialNodeMap" "MaterialMapArray")
+		-- Test to see if there is a file
+		if (doesfileexist curMaterialFile) then
 		(
-			ObjectsToApplyMaterial = #()
-			-- loops through all 
-			for CurrentObjectName in MaterialMapArray[i] do
+			
+			NumberMaterials = MaterialMapArray.count
+
+			for i = 1 to NumberMaterials do
 			(
-				for j = 1 to theObjectsNames.count do
+				ObjectsToApplyMaterial = #()
+				-- loops through all 
+				for CurrentObjectName in MaterialMapArray[i] do
 				(
-					if (theObjectsNames[j] == CurrentObjectName) OR (Original_Mesh_Names[j] == CurrentObjectName) do
+					for j = 1 to theObjectsNames.count do
 					(
-						append ObjectsToApplyMaterial theObjects[j]
+						if (theObjectsNames[j] == CurrentObjectName) OR (Original_Mesh_Names[j] == CurrentObjectName) do
+						(
+							append ObjectsToApplyMaterial theObjects[j]
+						)
 					)
 				)
-			)
-			if LoadtyLibMtl then
-			(
-				LoadedtyLibMtl = copy currentMaterialLibrary[1]
-				LoadedtyLibMtl.index = (i - 1)
-				ObjectsToApplyMaterial.material = LoadedtyLibMtl
-			)
-			else
-			(
-				ObjectsToApplyMaterial.material = currentMaterialLibrary[i]
+				if LoadtyLibMtl then
+				(
+					LoadedtyLibMtl = copy currentMaterialLibrary[1]
+					LoadedtyLibMtl.index = (i - 1)
+					ObjectsToApplyMaterial.material = LoadedtyLibMtl
+				)
+				else
+				(
+					ObjectsToApplyMaterial.material = currentMaterialLibrary[i]
+				)
 			)
 		)
+	)
+	-- If no .matmap file exists, apply to all objects the first material of the loaded material library
+	else
+	(
+		theObjects.material = currentMaterialLibrary[1]
 	)
 )
 	
@@ -741,16 +754,20 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 			deleteItem HierarchyNodes i
 		)
 	)
+
 	NodesToLinkNames = (for RigNode in HierarchyNodes collect RigNode.name)
 
-	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
 
+	-- TODO: Handle the absence of the VRayMap INI file
+
+
+	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
 	ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
 	ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
-
 	ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
 	FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
 	NumberOfFiles = FilesInFolder.count
+
 	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
