@@ -103,8 +103,15 @@ struct ASSET_PublishFunctions
 			if (((classof ObjClass) == geometryclass) AND (ObjClass != Biped_Object) AND (ObjClass != BoneGeometry) AND (ObjClass != HubObject)
 				(ObjClass != CATBone)) do
 			(
-				MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name parent:arg_Arr[i].parent material:arg_Arr[i].material
-				append resultArr MesherObj
+				-- This method creates and instance of the object, and then collapses it to a mesh before passing the array to be exported
+				InstanceObj = instance arg_Arr[i]
+				InstanceObj.name = arg_Arr[i].name
+				collapse.setDoBool false
+				collapse.setOutputType #Mesh
+				collapse.setCollapseTo #Single
+				collapse.doCollapse InstanceObj
+				--MesherObj = Mesher pick:arg_Arr[i] transform:arg_Arr[i].transform name:arg_Arr[i].name parent:arg_Arr[i].parent material:arg_Arr[i].material
+				append resultArr InstanceObj
 			)
 		)
 		return resultArr
