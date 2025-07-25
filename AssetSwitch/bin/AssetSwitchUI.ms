@@ -762,12 +762,19 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 
 
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
-	ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
-	ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
-	ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
-	FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
+	if (doesfileexist VrayMapFile) then
+	(
+		ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
+		ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
+		ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
+		FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
+	)
+	else
+	(
+		ExportedNodesParents = ExportedNodesTransform = ExportedNodesNames = #("")
+		FilesInFolder = #(arg)
+	)
 	NumberOfFiles = FilesInFolder.count
-
 	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
