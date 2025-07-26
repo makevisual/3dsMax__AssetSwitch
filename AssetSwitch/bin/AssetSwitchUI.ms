@@ -732,7 +732,7 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 	)
 )
 
--- Load in the chosen vray proxy	
+-- Load in the chosen vray proxy. This function in called ONLY to lead single VRayMesh objects. VrayParts objects are loaded using the FN_DoSwitch_Standard function
 fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	ASSET_PublishFunctions.LOGclear()
@@ -754,27 +754,30 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 			deleteItem HierarchyNodes i
 		)
 	)
-
 	NodesToLinkNames = (for RigNode in HierarchyNodes collect RigNode.name)
-
-
-	-- TODO: Handle the absence of the VRayMap INI file
-
-
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
+	-- Checks if the INI .vpmap file exists to load the VRayMeshes from the information stored in it
 	if (doesfileexist VrayMapFile) then
 	(
 		ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
 		ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
 		ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
 		FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
+		-- If the file to load does NOT exist on the saved absolute path on the INI file, tries to find the file by appending the file name
+		-- to the path of the published asset
+		if NOT (doesfileexist FilesInFolder[1]) do
+		(
+			FilesInFolder[1] = ((pathConfig.removePathLeaf arg) + "\\" + (pathConfig.stripPathToLeaf FilesInFolder[1]))
+		)
 	)
+	-- In case the INI .vpmap file does not exist (possibly loading an asset created before AS v1.7 was deployed) revert to load the old way
 	else
 	(
 		ExportedNodesParents = ExportedNodesTransform = ExportedNodesNames = #("")
 		FilesInFolder = #(arg)
 	)
 	NumberOfFiles = FilesInFolder.count
+	-- TODO This FOR is unecessary since this function will only load individual VRayMesh files. Study way to simplyfy this whole routine in the future.
 	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
