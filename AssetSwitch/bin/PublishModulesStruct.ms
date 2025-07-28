@@ -334,7 +334,6 @@ struct ASSET_PublishFunctions
 				IndexToDelete = FindItem hierarchy_Array obj
 				DeleteItem hierarchy_Array IndexToDelete
 			)
-			print hierarchy_Array
 			-- Temporarily storing the Asset's tranform				
 			NodeTemporaryTransform = nodeAsset.transform
 			nodeAsset.position = [0,0,0]

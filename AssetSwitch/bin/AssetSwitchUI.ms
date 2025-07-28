@@ -83,7 +83,7 @@ fn FN_GetMtlsInDIr =
 -- gets all of the 'type folders' in the assedts directory and returns them as an array
 fn FN_GetObjectsInDir =
 (
-	typeArr = getDirectories  (assetDir + @"Publish\*")
+	typeArr = getDirectories (assetDir + @"Publish\*")
 	typeNames = #()
 	for i in 1 to typeArr.count do
 	(
@@ -214,6 +214,7 @@ fn FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
+	MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled = false
 		
 	MAIN_AssetSwitchUI.chkbox_materials.text = "Materials"
 	MAIN_AssetSwitchUI.chkbox_objects.text = "Objects"
@@ -315,6 +316,7 @@ fn FN_UiInformationUpdate =
 		(
 			curFileExtension =@"*.max"
 			targetFrameRangeparsed = "unknown"
+
 		)
 		-- V-Ray Mesh Import
 		2:
@@ -375,6 +377,7 @@ fn FN_UiUpdate_Versions =
 	curVersion = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
 		
 	curVersionArr =	FN_GetVersionsInDir()
+	-- This routine is setting the Version Dropdown to the current loaded version of the selected Asset
 	for i in 1 to curVersionArr.count do
 	(
 		if curVersion == curVersionArr[i] do
@@ -396,6 +399,15 @@ fn FN_UiUpdate_Objects =
 	-- Search the current directory for the filetype, and set the importer for it
 	curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
 	MAIN_AssetSwitchUI.lab_importType.text = ( "Import Module: " + (FN_importTypeTest curVersionFile))
+
+	if (curType == "Max") OR (curType == "VrmeshParts") then
+	(
+		MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled = true
+	)
+	else
+	(
+		MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled = false
+	)
 		
 	FN_UiUpdate_Versions()
 		
@@ -577,13 +589,13 @@ fn FN_UiToggleInformationTest arg =
 (
 	if arg == true then
 	(
-		MAIN_AssetSwitchUI.height = 362
+		MAIN_AssetSwitchUI.height = 385
 		MAIN_AssetSwitchUI.grp_Info.height = 110
 		FN_UiToggleInformation true
 	)
 	else
 	(
-		MAIN_AssetSwitchUI.height = 292
+		MAIN_AssetSwitchUI.height = 315
 		MAIN_AssetSwitchUI.grp_Info.height = 40
 		FN_UiToggleInformation false
 	)
@@ -623,7 +635,7 @@ fn FN_collectAllChildren obj includeParent:true MeshObjOnly:false =
 	-- return array containing children
 	allChildren
 )	
-	
+
 -- Load and apply the chosen material
 fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMtl = -- arg: the material file | arg2: the node to do the switch on
 (
@@ -684,14 +696,53 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 	)
 )
 	
+
+
+
+
+
+
+
+
+
+
+fn FN_Save_Load_Animation AssetGlobal operation =
+(
+	if operation == "AnimSave" then
+	(
+		TempAnimFile = sysInfo.tempdir + "TempAnimFile.xml"
+		AnimationNodes = (FN_collectAllChildren AssetGlobal includeParent:true MeshObjOnly:false)
+		LoadSaveAnimation.saveAnimation TempAnimFile &AnimationNodes (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true
+	)
+	else
+	(
+		TempAnimFile = sysInfo.tempdir + "TempAnimFile.xml"
+		AnimationNodes = (FN_collectAllChildren AssetGlobal includeParent:true MeshObjOnly:false)
+		LoadSaveAnimation.loadAnimation TempAnimFile &AnimationNodes relative:false insert:false
+	)
+)
+
+
+
+
+
+
+
+
+
 fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	-- set some stuff up
+	LoadAnimation = false
 	nodeAsset = arg2
 	heroName = nodeAsset.name
 	allObjectsArr = (objects as array)
 	nameDuplicatesArr = #()
-
+	if (MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled == true) AND (MAIN_AssetSwitchUI.LoadAnim_CheckBox.checked == true) do
+	(
+		LoadAnimation = true
+		FN_Save_Load_Animation nodeAsset "AnimSave"
+	)
 	-- Put all objects named the same in an array
 	for i in 1 to allObjectsArr.count do
 	(
@@ -707,6 +758,7 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 		
 	-- Load objects from the scenefile into an array
 	mergeFile = arg
+	-- Gets the names of the objects inside the file to be merged in
 	mergeObjects = getmaxfileobjectnames mergeFile
 		
 	try
@@ -718,21 +770,26 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 		deleteItem mergeObjects removeGlobalIndex
 		
 		-- Collect all the children of the nodeAsset, and delete them
-		deleteMe = (FN_collectAllChildren nodeAsset includeParent:false)
+		deleteMe = (FN_collectAllChildren nodeAsset includeParent:false MeshObjOnly:false)
 		delete deleteMe
 		
-		mergeMAXfile mergeFile mergeObjects #useMergedMtlDups  #mergeDups #alwaysReparent 
+		mergeMAXfile mergeFile mergeObjects #useMergedMtlDups #mergeDups #alwaysReparent 
 			
 		-- Put all of the nodes back to having the same name	
 		for i in 1 to nameDuplicatesArr.count do (nameDuplicatesArr[i].name = (heroName))
+		if LoadAnimation do
+		(
+			FN_Save_Load_Animation nodeAsset "AnimLoad"
+		)
 	)
+
 	Catch
 	(
 		messagebox ("No objects with the name '" + heroName + "' were found in the target asset file. Please check your target file and verify the naming is correct.")
 	)
 )
 
--- Load in the chosen vray proxy	
+-- Load in the chosen vray proxy. This function in called ONLY to lead single VRayMesh objects. VrayParts objects are loaded using the FN_DoSwitch_Standard function
 fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	ASSET_PublishFunctions.LOGclear()
@@ -754,20 +811,30 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 			deleteItem HierarchyNodes i
 		)
 	)
-
 	NodesToLinkNames = (for RigNode in HierarchyNodes collect RigNode.name)
-
-
-	-- TODO: Handle the absence of the VRayMap INI file
-
-
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
-	ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
-	ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
-	ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
-	FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
+	-- Checks if the INI .vpmap file exists to load the VRayMeshes from the information stored in it
+	if (doesfileexist VrayMapFile) then
+	(
+		ExportedNodesNames = (execute (getinisetting VrayMapFile "NodesNames" "NodesNamesArray"))
+		ExportedNodesTransform = (execute (getinisetting VrayMapFile "NodesTransform" "NodesTranformArray"))
+		ExportedNodesParents = (execute (getinisetting VrayMapFile "NodesParent" "NodesParentArray"))
+		FilesInFolder = (execute (getinisetting VrayMapFile "NodesPath" "NodesFilePath"))
+		-- If the file to load does NOT exist on the saved absolute path on the INI file, tries to find the file by appending the file name
+		-- to the path of the published asset
+		if NOT (doesfileexist FilesInFolder[1]) do
+		(
+			FilesInFolder[1] = ((pathConfig.removePathLeaf arg) + "\\" + (pathConfig.stripPathToLeaf FilesInFolder[1]))
+		)
+	)
+	-- In case the INI .vpmap file does not exist (possibly loading an asset created before AS v1.7 was deployed) revert to load the old way
+	else
+	(
+		ExportedNodesParents = ExportedNodesTransform = ExportedNodesNames = #("")
+		FilesInFolder = #(arg)
+	)
 	NumberOfFiles = FilesInFolder.count
-
+	-- TODO This FOR is unecessary since this function will only load individual VRayMesh files. Study way to simplyfy this whole routine in the future.
 	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
@@ -1112,7 +1179,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 			button btn_copyMatDir "C" width:18 height:18 align:#left offset:[382,-25]
 			button btn_openMatDir "..." width:18 height:18 align:#left offset:[401,-23]
 		
-	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:75
+	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:90
 		checkbox chkbox_objects "Objects" offset:[0,((grp_objects.height * -1)-6)] checked:true align:#left
 		dropdownlist ddl_objDropdown width:381 items:#(" -- No Objects Present --") align:#left offset:[0,0]
 			button btn_copyObjDir "C" width:18 height:18 align:#left offset:[382,-25]
@@ -1121,6 +1188,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		dropdownlist ddl_versionDropdown width:361 items:#(" -- No Versions Present --") align:#left offset:[20,-22]
 			button btn_copyVerDir "C" width:18 height:18 align:#left offset:[382,-25]
 			button btn_openVerDir "..." width:18 height:18 align:#left offset:[401,-23]
+		checkbox LoadAnim_CheckBox "Transfer Animation on Switch" enabled:false
 		
 	groupbox grp_Info "" offset:[-8,13] width:438 height:40 align:#left
 		checkbox chkbox_info "Information" offset:[0,((grp_info.height * -1)-6)] checked:true 					-- TOGGLE FOR INFO PANEL
@@ -1229,7 +1297,6 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 	-- Triggers on OBJECT selection, from its dropdown		
 	on ddl_objDropdown selected arg do
 	(
-
 		curType = ddl_ObjDropdown.items[arg]
 		FN_UiUpdate_Objects()
 	)
