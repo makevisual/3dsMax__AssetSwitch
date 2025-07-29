@@ -836,7 +836,6 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		)
 	)
 	NodesToLinkNames = (for RigNode in HierarchyNodes collect RigNode.name)
-
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
 	-- Checks if the INI .vpmap file exists to load the VRayMeshes from the information stored in it
 	if (doesfileexist VrayMapFile) then
@@ -860,7 +859,6 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 	)
 	NumberOfFiles = FilesInFolder.count
 	-- TODO This FOR is unecessary since this function will only load individual VRayMesh files. Study way to simplyfy this whole routine in the future.
-
 	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
