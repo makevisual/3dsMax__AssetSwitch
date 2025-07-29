@@ -369,8 +369,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 		function FN_UpdateFrameRange arg_label arg_iniKey =  -- arg_label: the UI element to update |arg_iniKey: where to read out of the ini file
 		(
 			-- Get if animation is enabled
-			if ( hasinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" )
-			then
+			if ( hasinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" ) then
 			(
 				export_animation = ( execute ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" ))
 			)
@@ -381,8 +380,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			)
 			
 			-- Set the approprite frame or frame range to the .ini and ui
-			if export_animation
-			then
+			if export_animation then
 			(
 				startFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" )
 				endFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" )
