@@ -750,10 +750,10 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 	-- set some stuff up
 	LoadAnimation = false
 	LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "LoadSavedNames"))
-	UseInterval = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetInterval"))
-	IntervalStart = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart"))
-	IntervalEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd"))
-	IntervalRange = interval IntervalStart IntervalEnd
+	UseInterval = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetRange"))
+	RangeStart = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart"))
+	RangeEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd"))
+	IntervalRange = interval RangeStart RangeEnd
 	TempAnimFile = undefined
 	nodeAsset = arg2
 	heroName = nodeAsset.name
@@ -1150,12 +1150,20 @@ fn FN_help_About =
 	createdialog ROLL_AssetSwitch_Help 200 105
 )
 
+
+
+
 fn TransferAnimation_Label_Update =
 (
-	if ( hasINISetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetInterval" ) then
+	if ( hasINISetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetRange" ) then
 	(
+		SetRange = (execute ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetRange" ))
 		startFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart" )
 		endFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd" )
+		if SetRange do
+		(
+			MAIN_AssetSwitchUI.SaveLoadAnim_Label.enabled = true
+		)
 	)
 	else
 	(
@@ -1173,7 +1181,7 @@ function FN_RefreshFrameRange arg_iniKey arg_label = -- arg_iniKey: where to rea
 	startFrame = substring startFrame 1 (startFrame.count - 1)
 	endFrame = substring endFrame 1 (endFrame.count - 1)
 	
-	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "SetInterval" "true"
+	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "SetRange" "true"
 	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" startFrame
 	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" endFrame
 		
@@ -1185,38 +1193,38 @@ fn TransferAnimation_Options =
 	(
 		group  "Transfer Animation Options"
 		(
-			checkbox SetInterval_CheckBox "Set Interval" across:3
-			spinner StartInterval_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1]
-			spinner EndInterval_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1]
-			checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation"
+			checkbox SetRange_CheckBox "Set Range" checked:false across:3
+			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1]
+			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1]
+			checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false
 		)
 		button buttonOK "OK" pos:[258, 75]
 		button buttonCancel "Cancel" align:#right offset:[0,-26]
-		on SetInterval_CheckBox changed state do
+		on SetRange_CheckBox changed state do
 		(
-			StartInterval_Spinner.enabled = EndInterval_Spinner.enabled = MAIN_AssetSwitchUI.SaveLoadAnim_Label.enabled = state
+			StartRange_Spinner.enabled = EndRange_Spinner.enabled = MAIN_AssetSwitchUI.SaveLoadAnim_Label.enabled = state
 		)
-		on StartInterval_Spinner changed state do (if state >= EndInterval_Spinner.value then (EndInterval_Spinner.value = state)else())
-		on EndInterval_Spinner changed state do (if state <= StartInterval_Spinner.value then (StartInterval_Spinner.value = state)else())
+		on StartRange_Spinner changed state do (if state >= EndRange_Spinner.value then (EndRange_Spinner.value = state)else())
+		on EndRange_Spinner changed state do (if state <= StartRange_Spinner.value then (StartRange_Spinner.value = state)else())
 
 
 		on SWITCH_TransferAnimation_Options open do
 		(
 			try
 			(
-				SetInterval_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetInterval" ))
-				StartInterval_Spinner.enabled = EndInterval_Spinner.enabled = SetInterval_CheckBox.checked
-				StartInterval_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart" ))
-				EndInterval_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd" ))
+				SetRange_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetRange" ))
+				StartRange_Spinner.enabled = EndRange_Spinner.enabled = SetRange_CheckBox.checked
+				StartRange_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart" ))
+				EndRange_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd" ))
 				LoadSavedNames_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "LoadSavedNames" ))
 			)
 			catch()
 		)
 		on buttonOK pressed do
 		(
-			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetInterval" (SetInterval_CheckBox.checked as string)
-			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart" (StartInterval_Spinner.value as string)
-			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd" (EndInterval_Spinner.value as string)
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "SetRange" (SetRange_CheckBox.checked as string)
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameStart" (StartRange_Spinner.value as string)
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "FrameEnd" (EndRange_Spinner.value as string)
 			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationTransfer" "LoadSavedNames" (LoadSavedNames_CheckBox.checked as string)
 			TransferAnimation_Label_Update()
 			destroydialog SWITCH_TransferAnimation_Options
