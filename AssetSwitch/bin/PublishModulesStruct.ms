@@ -262,6 +262,39 @@ struct ASSET_PublishFunctions
 		Catch(return "ERROR: MaxFile Publish failed")
 	),
 	
+
+
+
+
+
+
+
+
+
+
+
+	function pub_AnimationFile arg_asset arg_path = --TODO: Create animation publishing routine
+	(
+
+	),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	-- Publish a MaterialFile	
 	function Create_TyLibMaterial currentMaterialLibrary arg_path =
 	(

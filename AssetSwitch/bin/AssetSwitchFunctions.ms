@@ -88,7 +88,7 @@ struct ASSET_Functions
 	(
 		try (destroydialog CreateNewAsset_Dialog) catch()
 
-		rollout CreateNewAsset_Dialog  "Create New Asset 1.7" width:350 height:250
+		rollout CreateNewAsset_Dialog  ("Create New Asset v" + (versionNumber as string)) width:350 height:250
 		(
 			groupbox			grp_project			"Project" 			width: (CreateNewAsset_Dialog.width - 25 ) height:65
 				button 			btn_ChooseProject 	"Choose Project" 	width: (CreateNewAsset_Dialog.width - 35 ) offset:[0,(grp_project.height * -1 + 10)]
