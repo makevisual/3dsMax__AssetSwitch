@@ -1062,16 +1062,24 @@ fn FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
+			-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
+			-- Creates the temporary animation *.xaf file
 			TempAnimFile = undefined
+			-- Test for the Animation Group AND the "Transfer Current Animation" checkboxes
 			if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == true) do
 			(
+				-- Creates the filepath for the temporary animation file where the animation data will be stored
 				TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
+				-- Call the Animation Swtitch function in "QuickSwitchSave" mode, which will just record the animation of the current assets on the temporary file
+				-- and then proceeds to switch the Asset's objects (*.max file or VrayMesh files)
 				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
 			)
 			switchObjectsArray[i].name = assetGlobalName
 			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
+			-- Test for temporary animation file (if it exists, it means it was created because the user wanted to transfer the asset's current animation to the newly switched asset)
 			if TempAnimFile != undefined do
 			(
+				-- -- Call the Animation Swtitch function in "QuickSwitchLoad" mode, which will load the animation of the temporary animation file on the new switched asset
 				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
 			)
 		)
@@ -1086,6 +1094,7 @@ fn FN_DoSwitch =
 																						  -- To avoid this the materials should be defined BEFORE the loop on
 																						  -- line 1038 ("for i in 1 to switchObjectsArray.count do")
 		)
+		-- Test for if an Animation switch is desired. Will only hold true IF the Animation Group checkbox is true AND the "Transfer Current Animation" is false
 		if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == false) do
 		(
 			FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] "undefined" "none"
@@ -1196,10 +1205,6 @@ fn FN_help_About =
 		
 	createdialog ROLL_AssetSwitch_Help 200 105
 )
-
-
-
-
 fn TransferAnimation_Label_Update =
 (
 	if ( hasINISetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" ) then
@@ -1240,10 +1245,10 @@ fn TransferAnimation_Options =
 	(
 		group  "Switch Animation Options"
 		(
-			checkbox SetRange_CheckBox "Set Range" checked:false across:3
-			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1]
-			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1]
-			checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false
+			checkbox SetRange_CheckBox "Set Range" checked:false tooltip:"Enables Animation Switch on a specific range" across:3
+			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1] tooltip:"Start frame to Switch animation"
+			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1] tooltip:"End frame to Switch animation"
+			checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false tooltip:"Load saved names inside User Properties on the object before doing a Switch"
 		)
 		button buttonOK "OK" pos:[258, 75]
 		button buttonCancel "Cancel" align:#right offset:[0,-26]
@@ -1323,65 +1328,52 @@ rcMenu rc_MainMenu
 rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 (
 	groupbox grp_Asset "Asset" height:71 width:438 pos:[5,5]-- offset:[-8,8]
-		button btn_chooseAsset "" height:25 width:420 align:#left offset:[0,((grp_Asset.height * -1) +12)]
-		label lab_assetDir  " " style_sunkenedge:true align:#left width:378 height:16 offset:[1,0]
-			button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[382,-22]
-			button btn_openAssetDir "..." width:18 height:18 align:#left offset:[401,-23]
+		button btn_chooseAsset "" height:25 width:420 align:#left offset:[0,((grp_Asset.height * -1) +12)] tooltip:"Selected Asset file"
+		label lab_assetDir  " " style_sunkenedge:true align:#left width:378 height:16 offset:[1,0] tooltip:"Current Asset folder path"
+			button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[382,-22] tooltip:"Copy the path to the clipboard"
+			button btn_openAssetDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 			
 	groupBox grp_materials "" width:438 offset:[-8,8] height:50
-		checkbox chkbox_materials "Materials" offset:[0,((grp_materials.height * -1)-6)] checked:true align:#left
-		dropdownlist ddl_matDropdown width:381 items:#(" -- No Materials Present --") align:#left offset:[0,0] 
-			button btn_copyMatDir "C" width:18 height:18 align:#left offset:[382,-25]
-			button btn_openMatDir "..." width:18 height:18 align:#left offset:[401,-23]
+		checkbox chkbox_materials "Materials" offset:[0,((grp_materials.height * -1)-6)] checked:true align:#left tooltip:"Enable Material Switch"
+		dropdownlist ddl_matDropdown width:381 items:#(" -- No Materials Present --") align:#left offset:[0,0]  tooltip:"Material to Switch"
+			button btn_copyMatDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
+			button btn_openMatDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 		
 	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:75
-		checkbox chkbox_objects "Objects" offset:[0,((grp_objects.height * -1)-6)] checked:true align:#left
-		dropdownlist ddl_objDropdown width:381 items:#(" -- No Objects Present --") align:#left offset:[0,0]
-			button btn_copyObjDir "C" width:18 height:18 align:#left offset:[382,-25]
-			button btn_openObjDir "..." width:18 height:18 align:#left offset:[401,-23]
+		checkbox chkbox_objects "Objects" offset:[0,((grp_objects.height * -1)-6)] checked:true align:#left tooltip:"Enable Object Switch"
+		dropdownlist ddl_objDropdown width:381 items:#(" -- No Objects Present --") align:#left offset:[0,0] tooltip:"Object type to Switch"
+			button btn_copyObjDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
+			button btn_openObjDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 		label lab_versionDropdown "Ver:" offset:[0,3] align:#left
-		dropdownlist ddl_versionDropdown width:361 items:#(" -- No Versions Present --") align:#left offset:[20,-22]
-			button btn_copyVerDir "C" width:18 height:18 align:#left offset:[382,-25]
-			button btn_openVerDir "..." width:18 height:18 align:#left offset:[401,-23]
+		dropdownlist ddl_versionDropdown width:361 items:#(" -- No Versions Present --") align:#left offset:[20,-22] tooltip:"Object version to Switch"
+			button btn_copyVerDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
+			button btn_openVerDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 		
-
-
-
-
-
-
 	groupBox grp_animation "" width:438 align:#left offset:[-8,15] height:75
-		checkbox chkbox_animation "Animation" offset:[0,((grp_objects.height * -1)-5)] checked:true align:#left
-		checkbox SwitchCurrentAnim_CheckBox "Transfer Current Animation on Switch" enabled:false across:4
-		button SaveLoadAnim_Refresh "R" align:#left offset:[100,-3] width:18 height:18
+		checkbox chkbox_animation "Animation" offset:[0,((grp_objects.height * -1)-5)] checked:true align:#left tooltip:"Enable Animation Switch"
+		checkbox SwitchCurrentAnim_CheckBox "Transfer Current Animation on Switch" enabled:false tooltip:"Transfer animation from current scene Asset to Switched Asset" across:4
+		button SaveLoadAnim_Refresh "R" align:#left offset:[100,-3] width:18 height:18 tooltip:"Reset frame range to current scene time range and enables Set Range under Options menu"
 		label SaveLoadAnim_Label "frames:" enabled:false offset:[15,0]
-		button SaveLoadAnim_Options "Options" enabled:false offset:[20,-3]
-		dropdownlist ddl_AnimationDropdown width:381 items:#(" -- No Animation Present --") align:#left offset:[0,0]
-			button btn_copyAnimationDir "C" width:18 height:18 align:#left offset:[382,-25]
-			button btn_openAnimationDir "..." width:18 height:18 align:#left offset:[401,-23]
+		button SaveLoadAnim_Options "Options" enabled:false offset:[20,-3] tooltip:"Options for Animation Switching"
+		dropdownlist ddl_AnimationDropdown width:381 items:#(" -- No Animation Present --") align:#left offset:[0,0] tooltip:"Animation to Switch"
+			button btn_copyAnimationDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
+			button btn_openAnimationDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 
-
-
-
-
-
+ 					-- TOGGLE FOR INFO PANEL
 	groupbox grp_Info "" offset:[-8,15] width:438 height:40 align:#left
-		checkbox chkbox_info "Information" offset:[0,((grp_info.height * -1)-6)] checked:true 					-- TOGGLE FOR INFO PANEL
+		checkbox chkbox_info "Information" offset:[0,((grp_info.height * -1)-6)] checked:true tooltip:"Enable Asset Switch Information"
 		label lab_importType "Import Module: N/A" align:#left offset:[3,-2]
 		label lab_versionInfo_Filename "File name: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Materialname "Material name: N/A"  align:#left offset:[3,0] visible:false
-
 		label lab_versionInfo_AnimationFile "Animation file: N/A"  align:#left offset:[3,0] visible:false
-
-
 		label lab_versionInfo_Frames "Frame Range: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Date "Date Created: N/A" align:#left offset:[3,0] visible:false
 		bitmap bmp_preview filename:"" width:82 height:82 align:#right offset:[-5,-90] visible:false
 		
-	button btn_SwitchAsset "<< Switch Asset! >>" height:25 width:282 align:#right pos:[60,(MAIN_AssetSwitchUI.height - 30)]--offset:[100, 15] -- w 336
-	button btn_Open_Publish_Center "Publish" height:25 width:55 align:#left offset:[-8,-41]
-	checkbutton chkbtn_SwitchHold "Hold" height:25 width:40 align:#left offset:[329,-30] checked:false
-	button btn_Revert "Revert" height:25 width:60 align:#left offset:[370,-30] enabled:false
+	button btn_SwitchAsset "<< Switch Asset! >>" height:25 width:282 align:#right pos:[60,(MAIN_AssetSwitchUI.height - 30)] tooltip:"Switches Assets"
+	button btn_Open_Publish_Center "Publish" height:25 width:55 align:#left offset:[-8,-41] tooltip:"Open the Publishing window"
+	checkbutton chkbtn_SwitchHold "Hold" height:25 width:40 align:#left offset:[329,-30] checked:false tooltip:"Enables scene HOLD before doing a Switch"
+	button btn_Revert "Revert" height:25 width:60 align:#left offset:[370,-30] enabled:false tooltip:"Reverts the scene to the state before the last Switch"
 	
 -- ===================
 -- EVENT HANDLERS
@@ -1525,7 +1517,10 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	(
 		SwitchCurrentAnim_CheckBox.enabled = state
 		SaveLoadAnim_Refresh.enabled = state
-		SaveLoadAnim_Label.enabled = state
+		if (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" )) do
+		(
+			SaveLoadAnim_Label.enabled = state
+		)
 		SaveLoadAnim_Options.enabled = state
 		ddl_AnimationDropdown.enabled = state
 	)

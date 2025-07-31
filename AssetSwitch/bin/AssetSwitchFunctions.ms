@@ -90,17 +90,17 @@ struct ASSET_Functions
 
 		rollout CreateNewAsset_Dialog  ("Create New Asset v" + (versionNumber as string)) width:350 height:250
 		(
-			groupbox			grp_project			"Project" 			width: (CreateNewAsset_Dialog.width - 25 ) height:65
-				button 			btn_ChooseProject 	"Choose Project" 	width: (CreateNewAsset_Dialog.width - 35 ) offset:[0,(grp_project.height * -1 + 10)]
+			groupbox			grp_project			"Project" 			width: (CreateNewAsset_Dialog.width - 25 ) height:65  
+				button 			btn_ChooseProject 	"Choose Project" 	width: (CreateNewAsset_Dialog.width - 35 ) offset:[0,(grp_project.height * -1 + 10)] tooltip:"Select Project root for new Asset"
 				label 			lab_Project 		""				align:#left offset:[6,0] style_sunkenedge:true height:18 width: (CreateNewAsset_Dialog.width - 38 )
 
 			groupbox			grp_Asset 			"Asset Information" width: (CreateNewAsset_Dialog.width - 25 ) height:95 offset:[0,5]
 				label 			lab_AssetClass 		"Category:"  		offset:[8,(grp_Asset.height * -1 + 15)] align:#left
-				dropdownlist 	ddl_AssetClass 							offset:[60,-20] width:(CreateNewAsset_Dialog.width - 90 ) items:#("Characters","Effects","Misc","Objects","Sets")
+				dropdownlist 	ddl_AssetClass 							offset:[60,-20] width:(CreateNewAsset_Dialog.width - 90 ) items:#("Characters","Effects","Misc","Objects","Sets") tooltip:"Select new Asset Category"
 				label 			lab_Handle 			"Handle:" 			align:#left offset:[8,0]
-				edittext 		edt_Handle 			"" 		 			offset:[58,-20]  width:50 -- width:(CreateNewAsset_Dialog.width - 90 )
+				edittext 		edt_Handle 			"" 		 			offset:[58,-20]  width:50 tooltip:"Enter Asset's Prefix"
 				label 			lab_Name 			"Name:" 			align:#left offset:[8,3]
- 				edittext 		edt_Name 			"" 					offset:[58,-20] width:(CreateNewAsset_Dialog.width - 90 )
+ 				edittext 		edt_Name 			"" 					offset:[58,-20] width:(CreateNewAsset_Dialog.width - 90 ) tooltip:"Enter Asset's Name"
 
 			groupbox			grp_create			"Create" 			width: (CreateNewAsset_Dialog.width - 25 ) height:65 offset:[0,10]
 				button 			btn_create		 	"Create Asset"	 	width: (CreateNewAsset_Dialog.width - 35 ) offset:[0,(grp_project.height * -1 + 10)]									enabled:false
