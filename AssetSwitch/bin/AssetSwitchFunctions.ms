@@ -98,7 +98,7 @@ struct ASSET_Functions
 				label 			lab_AssetClass 		"Category:"  		offset:[8,(grp_Asset.height * -1 + 15)] align:#left
 				dropdownlist 	ddl_AssetClass 							offset:[60,-20] width:(CreateNewAsset_Dialog.width - 90 ) items:#("Characters","Effects","Misc","Objects","Sets") tooltip:"Select new Asset Category"
 				label 			lab_Handle 			"Handle:" 			align:#left offset:[8,0]
-				edittext 		edt_Handle 			"" 		 			offset:[58,-20]  width:50 tooltip:"Enter Asset's Prefix"
+				edittext 		edt_Handle 			"" 		 			offset:[58,-20]  width:50 tooltip:"Enter Asset's Tag"
 				label 			lab_Name 			"Name:" 			align:#left offset:[8,3]
  				edittext 		edt_Name 			"" 					offset:[58,-20] width:(CreateNewAsset_Dialog.width - 90 ) tooltip:"Enter Asset's Name"
 
