@@ -379,6 +379,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 				(
 					curClassName = "Animation"
 					curClassExtension = ".xaf"
+					comboString = (@"\" + curClassName + @"\" + curAssetName + nameVer + curClassExtension )
+					target.text = comboString
+					return comboString
 				)
 				3: -- MaterialFile
 				(
@@ -579,6 +582,21 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_ReportResult result timestart_minor
 		)
 		
+		function FN_Publish_AnimationFile =
+		(
+			publish_filepath = ( assetDir + "Publish" + (FN_Update_AnimationFile()))
+
+			-- Prepare to publish
+			timestart_minor = timestamp()
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing Animation File >>>")
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath)
+			lab_Status.text = " Status: Publishing Animation File"
+
+			result = ASSET_PublishFunctions.pub_AnimationFile "asset" publish_filepath
+			FN_ReportResult result timestart_minor
+
+
+		)
 		
 		function FN_PUBhistSave =
 		(
@@ -853,6 +871,12 @@ function FN_PublishCenter = -- asset: the current asset definition
 			if chk_vrmeshPartsFile.checked then
 			(
 				errorcount += FN_Publish_vrmeshPartsFile()
+				countCurrent += 1
+				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+			)
+			if chk_AnimationFile.checked then
+			(
+				errorcount += FN_Publish_AnimationFile()
 				countCurrent += 1
 				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
 			)

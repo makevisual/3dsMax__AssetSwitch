@@ -11,6 +11,9 @@ global curType = undefined
 global curVersion = undefined
 global curVersionFile = undefined
 
+global curAnim = undefined
+global curAnimFile = undefined
+
 global nodeAsset = undefined  					-- The target node
 global switchObjectsHandleArray = undefined 	-- The objects selected when a switch is performed (used for fetching)
 
