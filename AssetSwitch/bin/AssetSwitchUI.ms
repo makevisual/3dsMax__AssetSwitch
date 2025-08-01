@@ -230,6 +230,7 @@ fn FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
+
 	MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
 	MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
 		
@@ -437,6 +438,7 @@ fn FN_UiUpdate_Objects =
 
 	if (curType == "Max") OR (curType == "VrmeshParts") then
 	(
+
 		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = true
 		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = true
 	)
@@ -444,6 +446,7 @@ fn FN_UiUpdate_Objects =
 	(
 		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
 		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
+
 	)
 		
 	FN_UiUpdate_Versions()
@@ -633,13 +636,17 @@ fn FN_UiToggleInformationTest arg =
 (
 	if arg == true then
 	(
+
 		MAIN_AssetSwitchUI.height = 475
 		MAIN_AssetSwitchUI.grp_Info.height = 130
+
 		FN_UiToggleInformation true
 	)
 	else
 	(
+
 		MAIN_AssetSwitchUI.height = 385
+
 		MAIN_AssetSwitchUI.grp_Info.height = 40
 		FN_UiToggleInformation false
 	)
@@ -739,6 +746,7 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 		theObjects.material = currentMaterialLibrary[1]
 	)
 )
+
 fn FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange operation =
 (
 	if operation == "AnimSave" then
@@ -791,14 +799,20 @@ fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepat
 		)
 	)
 )
+
 fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	-- set some stuff up
+	LoadAnimation = false
 	nodeAsset = arg2
 	heroName = nodeAsset.name
 	allObjectsArr = (objects as array)
 	nameDuplicatesArr = #()
-
+	if (MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled == true) AND (MAIN_AssetSwitchUI.LoadAnim_CheckBox.checked == true) do
+	(
+		LoadAnimation = true
+		FN_Save_Load_Animation nodeAsset "AnimSave"
+	)
 	-- Put all objects named the same in an array
 	for i in 1 to allObjectsArr.count do
 	(
@@ -833,6 +847,10 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 			
 		-- Put all of the nodes back to having the same name	
 		for i in 1 to nameDuplicatesArr.count do (nameDuplicatesArr[i].name = (heroName))
+		if LoadAnimation do
+		(
+			FN_Save_Load_Animation nodeAsset "AnimLoad"
+		)
 	)
 
 	Catch
@@ -1334,7 +1352,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 			button btn_copyMatDir "C" width:18 height:18 align:#left offset:[382,-25]
 			button btn_openMatDir "..." width:18 height:18 align:#left offset:[401,-23]
 		
-	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:75
+	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:90
 		checkbox chkbox_objects "Objects" offset:[0,((grp_objects.height * -1)-6)] checked:true align:#left
 		dropdownlist ddl_objDropdown width:381 items:#(" -- No Objects Present --") align:#left offset:[0,0]
 			button btn_copyObjDir "C" width:18 height:18 align:#left offset:[382,-25]
@@ -1343,6 +1361,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 		dropdownlist ddl_versionDropdown width:361 items:#(" -- No Versions Present --") align:#left offset:[20,-22]
 			button btn_copyVerDir "C" width:18 height:18 align:#left offset:[382,-25]
 			button btn_openVerDir "..." width:18 height:18 align:#left offset:[401,-23]
+		checkbox LoadAnim_CheckBox "Transfer Animation on Switch" enabled:false
 		
 
 
