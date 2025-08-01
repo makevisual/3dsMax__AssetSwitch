@@ -18,6 +18,8 @@
 --								>> Removed XREF, PRT and POINT CACHE modes
 --								>> Added publishing VrayProxies individual parts
 --								>> Added MultiMaterial publishing and tyLibMtl support
+-- version 1.7.1 : 07.25.2025	>> Fixed bugs on switching old assets created before v 1.7
+-- version 1.7.2 : 07.28.2025	>> Added feature to load animations on switched assets
 --*****************************************************
 
 try(DestroyDialog MAIN_AssetSwitchUI)catch()
@@ -89,7 +91,7 @@ fn FN_GetObjectsInDir =
 	(
 		foldersArr = filterstring typeArr[i] @"\"
 		curFolder = #(foldersArr[foldersArr.count])
-		if curFolder[1] != "Material" do
+		if (curFolder[1] != "Material") AND (curFolder[1] != "Animation") do
 		(
 			join typeNames curFolder
 		)
@@ -127,6 +129,21 @@ fn FN_GetVersionsInDir = -- arg: curType
 		return #()
 	)
 )
+fn FN_GetAnimationsInDir =
+(
+	AnimArr = getfiles (assetDir + @"Publish\Animation\*.xaf")
+	AnimNames = #()
+	for i in 1 to AnimArr.count do
+	(
+		join AnimNames #((getFilenameFile AnimArr[i]))
+	)
+	if AnimNames.count == 0 do
+	(
+		AnimNames = #(" No Animations Found")
+	)
+	curMaterial = AnimNames[1]
+	return AnimNames
+)
 	
 -- Changes the asset file and redefines all of the global asset variables used by other functions
 fn FN_ChangeAsset =
@@ -157,8 +174,7 @@ fn FN_ChangeAsset =
 		initalType = objArr[1]
 		
 		verArr = FN_GetVersionsInDir()
-		initalVer = objArr[1]
-			
+		initalVer = verArr[1]
 		selectionArray = (selection as array)
 
 
@@ -214,7 +230,9 @@ fn FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
-	MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled = false
+
+	MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
+	MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
 		
 	MAIN_AssetSwitchUI.chkbox_materials.text = "Materials"
 	MAIN_AssetSwitchUI.chkbox_objects.text = "Objects"
@@ -275,6 +293,12 @@ fn FN_UiInformationUpdate =
 		FN_importTypeTest curVersionFile
 	)
 	catch()
+	try
+	(
+		curAnim = MAIN_AssetSwitchUI.ddl_AnimationDropdown.selected
+		curAnimFile = (assetDir + @"Publish\Animation\" + curAnim + ".xaf")
+	)
+	catch()
 		
 	-- Set the bitmap image
 	bmp_PreviewFilename = (substring assetFile 1 (assetFile.count - 5) + "jpg")
@@ -300,7 +324,19 @@ fn FN_UiInformationUpdate =
 	)
 	MAIN_AssetSwitchUI.lab_versionInfo_Materialname.text = ("Material name: " + curMaterialFileSS)
 	
-		
+	-- Set the animation file
+	try
+	(
+		curAnimationFileSS = ("..." + (substring curAnimFile (curAnimFile.count - 40) 99999))
+	)
+	catch
+	(
+		curAnimationFileSS = ("invalid")	
+	)
+	MAIN_AssetSwitchUI.lab_versionInfo_AnimationFile.text = ("Animation file: " + curAnimationFileSS)
+
+
+
 	-- Set the Import file name
 		
 		
@@ -402,11 +438,15 @@ fn FN_UiUpdate_Objects =
 
 	if (curType == "Max") OR (curType == "VrmeshParts") then
 	(
-		MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled = true
+
+		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = true
+		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = true
 	)
 	else
 	(
-		MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled = false
+		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
+		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
+
 	)
 		
 	FN_UiUpdate_Versions()
@@ -419,10 +459,12 @@ fn FN_UiUpdate =
 	curMaterialsArr =	FN_GetMtlsInDIr()
 	curTypesArr =	FN_GetObjectsInDir()
 	curVersionArr = FN_GetVersionsInDir()
+	curAnimationArr = FN_GetAnimationsInDir()
 		
 	curMaterial = getUserProp selection[1] "MAKE_Asset_Loaded_Material"
 	curType = getUserProp selection[1] "MAKE_Asset_Loaded_Filetype"
 	curVersion = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
+	curAnim = getUserProp selection[1] "MAKE_Asset_Animation_Versions"
 		
 	for i in 1 to curMaterialsArr.count do
 	(
@@ -464,10 +506,14 @@ fn FN_UiUpdate =
 	MAIN_AssetSwitchUI.ddl_objDropdown.items = (curTypesArr)
 	MAIN_AssetSwitchUI.btn_copyObjDir.enabled = true
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = true
+
 	MAIN_AssetSwitchUI.ddl_versionDropdown.items = (curVersionArr)
-		
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = true
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = true
+
+	MAIN_AssetSwitchUI.ddl_AnimationDropdown.items = (curAnimationArr)
+	MAIN_AssetSwitchUI.btn_copyAnimationDir.enabled = true
+	MAIN_AssetSwitchUI.btn_openAnimationDir.enabled = true
 		
 	MAIN_AssetSwitchUI.chkbox_materials.text = ("Materials : " + (MAIN_AssetSwitchUI.ddl_matDropdown.items.count as string) + " available")
 	MAIN_AssetSwitchUI.chkbox_objects.text = ("Objects : " + (MAIN_AssetSwitchUI.ddl_objDropdown.items.count as string) + " available, " + (MAIN_AssetSwitchUI.ddl_versionDropdown.items.count as string) + " versions")
@@ -581,6 +627,7 @@ fn FN_UiToggleInformation arg =
 	MAIN_AssetSwitchUI.lab_versionInfo_Filename.visible = arg
 	MAIN_AssetSwitchUI.lab_versionInfo_Date.visible = arg
 	MAIN_AssetSwitchUI.lab_versionInfo_Materialname.visible = arg
+	MAIN_AssetSwitchUI.lab_versionInfo_AnimationFile.visible = arg
 	MAIN_AssetSwitchUI.bmp_preview.visible = arg
 )
 	
@@ -589,13 +636,17 @@ fn FN_UiToggleInformationTest arg =
 (
 	if arg == true then
 	(
-		MAIN_AssetSwitchUI.height = 385
-		MAIN_AssetSwitchUI.grp_Info.height = 110
+
+		MAIN_AssetSwitchUI.height = 475
+		MAIN_AssetSwitchUI.grp_Info.height = 130
+
 		FN_UiToggleInformation true
 	)
 	else
 	(
-		MAIN_AssetSwitchUI.height = 315
+
+		MAIN_AssetSwitchUI.height = 385
+
 		MAIN_AssetSwitchUI.grp_Info.height = 40
 		FN_UiToggleInformation false
 	)
@@ -695,40 +746,59 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 		theObjects.material = currentMaterialLibrary[1]
 	)
 )
-	
 
-
-
-
-
-
-
-
-
-
-fn FN_Save_Load_Animation AssetGlobal operation =
+fn FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange operation =
 (
 	if operation == "AnimSave" then
 	(
-		TempAnimFile = sysInfo.tempdir + "TempAnimFile.xml"
-		AnimationNodes = (FN_collectAllChildren AssetGlobal includeParent:true MeshObjOnly:false)
-		LoadSaveAnimation.saveAnimation TempAnimFile &AnimationNodes (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true
+		LoadSaveAnimation.saveAnimation AnimFile &AnimationNodes (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:UseInterval segInterval:IntervalRange
 	)
 	else
 	(
-		TempAnimFile = sysInfo.tempdir + "TempAnimFile.xml"
-		AnimationNodes = (FN_collectAllChildren AssetGlobal includeParent:true MeshObjOnly:false)
-		LoadSaveAnimation.loadAnimation TempAnimFile &AnimationNodes relative:false insert:false
+		LoadSaveAnimation.loadAnimation AnimFile &AnimationNodes relative:false insert:false --insertTime:(IntervalRange.start)
 	)
 )
-
-
-
-
-
-
-
-
+fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepath to import | arg2: the node to do the switch on
+(
+	print "here1"
+	nodeAsset = arg2
+	LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "LoadSavedNames"))
+	SetRange = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange"))
+	FrameStart = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameStart"))
+	FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameEnd"))
+	IntervalRange = interval FrameStart FrameEnd
+	AnimationNodes = (FN_collectAllChildren nodeAsset includeParent:true MeshObjOnly:false)
+	if LoadSavedNames do
+	(
+		for CurrentNode in AnimationNodes do
+		(
+			MAKE_NodeName = (getUserProp CurrentNode "MAKE_NodeName")
+			if MAKE_NodeName != undefined do
+			(
+				CurrentNode.name = MAKE_NodeName
+			) 
+		)
+	)
+	case QuickSwitch of
+	(
+		("QuickSwitchSave"):
+		(
+			FN_Save_Load_Animation TempAnimFile AnimationNodes SetRange IntervalRange "AnimSave"
+		)
+		("QuickSwitchLoad"):
+		(
+			deleteKeys nodeAsset #allKeys
+			print TempAnimFile
+			FN_Save_Load_Animation TempAnimFile AnimationNodes SetRange IntervalRange "AnimLoad"
+			deletefile TempAnimFile
+		)
+		("none"):
+		(
+			deleteKeys nodeAsset #allKeys
+			FN_Save_Load_Animation arg AnimationNodes SetRange IntervalRange "AnimLoad"
+		)
+	)
+)
 
 fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
@@ -812,7 +882,6 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 		)
 	)
 	NodesToLinkNames = (for RigNode in HierarchyNodes collect RigNode.name)
-
 	VrayMapFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\" + Assetname + "_" + curVersion + ".vpmap")
 	-- Checks if the INI .vpmap file exists to load the VRayMeshes from the information stored in it
 	if (doesfileexist VrayMapFile) then
@@ -836,7 +905,6 @@ fn	FN_DoSwitch_vRay arg arg2 = -- arg: the filepath to import | arg2: the node t
 	)
 	NumberOfFiles = FilesInFolder.count
 	-- TODO This FOR is unecessary since this function will only load individual VRayMesh files. Study way to simplyfy this whole routine in the future.
-
 	for i = 1 to NumberOfFiles do
 	(
 		newProxy = VRayProxy()
@@ -969,6 +1037,9 @@ fn FN_DoSwitch =
 	curMaterial = MAIN_AssetSwitchUI.ddl_matDropdown.selected
 	curType = MAIN_AssetSwitchUI.ddl_objDropdown.selected
 	curVersion = MAIN_AssetSwitchUI.ddl_versionDropdown.selected
+	curAnim = MAIN_AssetSwitchUI.ddl_AnimationDropdown.selected
+
+
 		
 	-- Prepare data for switch
 	curMaterialFile = (assetDir + @"Publish\Material\" + curMaterial + ".mat")
@@ -981,6 +1052,7 @@ fn FN_DoSwitch =
 		curMaterialMapFile = ((substring curMaterialMapFile 1 (tyLibMtlSplice - 2)) + ".matmap")
 	)
 	curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
+	curAnimFile = (assetDir + @"Publish\Animation\" + curAnim + ".xaf")
 	switchObjectsArray = (selection as array)
 	switchObjectsHandleArray = #()
 	assetGlobalName = (getINISetting assetFile "Global" "name")
@@ -991,6 +1063,7 @@ fn FN_DoSwitch =
 		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Material" (curMaterial + ".mat")
 		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Filetype" curType
 		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Version" curVersion
+		setUserProp switchObjectsArray[i] "MAKE_Asset_Loaded_Animation" curAnim
 
 		-- Try and set the paramaters of the global
 		try ( switchObjectsArray[i].radius = 		( execute ( getinisetting AssetFile "Global" "radius" ) ) ) catch ()
@@ -1007,8 +1080,18 @@ fn FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
+			TempAnimFile = undefined
+			if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == true) do
+			(
+				TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
+				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
+			)
 			switchObjectsArray[i].name = assetGlobalName
 			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
+			if TempAnimFile != undefined do
+			(
+				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
+			)
 		)
 		
 		-- Test for if a material switch is desired, and do it if so			
@@ -1020,6 +1103,10 @@ fn FN_DoSwitch =
 																						  -- material, with the SAME name, but with potentially different values.
 																						  -- To avoid this the materials should be defined BEFORE the loop on
 																						  -- line 1038 ("for i in 1 to switchObjectsArray.count do")
+		)
+		if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == false) do
+		(
+			FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] "undefined" "none"
 		)
 	)
 	
@@ -1127,6 +1214,90 @@ fn FN_help_About =
 		
 	createdialog ROLL_AssetSwitch_Help 200 105
 )
+
+
+
+
+fn TransferAnimation_Label_Update =
+(
+	if ( hasINISetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" ) then
+	(
+		SetRange = (execute ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" ))
+		startFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameStart" )
+		endFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameEnd" )
+		if SetRange do
+		(
+			MAIN_AssetSwitchUI.SaveLoadAnim_Label.enabled = true
+		)
+	)
+	else
+	(
+		startFrame = animationrange.start as string
+		endFrame = animationrange.end as string
+		startFrame = substring startFrame 1 (startFrame.count - 1)
+		endFrame = substring endFrame 1 (endFrame.count - 1)
+	)
+	MAIN_AssetSwitchUI.SaveLoadAnim_Label.text = "frames: " + startFrame + " to " + endFrame
+)
+function FN_RefreshFrameRange arg_iniKey arg_label = -- arg_iniKey: where to read out of the .ini file | arg_label: the label to update
+(
+	startFrame = animationrange.start as string
+	endFrame = animationrange.end as string
+	startFrame = substring startFrame 1 (startFrame.count - 1)
+	endFrame = substring endFrame 1 (endFrame.count - 1)
+	
+	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "SetRange" "true"
+	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" startFrame
+	setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" endFrame
+		
+	arg_label.text = ("frames: " + startFrame + " to " + endFrame)
+)
+fn TransferAnimation_Options =
+(
+	rollout SWITCH_TransferAnimation_Options "Asset Switch Options" width:350 height:105
+	(
+		group  "Switch Animation Options"
+		(
+			checkbox SetRange_CheckBox "Set Range" checked:false across:3
+			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1]
+			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1]
+			checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false
+		)
+		button buttonOK "OK" pos:[258, 75]
+		button buttonCancel "Cancel" align:#right offset:[0,-26]
+		on SetRange_CheckBox changed state do
+		(
+			StartRange_Spinner.enabled = EndRange_Spinner.enabled = MAIN_AssetSwitchUI.SaveLoadAnim_Label.enabled = state
+		)
+		on StartRange_Spinner changed state do (if state >= EndRange_Spinner.value then (EndRange_Spinner.value = state)else())
+		on EndRange_Spinner changed state do (if state <= StartRange_Spinner.value then (StartRange_Spinner.value = state)else())
+
+
+		on SWITCH_TransferAnimation_Options open do
+		(
+			try
+			(
+				SetRange_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" ))
+				StartRange_Spinner.enabled = EndRange_Spinner.enabled = SetRange_CheckBox.checked
+				StartRange_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameStart" ))
+				EndRange_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameEnd" ))
+				LoadSavedNames_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "LoadSavedNames" ))
+			)
+			catch()
+		)
+		on buttonOK pressed do
+		(
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" (SetRange_CheckBox.checked as string)
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameStart" (StartRange_Spinner.value as string)
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameEnd" (EndRange_Spinner.value as string)
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "LoadSavedNames" (LoadSavedNames_CheckBox.checked as string)
+			TransferAnimation_Label_Update()
+			destroydialog SWITCH_TransferAnimation_Options
+		)
+		on buttonCancel pressed do( destroydialog SWITCH_TransferAnimation_Options )
+	)
+	createDialog SWITCH_TransferAnimation_Options
+)
 	
 -- =======================
 -- THE USER INTERFACE
@@ -1167,7 +1338,7 @@ rcMenu rc_MainMenu
 	
 )
 
-rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
+rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 (
 	groupbox grp_Asset "Asset" height:71 width:438 pos:[5,5]-- offset:[-8,8]
 		button btn_chooseAsset "" height:25 width:420 align:#left offset:[0,((grp_Asset.height * -1) +12)]
@@ -1192,11 +1363,36 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 			button btn_openVerDir "..." width:18 height:18 align:#left offset:[401,-23]
 		checkbox LoadAnim_CheckBox "Transfer Animation on Switch" enabled:false
 		
-	groupbox grp_Info "" offset:[-8,13] width:438 height:40 align:#left
+
+
+
+
+
+
+	groupBox grp_animation "" width:438 align:#left offset:[-8,15] height:75
+		checkbox chkbox_animation "Animation" offset:[0,((grp_objects.height * -1)-5)] checked:true align:#left
+		checkbox SwitchCurrentAnim_CheckBox "Transfer Current Animation on Switch" enabled:false across:4
+		button SaveLoadAnim_Refresh "R" align:#left offset:[100,-3] width:18 height:18
+		label SaveLoadAnim_Label "frames:" enabled:false offset:[15,0]
+		button SaveLoadAnim_Options "Options" enabled:false offset:[20,-3]
+		dropdownlist ddl_AnimationDropdown width:381 items:#(" -- No Animation Present --") align:#left offset:[0,0]
+			button btn_copyAnimationDir "C" width:18 height:18 align:#left offset:[382,-25]
+			button btn_openAnimationDir "..." width:18 height:18 align:#left offset:[401,-23]
+
+
+
+
+
+
+	groupbox grp_Info "" offset:[-8,15] width:438 height:40 align:#left
 		checkbox chkbox_info "Information" offset:[0,((grp_info.height * -1)-6)] checked:true 					-- TOGGLE FOR INFO PANEL
 		label lab_importType "Import Module: N/A" align:#left offset:[3,-2]
 		label lab_versionInfo_Filename "File name: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Materialname "Material name: N/A"  align:#left offset:[3,0] visible:false
+
+		label lab_versionInfo_AnimationFile "Animation file: N/A"  align:#left offset:[3,0] visible:false
+
+
 		label lab_versionInfo_Frames "Frame Range: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Date "Date Created: N/A" align:#left offset:[3,0] visible:false
 		bitmap bmp_preview filename:"" width:82 height:82 align:#right offset:[-5,-90] visible:false
@@ -1312,7 +1508,22 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		FN_importTypeTest curVersionFile
 		FN_UiInformationUpdate()
 	)
-		
+	-- Triggers on ANIMATION selection, from its dropdown
+	on ddl_AnimationDropdown selected arg do
+	(
+		curAnim = ddl_AnimationDropdown.items[arg]
+		FN_UiInformationUpdate()
+	)
+
+	on SaveLoadAnim_Refresh pressed do
+	(
+		FN_RefreshFrameRange "AnimationSwitch" SaveLoadAnim_Label
+		SaveLoadAnim_Label.enabled = true
+	)
+	on SaveLoadAnim_Options pressed do
+	(
+		TransferAnimation_Options()
+	)	
 	-- Choose an Asset: set the type and update interested UI items
 	on btn_chooseAsset pressed do
 	(
@@ -1329,18 +1540,33 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 		lab_versionDropdown.enabled = state
 		ddl_versionDropdown.enabled = state
 	)
+	on chkbox_animation changed state do
+	(
+		SwitchCurrentAnim_CheckBox.enabled = state
+		SaveLoadAnim_Refresh.enabled = state
+		SaveLoadAnim_Label.enabled = state
+		SaveLoadAnim_Options.enabled = state
+		ddl_AnimationDropdown.enabled = state
+	)
 		
+	on SwitchCurrentAnim_CheckBox changed state do
+	(
+		ddl_AnimationDropdown.enabled = NOT state
+	)
+
 	-- When the Copy button is pressed, copy file path of the asset to the clipboard
 	on btn_copyAssetDir pressed do (setclipboardText assetDir)
 	on btn_copyMatDir pressed do (setclipboardText (assetDir + @"\Publish\Material"))
 	on btn_copyObjDir pressed do (setclipboardText (assetDir + @"Publish\" + curType + @"\"))
 	on btn_copyVerDir pressed do (setclipboardText (assetDir + @"Publish\" + curType + @"\"+ curVersion + @"\") )
-		
+	on btn_copyAnimationDir pressed do (setclipboardText (assetDir + @"\Publish\Animation"))
+
 	-- When the Open Directory button is pressed, open the file path in windows explorer
 	on btn_openAssetDir pressed do(shelllaunch assetDir "")
 	on btn_openMatDir pressed do(shelllaunch (assetDir + @"\Publish\Material") "")
 	on btn_openObjDir pressed do(shelllaunch (assetDir + @"Publish\" + curType + @"\") "")
 	on btn_openVerDir pressed do(shelllaunch (assetDir + @"Publish\" + curType + @"\"+ curVersion + @"\") "")
+	on btn_openAnimationDir pressed do(shelllaunch (assetDir + @"\Publish\Animation") "")
 
 	-- When the Info Group Checkbox is toggled hide/unhide the contents of the information group
 	on chkbox_info changed state do(FN_UiToggleInformationTest state)
@@ -1356,10 +1582,11 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" +(versionNumber as string) )
 
 
 	-- When the window is opened, perform a selection check, and register the selection check callback
-	on MAIN_AssetSwitchUi open do
+	on MAIN_AssetSwitchUI open do
 	(
 		FN_UiToggleInformationTest chkbox_info.checked
 		FN_UiUpdate_SelectionCheck()
+		TransferAnimation_Label_Update()
 		callbacks.addScript #selectionSetChanged "FN_Callback_SelectionChange()" id:#AssetSwitchCallbackID001
 		print "Selection Check callback registered"
 	)

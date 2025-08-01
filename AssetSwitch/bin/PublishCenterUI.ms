@@ -193,7 +193,7 @@ struct ASSET_PublishOptions
 			
 			on chk_exportAnimation changed state do
 			(
-				spn_from.enabled = spn_to.enabled = state
+				spn_from.enabled = spn_to.enabled = ASSET_PublishCenterRollout.lab_vrmeshAnimFrames.enabled = state
 			)
 			on spn_from changed state do (if state >= spn_to.value then (spn_to.value = state)else())
 			on spn_to changed state do (if state <= spn_from.value then (spn_from.value = state)else())
@@ -219,11 +219,66 @@ struct ASSET_PublishOptions
 				setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "Facecount" (spn_facecount.value as string)
 				destroydialog ASSET_Options_vrmeshFile
 					
-				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_vrmeshAnimFrames "vrmeshFile"
+				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_vrmeshAnimFrames "vrmeshFile" "ExportAnimation"
 			)
 			on buttonCancel pressed do( destroydialog ASSET_Options_vrmeshFile )
 		)
 		createDialog ASSET_Options_vrmeshFile
+	),
+	fn AnimationFile =
+	(
+
+
+
+
+		rollout ASSET_Options_Animation "Publish Center Options" width:350 height:105
+		(
+			group  "Publish Animation Options"
+			(
+				checkbox SetRange_CheckBox "Set Range" checked:false across:3
+				spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1]
+				spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1]
+				checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false
+			)
+			button buttonOK "OK" pos:[258, 75]
+			button buttonCancel "Cancel" align:#right offset:[0,-26]
+
+			on SetRange_CheckBox changed state do
+			(
+				StartRange_Spinner.enabled = EndRange_Spinner.enabled = ASSET_PublishCenterRollout.lab_AnimationAnimFrames.enabled = state
+			)
+			on StartRange_Spinner changed state do (if state >= EndRange_Spinner.value then (EndRange_Spinner.value = state)else())
+			on EndRange_Spinner changed state do (if state <= StartRange_Spinner.value then (StartRange_Spinner.value = state)else())
+
+
+			on ASSET_Options_Animation open do
+			(
+				try
+				(
+					SetRange_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "SetRange" ))
+					StartRange_Spinner.enabled = EndRange_Spinner.enabled = SetRange_CheckBox.checked
+					StartRange_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameStart" ))
+					EndRange_Spinner.value = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" ))
+					LoadSavedNames_CheckBox.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "LoadSavedNames" ))
+				)
+				catch()
+			)
+			on buttonOK pressed do
+			(
+				setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "SetRange" (SetRange_CheckBox.checked as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameStart" (StartRange_Spinner.value as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" (EndRange_Spinner.value as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "LoadSavedNames" (LoadSavedNames_CheckBox.checked as string)
+				destroydialog ASSET_Options_Animation
+				ASSET_PublishCenterRollout.FN_UpdateFrameRange ASSET_PublishCenterRollout.lab_AnimationAnimFrames "AnimationPublish" "OutputEnabled"
+			)
+			on buttonCancel pressed do( destroydialog ASSET_Options_Animation )
+		)
+		createDialog ASSET_Options_Animation
+
+
+
+
 	)
 )
 
@@ -232,7 +287,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 (	
 	
 	-- The main rollout
-	rollout	ASSET_PublishCenterRollout "Publish Center 1.7" width:380 height:505
+	rollout	ASSET_PublishCenterRollout ("Publish Center v" + (versionNumber as string)) width:380 height:505
 	(
 		label lab_AssetName assetName
 /*
@@ -274,6 +329,25 @@ function FN_PublishCenter = -- asset: the current asset definition
 				spinner spinner_vrmeshPartsFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
 				label lab_vrmeshPartsFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 
+
+
+
+
+
+		groupbox grp_AnimationFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
+			checkbox chk_AnimationFile "Animation .xaf File" align:#left offset:[0,((grp_AnimationFile.height * -1) - 5)] -- enabled:false
+				dropdownlist ddl_AnimationFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]  visible:false
+				edittext edt_AnimationFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25]
+				spinner spinner_AnimationFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
+				button button_AnimationFile_Options "Options" offset:[0,-25] align:#right
+				label lab_AnimationAnimFrames "frames:0" enabled:false align:#left offset:[125,-20]
+				button button_AnimationFileRefresh "R" align:#left offset:[105,-21] width:18 height:18
+				label lab_AnimationFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
+
+
+
+
+
 		groupbox grp_PublishAsset "Publish Asset" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:120
 			label lab_PublishAssetDir  "" style_sunkenedge:true align:#left width:(ASSET_PublishCenterRollout.width - 68) height:16 offset:[0,((grp_PublishAsset.height * -1) + 10)]
 				button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23]
@@ -301,10 +375,13 @@ function FN_PublishCenter = -- asset: the current asset definition
 					curClassName = "Max"
 					curClassExtension = ".max"
 				)
-				2: -- MaxOptimizedFile
+				2: -- AnimationFile
 				(
-					curClassName = "MaxOptimized"
-					curClassExtension = ".max"
+					curClassName = "Animation"
+					curClassExtension = ".xaf"
+					comboString = (@"\" + curClassName + @"\" + curAssetName + nameVer + curClassExtension )
+					target.text = comboString
+					return comboString
 				)
 				3: -- MaterialFile
 				(
@@ -353,12 +430,12 @@ function FN_PublishCenter = -- asset: the current asset definition
 		)
 		
 		-- Sets passed publish class to animation enabled, and sets its export frame range to the current time line
-		function FN_RefreshFrameRange arg_iniKey arg_label = -- arg_iniKey: where to read out of the .ini file | arg_label: the label to update
+		function FN_RefreshFrameRange arg_label arg_iniKey ar_variable = -- arg_iniKey: where to read out of the .ini file | arg_label: the label to update
 		(
 			startFrame = ((animationrange.start as integer / ticksperframe) as string)
 			endFrame = ((animationrange.end as integer / ticksperframe) as string)
 			
-			setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" "true"
+			setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey ar_variable "true"
 			setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" (startFrame as string)
 			setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" (endFrame as string)
 				
@@ -366,34 +443,33 @@ function FN_PublishCenter = -- asset: the current asset definition
 		)
 		
 		-- Function for reading and sorting the frame range for an asset publish, and updates the UI for it
-		function FN_UpdateFrameRange arg_label arg_iniKey =  -- arg_label: the UI element to update |arg_iniKey: where to read out of the ini file
+		function FN_UpdateFrameRange arg_label arg_iniKey ar_variable =  -- arg_label: the UI element to update |arg_iniKey: where to read out of the ini file
 		(
 			-- Get if animation is enabled
-			if ( hasinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" )
-			then
+			if ( hasinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey ar_variable ) then
 			(
-				export_animation = ( execute ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" ))
+				export_animation = ( execute ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey ar_variable ))
 			)
 			else
 			(
-				setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "ExportAnimation" "false"
+				setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey ar_variable "false"
 				export_animation = false
 			)
 			
 			-- Set the approprite frame or frame range to the .ini and ui
-			if export_animation
-			then
+			if export_animation then
 			(
 				startFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" )
 				endFrame = ( getinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" )
 				arg_label.text = ("frames: " + startFrame + " to " + endFrame)
 			)
 			else
-			(
-				curFrame = ((slidertime as integer / ticksperframe) as string)
-				setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" curFrame
-				setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" curFrame
-				arg_label.text = ("frames: " + curFrame + " to " + curFrame)
+			(	
+				StartFrame = ((animationrange.start as integer / ticksperframe) as string)
+				EndFrame = ((animationrange.end as integer / ticksperframe) as string)
+				setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameStart" StartFrame
+				setinisetting (ASSET_PublishFunctions.INIget()) arg_iniKey "FrameEnd" EndFrame
+				arg_label.text = ("frames: " + StartFrame + " to " + EndFrame)
 			)
 		)
 		
@@ -402,6 +478,8 @@ function FN_PublishCenter = -- asset: the current asset definition
 		function FN_Update_Material_Lib_File =		(FN_UpdateLocalPath lab_MaterialFile 3 ddl_MaterialFile_Name.selection edt_MaterialFile_Prefex.text spinner_MaterialFile_Number.value)
 		function FN_Update_vrmeshFile =				(FN_UpdateLocalPath lab_vrmeshFile 4 ddl_vrmeshFile_Name.selection edt_vrmeshFile_Prefex.text spinner_vrmeshFile_Number.value)
 		function FN_Update_vrmeshPartsFile =		(FN_UpdateLocalPath lab_vrmeshPartsFile 5 ddl_vrmeshPartsFile_Name.selection edt_vrmeshPartsFile_Prefex.text spinner_vrmeshPartsFile_Number.value)
+		function FN_Update_AnimationFile = 			(FN_UpdateLocalPath lab_AnimationFile 2 ddl_AnimationFile_Name.selection edt_AnimationFile_Prefex.text spinner_AnimationFile_Number.value)
+
 
 		function FN_ReportResult arg_result arg_timestart_minor = -- arg_result : the string returned from the publisher  | arg_timestart : the start time of the operation
 		(
@@ -504,12 +582,28 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_ReportResult result timestart_minor
 		)
 		
+		function FN_Publish_AnimationFile =
+		(
+			publish_filepath = ( assetDir + "Publish" + (FN_Update_AnimationFile()))
+
+			-- Prepare to publish
+			timestart_minor = timestamp()
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": <<< Publishing Animation File >>>")
+			ASSET_PublishFunctions.LOGwrite (LocalTime + ": [ ASSET DIRECTORY ] : " + publish_filepath)
+			lab_Status.text = " Status: Publishing Animation File"
+
+			result = ASSET_PublishFunctions.pub_AnimationFile "asset" publish_filepath
+			FN_ReportResult result timestart_minor
+
+
+		)
 		
 		function FN_PUBhistSave =
 		(
  			setUserProp nodeAsset "MAKE_Asset_Material_Versions" spinner_MaterialFile_Number.value
  			setUserProp nodeAsset "MAKE_Asset_Max_Versions" spinner_MaxFile_Number.value
  			setUserProp nodeAsset "MAKE_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
+ 			setUserProp nodeAsset "MAKE_Asset_Animation_Versions" spinner_AnimationFile_Number.value
  			setUserProp nodeAsset "MAKE_Asset_TimeStamp" localTime
  			setUserProp nodeAsset "MAKE_Asset_Author" sysInfo.username
  			setUserProp nodeAsset "MAKE_Asset_Computer" sysInfo.computername 
@@ -545,6 +639,13 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_vrmeshPartsFile_Number.enabled = bool
 			edt_vrmeshPartsFile_Prefex.enabled = bool
 			ddl_vrmeshPartsFile_Name.enabled = bool
+
+			-- AnimationFile
+			bool = chk_AnimationFile.checked
+			lab_AnimationFile.enabled = bool
+			spinner_AnimationFile_Number.enabled = bool
+			edt_AnimationFile_Prefex.enabled = bool
+			ddl_AnimationFile_Name.enabled = bool
 		)
 		
 		function FN_CountEnabled =
@@ -554,6 +655,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			if chk_MaterialFile.checked then 		(count += 1)
 			if chk_vrmeshFile.checked then 			(count += 1)
 			if chk_vrmeshPartsFile.checked then 	(count += 1)
+			if chk_AnimationFile.checked then 		(count += 1)
 			return count
 		)
 		
@@ -576,6 +678,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_Update_Material_Lib_File()
 			FN_Update_vrmeshFile()
 			FN_Update_vrmeshPartsFile()
+			FN_Update_AnimationFile()
 		)
 		--------------------
 		-- Event Handlers --
@@ -607,18 +710,15 @@ function FN_PublishCenter = -- asset: the current asset definition
 		on edt_PrefixGang_Custom changed state do updateAllPrefixes state
 
 */
-		-- 3dsMaxFile
-		on button_MaxFile_Options pressed do (ASSET_PublishOptions.maxfile())
-		on chk_MaxFile changed state do 
-		(
-			setinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled" (chk_MaxFile.checked as string)
-			FN_CategoryToggle() 
-		)
-		on spinner_MaxFile_Number changed state do FN_Update_3dsMaxFile()
-		on edt_MaxFile_Prefex changed state do FN_Update_3dsMaxFile()
-		on ddl_MaxFile_Name selected state do FN_Update_3dsMaxFile()
-			
 		-- MaterialFile
+		on chk_MaterialFile changed state do
+		(
+			setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled" (chk_MaterialFile.checked as string)
+			FN_CategoryToggle()
+		)
+		on ddl_MaterialFile_Name selected state do (FN_Update_Material_Lib_File())
+		on edt_MaterialFile_Prefex changed state do (FN_Update_Material_Lib_File())
+		on spinner_MaterialFile_Number changed state do	(FN_Update_Material_Lib_File())
 		on button_MaterialFile_Options pressed do
 		(
 			tyLibMatExists = true
@@ -630,47 +730,73 @@ function FN_PublishCenter = -- asset: the current asset definition
 			)
 			ASSET_PublishOptions.materialfile tyLibMatExists
 		)
-		on chk_MaterialFile changed state do
+		-- 3dsMaxFile
+		on chk_MaxFile changed state do 
 		(
-			setinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled" (chk_MaterialFile.checked as string)
-			FN_CategoryToggle()
+			setinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled" (chk_MaxFile.checked as string)
+			FN_CategoryToggle() 
 		)
-		on spinner_MaterialFile_Number changed state do	(FN_Update_Material_Lib_File())
-		on edt_MaterialFile_Prefex changed state do (FN_Update_Material_Lib_File())
-		on ddl_MaterialFile_Name selected state do (FN_Update_Material_Lib_File())
-		
+		on ddl_MaxFile_Name selected state do FN_Update_3dsMaxFile()
+		on edt_MaxFile_Prefex changed state do FN_Update_3dsMaxFile()
+		on spinner_MaxFile_Number changed state do FN_Update_3dsMaxFile()
+		on button_MaxFile_Options pressed do (ASSET_PublishOptions.maxfile())
 		-- vrmeshFile
-		on button_vrmeshFile_Options pressed do (ASSET_PublishOptions.vrmeshfile())
-		on button_vrmeshFileRefresh pressed do (FN_RefreshFrameRange "vrmeshFile" lab_vrmeshAnimFrames)
 		on chk_vrmeshFile changed state do
 		(
 			setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "OutputEnabled" (chk_vrmeshFile.checked as string)
 			FN_CategoryToggle() 
 		)
-		on spinner_vrmeshFile_Number changed state do FN_Update_vrmeshFile()
-		on edt_vrmeshFile_Prefex changed state do FN_Update_vrmeshFile()
 		on ddl_vrmeshFile_Name selected state do FN_Update_vrmeshFile()
-
+		on edt_vrmeshFile_Prefex changed state do FN_Update_vrmeshFile()
+		on spinner_vrmeshFile_Number changed state do FN_Update_vrmeshFile()
+		on button_vrmeshFile_Options pressed do (ASSET_PublishOptions.vrmeshfile())
+		on button_vrmeshFileRefresh pressed do
+		(
+			FN_RefreshFrameRange lab_vrmeshAnimFrames "vrmeshFile" "ExportAnimation"
+			lab_vrmeshAnimFrames.enabled = true
+		)
 		-- vrmeshPartsFile
 		on chk_vrmeshPartsFile changed state do
 		(
 			setinisetting (ASSET_PublishFunctions.INIget()) "vrmeshPartsFile" "OutputEnabled" (chk_vrmeshPartsFile.checked as string)
 			FN_CategoryToggle() 
 		)
-		on spinner_vrmeshPartsFile_Number changed state do FN_Update_vrmeshPartsFile()
-		on edt_vrmeshPartsFile_Prefex changed state do FN_Update_vrmeshPartsFile()
 		on ddl_vrmeshPartsFile_Name selected state do FN_Update_vrmeshPartsFile()
-			
+		on edt_vrmeshPartsFile_Prefex changed state do FN_Update_vrmeshPartsFile()
+		on spinner_vrmeshPartsFile_Number changed state do FN_Update_vrmeshPartsFile()
+		-- AnimationFile
+		on chk_AnimationFile changed state do
+		(
+			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "OutputEnabled" (chk_AnimationFile.checked as string)
+			FN_CategoryToggle() 
+		)
+
+
+
+
+		on ddl_AnimationFile_Name changed state do FN_Update_AnimationFile() --TODO: Create this function
+		on edt_AnimationFile_Prefex changed state do FN_Update_AnimationFile()
+		on spinner_AnimationFile_Number changed state do FN_Update_AnimationFile()
+
+
+
+
+
+		on button_AnimationFile_Options pressed do (ASSET_PublishOptions.AnimationFile())
+		on button_AnimationFileRefresh pressed do
+		(
+			FN_RefreshFrameRange lab_AnimationAnimFrames "AnimationPublish" "SetRange"
+			lab_AnimationAnimFrames.enabled = true
+		)		
 		-- UI Update triggers for when the main rollout first opens
 		on ASSET_PublishCenterRollout open do
 		(
 			-- Loads previous settings, if settings had been set
 			try( chk_MaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxFile" "OutputEnabled")) )catch()
-			try( chk_MaxOptimizedFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaxOptimizedFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
 			try( chk_MaterialFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "MaterialFile" "OutputEnabled")) )catch()
 			try( chk_vrmeshFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "OutputEnabled")) )catch()
 			try( chk_vrmeshPartsFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshPartsFile" "OutputEnabled")) )catch()
-			try( chk_vrmeshAsMaxFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshAsMaxFile" "OutputEnabled")) )catch() ----> ASK_AARON - This option is absent on the INI file
+			try( chk_AnimationFile.checked = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "OutputEnabled")) )catch()
 
 			-- Update stored names 
 			curStr = "undefined"
@@ -696,9 +822,10 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_Update_Material_Lib_File()
 			FN_Update_vrmeshFile()
 			FN_Update_vrmeshPartsFile()
+			FN_Update_AnimationFile()
 			--arg_enabled: if animation is enabled | arg_source: either scene or predefined range | arg_label: the UI element to update
-			FN_UpdateFrameRange lab_vrmeshAnimFrames "vrmeshFile"
-				
+			FN_UpdateFrameRange lab_vrmeshAnimFrames "vrmeshFile" "ExportAnimation"
+			FN_UpdateFrameRange lab_AnimationAnimFrames "AnimationPublish" "OutputEnabled"
 			-- Update Ui Items
 			FN_PublishAssetDirPreview()
 			FN_CategoryToggle()
@@ -747,6 +874,12 @@ function FN_PublishCenter = -- asset: the current asset definition
 				countCurrent += 1
 				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
 			)
+			if chk_AnimationFile.checked then
+			(
+				errorcount += FN_Publish_AnimationFile()
+				countCurrent += 1
+				prog_totalprogress.value = ((( countCurrent / countTotal as float) * 100))
+			)
 			-- report the results of the publishing operations
 			FN_ReportEnd errorcount timestart
 			if errorcount > 0 then(ASSET_PublishFunctions.LOGopen()) else(destroydialog ASSET_PublishCenterRollout)
@@ -768,7 +901,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			ASSET_PublishFunctions.LOGopen()
 		)
 	)
-	createDialog ASSET_PublishCenterRollout 380 440 --modal:true -- added a fixed size for this dialog
+	createDialog ASSET_PublishCenterRollout 380 510 --modal:true -- added a fixed size for this dialog
 )
 
 FN_PublishCenter()

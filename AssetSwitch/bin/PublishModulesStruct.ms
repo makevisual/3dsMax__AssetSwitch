@@ -259,9 +259,64 @@ struct ASSET_PublishFunctions
 			
 			return "Success!"
 		)
-		Catch(return "ERROR: MaxFile Publish failed")
+		catch(return "ERROR: MaxFile Publish failed")
 	),
-	
+	function pub_AnimationFile arg_asset arg_path = --TODO: Create animation publishing routine
+	(
+		try
+		(
+			SetRange = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "SetRange" ))
+			FrameStart = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameStart" ))
+			FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" ))
+			LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "LoadSavedNames" ))
+			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true MeshObjOnly:false
+			if LoadSavedNames do
+			(
+				for CurrentNode in saveArr do
+				(
+					MAKE_NodeName = (getUserProp CurrentNode "MAKE_NodeName")
+					if MAKE_NodeName != undefined do
+					(
+						CurrentNode.name = MAKE_NodeName
+					) 
+				)
+			)
+			if SetRange then
+			(
+				IntervalRange = interval FrameStart FrameEnd
+			)
+			else
+			(
+				IntervalRange = (interval 0f 0f)
+			)
+			print "Path"
+			print arg_path
+			print "Dir"
+			print (getFilenamePath arg_path)
+			makeDir (getFilenamePath arg_path)
+			LoadSaveAnimation.saveAnimation arg_path &saveArr (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:SetRange segInterval:IntervalRange
+			return "Success!"
+		)
+		catch(return "ERROR: Animation Publish failed")
+	),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	-- Publish a MaterialFile	
 	function Create_TyLibMaterial currentMaterialLibrary arg_path =
 	(
@@ -382,7 +437,6 @@ struct ASSET_PublishFunctions
 				)
 				MapIniName = PartsPartialName + "_Parts.vpmap"
 				Max_nodes_to_Save = export_arr + hierarchy_Array
-				print Max_nodes_to_Save
 				saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max" )
 			)
 			setinisetting (MapIniName) "NodesNames" "NodesNamesArray" (ExportedNodesNames as string)
