@@ -236,15 +236,20 @@ fn FN_UiReset =
 		
 	MAIN_AssetSwitchUI.chkbox_materials.text = "Materials"
 	MAIN_AssetSwitchUI.chkbox_objects.text = "Objects"
+	MAIN_AssetSwitchUI.chkbox_animation.text = "Animation"
+
 
 	MAIN_AssetSwitchUI.ddl_matDropdown.items = #(" -- No Materials Present --")
 	MAIN_AssetSwitchUI.ddl_matDropdown.selection = 1
 	
-	MAIN_AssetSwitchUI.ddl_objDropdown.items =#(" -- No Objects Present --")
+	MAIN_AssetSwitchUI.ddl_objDropdown.items = #(" -- No Objects Present --")
 	MAIN_AssetSwitchUI.ddl_objDropdown.selection = 1
-	
-	MAIN_AssetSwitchUI.ddl_versionDropdown.items =#(" -- No Versions Present --")
+
+	MAIN_AssetSwitchUI.ddl_versionDropdown.items = #(" -- No Versions Present --")
 	MAIN_AssetSwitchUI.ddl_versionDropdown.selection = 1
+
+	MAIN_AssetSwitchUI.ddl_AnimationDropdown.items = #(" -- No Animation Present --")
+	MAIN_AssetSwitchUI.ddl_AnimationDropdown.selection = 1
 	
 	MAIN_AssetSwitchUI.lab_importType.text = ( "Import Module: N/A")
 	
@@ -252,6 +257,7 @@ fn FN_UiReset =
 	-- Information portion
 	MAIN_AssetSwitchUI.lab_versionInfo_Filename.text = ("File name: N/A")
 	MAIN_AssetSwitchUI.lab_versionInfo_Materialname.text = ("Material name: N/A")
+	MAIN_AssetSwitchUI.lab_versionInfo_AnimationFile.text = ("Animation file: N/A")
 	MAIN_AssetSwitchUI.lab_versionInfo_Frames.text = ("Frame range: N/A")
 	MAIN_AssetSwitchUI.lab_versionInfo_Date.text = ("Date modified: N/A")
 	MAIN_AssetSwitchUI.bmp_preview.visible = false
@@ -458,6 +464,10 @@ fn FN_UiUpdate =
 	curTypesArr =	FN_GetObjectsInDir()
 	curVersionArr = FN_GetVersionsInDir()
 	curAnimationArr = FN_GetAnimationsInDir()
+	print "curMaterialsArr"
+	print curMaterialsArr
+	print "curAnimationArr"
+	print curAnimationArr
 		
 	curMaterial = getUserProp selection[1] "MAKE_Asset_Loaded_Material"
 	curType = getUserProp selection[1] "MAKE_Asset_Loaded_Filetype"
@@ -515,7 +525,8 @@ fn FN_UiUpdate =
 		
 	MAIN_AssetSwitchUI.chkbox_materials.text = ("Materials : " + (MAIN_AssetSwitchUI.ddl_matDropdown.items.count as string) + " available")
 	MAIN_AssetSwitchUI.chkbox_objects.text = ("Objects : " + (MAIN_AssetSwitchUI.ddl_objDropdown.items.count as string) + " available, " + (MAIN_AssetSwitchUI.ddl_versionDropdown.items.count as string) + " versions")
-		
+	MAIN_AssetSwitchUI.chkbox_animation.text = ("Animation : " + (MAIN_AssetSwitchUI.ddl_AnimationDropdown.items.count as string) + " available")
+
 	-- Search the current directory for the filetype, and set the importer for it
 	curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
 	MAIN_AssetSwitchUI.lab_importType.text = ( "Import Module: " + (FN_importTypeTest curVersionFile))
@@ -1513,17 +1524,43 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 		ddl_objDropdown.enabled = state
 		lab_versionDropdown.enabled = state
 		ddl_versionDropdown.enabled = state
+		if state then
+		(
+			if chkbox_animation.checked do
+			(
+				SwitchCurrentAnim_CheckBox.enabled = state
+			)
+		)
+		else
+		(
+			SwitchCurrentAnim_CheckBox.enabled = state
+			SwitchCurrentAnim_CheckBox.checked = state
+			if chkbox_animation.checked do
+			(
+				ddl_AnimationDropdown.enabled = true
+			)
+		)
 	)
 	on chkbox_animation changed state do
 	(
-		SwitchCurrentAnim_CheckBox.enabled = state
+		if chkbox_objects.checked then
+		(
+			SwitchCurrentAnim_CheckBox.enabled = state
+		)
 		SaveLoadAnim_Refresh.enabled = state
 		if (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" )) do
 		(
 			SaveLoadAnim_Label.enabled = state
 		)
 		SaveLoadAnim_Options.enabled = state
-		ddl_AnimationDropdown.enabled = state
+		if SwitchCurrentAnim_CheckBox.checked then
+		(
+			ddl_AnimationDropdown.enabled = false
+		)
+		else
+		(
+			ddl_AnimationDropdown.enabled = state
+		)
 	)
 		
 	on SwitchCurrentAnim_CheckBox changed state do

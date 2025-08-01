@@ -600,6 +600,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_MaxFile_Number.enabled = bool
 			edt_MaxFile_Prefex.enabled = bool
 			ddl_MaxFile_Name.enabled = bool
+			button_MaxFile_Options.enabled = bool
 			
 			-- MaterialFile
 			bool = chk_MaterialFile.checked
@@ -607,13 +608,24 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_MaterialFile_Number.enabled = bool
 			edt_MaterialFile_Prefex.enabled = bool
 			ddl_MaterialFile_Name.enabled = bool
+			button_MaterialFile_Options.enabled = bool
 			
 			-- vrmeshFile
 			bool = chk_vrmeshFile.checked
 			lab_vrmeshFile.enabled = bool
 			spinner_vrmeshFile_Number.enabled = bool
 			edt_vrmeshFile_Prefex.enabled = bool
+			button_vrmeshFileRefresh.enabled = bool
 			ddl_vrmeshFile_Name.enabled = bool
+			button_vrmeshFile_Options.enabled = bool
+			if bool then
+			(
+				lab_vrmeshAnimFrames.enabled = (execute ( getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" ))
+			)
+			else
+			(
+				lab_vrmeshAnimFrames.enabled = bool
+			)
 
 			-- vrmeshPartsFile
 			bool = chk_vrmeshPartsFile.checked
@@ -627,7 +639,17 @@ function FN_PublishCenter = -- asset: the current asset definition
 			lab_AnimationFile.enabled = bool
 			spinner_AnimationFile_Number.enabled = bool
 			edt_AnimationFile_Prefex.enabled = bool
+			button_AnimationFileRefresh.enabled = bool
 			ddl_AnimationFile_Name.enabled = bool
+			button_AnimationFile_Options.enabled = bool
+			if bool then
+			(
+				lab_AnimationAnimFrames.enabled = (execute ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "SetRange" ))
+			)
+			else
+			(
+				lab_AnimationAnimFrames.enabled = bool
+			)
 		)
 		
 		function FN_CountEnabled =
