@@ -21,6 +21,7 @@
 -- version 1.7.1 : 07.25.2025	>> Fixed bugs on switching old assets created before v 1.7
 -- version 1.7.2 : 07.28.2025	>> Added feature to load animations on switched assets
 -- version 1.7.3 : 07.30.2025	>> Further improved the saving and loading animation workflow
+
 --*****************************************************
 
 try(DestroyDialog MAIN_AssetSwitchUI)catch()
@@ -231,6 +232,7 @@ fn FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
+
 	MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
 	MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
 		
@@ -444,6 +446,7 @@ fn FN_UiUpdate_Objects =
 
 	if (curType == "Max") OR (curType == "VrmeshParts") then
 	(
+
 		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = true
 		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = true
 	)
@@ -451,6 +454,7 @@ fn FN_UiUpdate_Objects =
 	(
 		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
 		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
+
 	)
 		
 	FN_UiUpdate_Versions()
@@ -641,13 +645,17 @@ fn FN_UiToggleInformationTest arg =
 (
 	if arg == true then
 	(
+
 		MAIN_AssetSwitchUI.height = 475
 		MAIN_AssetSwitchUI.grp_Info.height = 130
+
 		FN_UiToggleInformation true
 	)
 	else
 	(
+
 		MAIN_AssetSwitchUI.height = 385
+
 		MAIN_AssetSwitchUI.grp_Info.height = 40
 		FN_UiToggleInformation false
 	)
@@ -747,6 +755,7 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 		theObjects.material = currentMaterialLibrary[1]
 	)
 )
+
 fn FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange operation =
 (
 	if operation == "AnimSave" then
@@ -760,6 +769,7 @@ fn FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange oper
 )
 fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepath to import | arg2: the node to do the switch on
 (
+
 	nodeAsset = arg2
 	LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "LoadSavedNames"))
 	SetRange = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange"))
@@ -787,6 +797,7 @@ fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepat
 		("QuickSwitchLoad"):
 		(
 			deleteKeys nodeAsset #allKeys
+
 			FN_Save_Load_Animation TempAnimFile AnimationNodes SetRange IntervalRange "AnimLoad"
 			deletefile TempAnimFile
 		)
@@ -797,14 +808,20 @@ fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepat
 		)
 	)
 )
+
 fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	-- set some stuff up
+	LoadAnimation = false
 	nodeAsset = arg2
 	heroName = nodeAsset.name
 	allObjectsArr = (objects as array)
 	nameDuplicatesArr = #()
-
+	if (MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled == true) AND (MAIN_AssetSwitchUI.LoadAnim_CheckBox.checked == true) do
+	(
+		LoadAnimation = true
+		FN_Save_Load_Animation nodeAsset "AnimSave"
+	)
 	-- Put all objects named the same in an array
 	for i in 1 to allObjectsArr.count do
 	(
@@ -839,6 +856,10 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 			
 		-- Put all of the nodes back to having the same name	
 		for i in 1 to nameDuplicatesArr.count do (nameDuplicatesArr[i].name = (heroName))
+		if LoadAnimation do
+		(
+			FN_Save_Load_Animation nodeAsset "AnimLoad"
+		)
 	)
 
 	Catch
@@ -1068,6 +1089,7 @@ fn FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
+
 			-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
 			-- Creates the temporary animation *.xaf file
 			TempAnimFile = undefined
@@ -1078,14 +1100,17 @@ fn FN_DoSwitch =
 				TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
 				-- Call the Animation Swtitch function in "QuickSwitchSave" mode, which will just record the animation of the current assets on the temporary file
 				-- and then proceeds to switch the Asset's objects (*.max file or VrayMesh files)
+
 				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
 			)
 			switchObjectsArray[i].name = assetGlobalName
 			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
+
 			-- Test for temporary animation file (if it exists, it means it was created because the user wanted to transfer the asset's current animation to the newly switched asset)
 			if TempAnimFile != undefined do
 			(
 				-- -- Call the Animation Swtitch function in "QuickSwitchLoad" mode, which will load the animation of the temporary animation file on the new switched asset
+
 				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
 			)
 		)
@@ -1100,6 +1125,7 @@ fn FN_DoSwitch =
 																						  -- To avoid this the materials should be defined BEFORE the loop on
 																						  -- line 1038 ("for i in 1 to switchObjectsArray.count do")
 		)
+
 		-- Test for if an Animation switch is desired. Will only hold true IF the Animation Group checkbox is true AND the "Transfer Current Animation" is false
 		if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == false) do
 		(
@@ -1211,6 +1237,7 @@ fn FN_help_About =
 		
 	createdialog ROLL_AssetSwitch_Help 200 105
 )
+
 fn TransferAnimation_Label_Update =
 (
 	if ( hasINISetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" ) then
@@ -1251,10 +1278,12 @@ fn TransferAnimation_Options =
 	(
 		group  "Switch Animation Options"
 		(
+
 			checkbox SetRange_CheckBox "Set Range" checked:false tooltip:"Enables Animation Switch on a specific range" across:3
 			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1] tooltip:"Start frame to Switch animation"
 			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1] tooltip:"End frame to Switch animation"
 			checkbox LoadSavedNames_CheckBox "Load saved names before transferring animation" checked:false tooltip:"Load saved names inside User Properties on the object before doing a Switch"
+
 		)
 		button buttonOK "OK" pos:[258, 75]
 		button buttonCancel "Cancel" align:#right offset:[0,-26]
@@ -1345,6 +1374,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 			button btn_copyMatDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
 			button btn_openMatDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 		
+
 	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:75
 		checkbox chkbox_objects "Objects" offset:[0,((grp_objects.height * -1)-6)] checked:true align:#left tooltip:"Enable Object Switch"
 		dropdownlist ddl_objDropdown width:381 items:#(" -- No Objects Present --") align:#left offset:[0,0] tooltip:"Object type to Switch"
@@ -1372,6 +1402,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 		label lab_versionInfo_Filename "File name: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Materialname "Material name: N/A"  align:#left offset:[3,0] visible:false
 		label lab_versionInfo_AnimationFile "Animation file: N/A"  align:#left offset:[3,0] visible:false
+
 		label lab_versionInfo_Frames "Frame Range: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Date "Date Created: N/A" align:#left offset:[3,0] visible:false
 		bitmap bmp_preview filename:"" width:82 height:82 align:#right offset:[-5,-90] visible:false
@@ -1555,6 +1586,14 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 		(
 			ddl_AnimationDropdown.enabled = state
 		)
+	)
+	on chkbox_animation changed state do
+	(
+		SwitchCurrentAnim_CheckBox.enabled = state
+		SaveLoadAnim_Refresh.enabled = state
+		SaveLoadAnim_Label.enabled = state
+		SaveLoadAnim_Options.enabled = state
+		ddl_AnimationDropdown.enabled = state
 	)
 		
 	on SwitchCurrentAnim_CheckBox changed state do

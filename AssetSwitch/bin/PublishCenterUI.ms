@@ -226,14 +226,17 @@ struct ASSET_PublishOptions
 	),
 	fn AnimationFile =
 	(
+
 		rollout ASSET_Options_Animation "Publish Center Options" width:350 height:105
 		(
 			group  "Publish Animation Options"
 			(
+
 				checkbox SetRange_CheckBox "Set Range" checked:false tooltip:"Enables Animation Publish on a specific range" across:3
 				spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1] tooltip:"Start frame to Publish animation"
 				spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1] tooltip:"End frame to Publish animation"
 				checkbox LoadSavedNames_CheckBox "Load saved names before transferring animation" checked:false  tooltip:"Load saved names inside User Properties on the object before doing a Publish"
+
 			)
 			button buttonOK "OK" pos:[258, 75]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
@@ -270,6 +273,7 @@ struct ASSET_PublishOptions
 			on buttonCancel pressed do( destroydialog ASSET_Options_Animation )
 		)
 		createDialog ASSET_Options_Animation
+
 	)
 )
 
@@ -319,6 +323,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 				edittext edt_vrmeshPartsFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25] tooltip:"Version name prefix"
 				spinner spinner_vrmeshPartsFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21] tooltip:"Version number"
 				label lab_vrmeshPartsFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
+
 
 		groupbox grp_AnimationFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
 			checkbox chk_AnimationFile "Animation .xaf File" align:#left offset:[0,((grp_AnimationFile.height * -1) - 5)] tooltip:"Enable Animation file Publish"
@@ -639,6 +644,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			lab_AnimationFile.enabled = bool
 			spinner_AnimationFile_Number.enabled = bool
 			edt_AnimationFile_Prefex.enabled = bool
+
 			button_AnimationFileRefresh.enabled = bool
 			ddl_AnimationFile_Name.enabled = bool
 			button_AnimationFile_Options.enabled = bool
@@ -650,6 +656,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			(
 				lab_AnimationAnimFrames.enabled = bool
 			)
+
 		)
 		
 		function FN_CountEnabled =
@@ -774,9 +781,11 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "OutputEnabled" (chk_AnimationFile.checked as string)
 			FN_CategoryToggle() 
 		)
+
 		on ddl_AnimationFile_Name changed state do FN_Update_AnimationFile() --TODO: Create this function
 		on edt_AnimationFile_Prefex changed state do FN_Update_AnimationFile()
 		on spinner_AnimationFile_Number changed state do FN_Update_AnimationFile()
+
 		on button_AnimationFile_Options pressed do (ASSET_PublishOptions.AnimationFile())
 		on button_AnimationFileRefresh pressed do
 		(
