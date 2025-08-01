@@ -1248,7 +1248,7 @@ fn TransferAnimation_Options =
 			checkbox SetRange_CheckBox "Set Range" checked:false tooltip:"Enables Animation Switch on a specific range" across:3
 			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1] tooltip:"Start frame to Switch animation"
 			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1] tooltip:"End frame to Switch animation"
-			checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false tooltip:"Load saved names inside User Properties on the object before doing a Switch"
+			checkbox LoadSavedNames_CheckBox "Load saved names before transferring animation" checked:false tooltip:"Load saved names inside User Properties on the object before doing a Switch"
 		)
 		button buttonOK "OK" pos:[258, 75]
 		button buttonCancel "Cancel" align:#right offset:[0,-26]
