@@ -115,9 +115,8 @@ struct ASSET_PublishOptions
 	(
 		rollout ASSET_Options_MaxFile  "Publish Center Options" width:350 height:90
 		(
-			groupbox grp "3DS Max File Options" width:(ASSET_Options_MaxFile.width - 25) height:(ASSET_Options_MaxFile.height - 40)
-				dropdownlist ddl_Contents "" items:#("Publish asset only (reccomended)","Publish entire scene") offset:[10,((grp.height * -1) + 15)] width:(ASSET_Options_MaxFile.width - 45)
-				
+			groupbox grp "3ds Max File Options" width:(ASSET_Options_MaxFile.width - 25) height:(ASSET_Options_MaxFile.height - 40)
+			dropdownlist ddl_Contents "" items:#("Publish asset only (reccomended)","Publish entire scene") offset:[10,((grp.height * -1) + 15)] width:(ASSET_Options_MaxFile.width - 45)
 			button buttonOK "OK" pos:[(ASSET_Options_MaxFile.width - 92),(ASSET_Options_MaxFile.height - 30)]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
 
@@ -146,14 +145,14 @@ struct ASSET_PublishOptions
 		(
 			group "Material File Options" --width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
 			(
-				checkbox TyLibMaterialCheckbox "Also save tyLibMtl material" enabled:tyLibMatExists --pos:[25,25] --checked:tyLibMatChecked
+				checkbox TyLibMaterialCheckbox "Also save tyLibMtl material" enabled:tyLibMatExists tooltip:"Enables Publishing a tyLib Material alongside the Material Library" 
 			)
 			group "Material Conflict Options" --offset:[0,15] width:(ASSET_Options_MaterialFile.width - 25) height:(ASSET_Options_MaterialFile.height - 75)
 			(
-				label GlobalChildrenConflict_Label "Global and Children conflict:" offset:[-5,0] across:2
-				label ChildrenConflict_Label "Children conflict:" offset:[-11,0]
-				radiobuttons GlobalChildren_Radiobutton "" labels:#("Save Global only", "Save Global and Children", "Ask per case") offsets:#([0,0], [0,5], [0,10]) default:3 across:2
-				radiobuttons Children_Radiobutton "" labels:#("Save all Children", "Ask per case")  offsets:#([0,0], [0,5]) default:2
+				label GlobalChildrenConflict_Label "Global and Children conflict:" offset:[-5,0] tooltip:"Default option when a conflict is detected between the Global and its children"  across:2
+				label ChildrenConflict_Label "Children conflict:" offset:[-11,0] tooltip:"Default option when a conflict is detected between the children"
+				radiobuttons GlobalChildren_Radiobutton "" labels:#("Save Global only", "Save Global and Children", "Ask per case") tooltip:#("Publish the Global's material only","Publish the Global and its children's materials","Prompt user when a conflict is detected") offsets:#([0,0], [0,5], [0,10]) default:3 across:2
+				radiobuttons Children_Radiobutton "" labels:#("Save all Children", "Ask per case")  tooltip:#("Publish all of children's materials","Prompt user when a conflict is detected") offsets:#([0,0], [0,5]) default:2
 			)
 			button buttonOK "OK" pos:[(ASSET_Options_MaterialFile.width - 92),(ASSET_Options_MaterialFile.height - 30)]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
@@ -182,9 +181,9 @@ struct ASSET_PublishOptions
 		(
 			group  "VRMESH File Options" --width:(ASSET_Options_vrmeshFile.width - 25) height:(ASSET_Options_vrmeshFile.height - 40)
 			(
-				checkbox chk_exportAnimation "Export Animation" across:3 --pos:[25,25] 
-				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[51,1]
-				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[20,1]
+				checkbox chk_exportAnimation "Export Animation" across:3 tooltip:"Enables Publishing a VRay animated proxy"  
+				spinner spn_from "from" range:[-9999,9999,((animationrange.start / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[51,1]  tooltip:"Start frame to Publish animation"
+				spinner spn_to "to" range:[-9999,9999,((animationrange.end / TicksPerFrame ) as integer )] type:#integer width:70 align:#left offset:[20,1]  tooltip:"End frame to Publish animation"
 				
 				spinner spn_facecount "Number of faces in preview mesh: " align:#left range:[1,50000,1000] type:#integer offset:[15,0] width:100
 			)
@@ -228,17 +227,16 @@ struct ASSET_PublishOptions
 	fn AnimationFile =
 	(
 
-
-
-
 		rollout ASSET_Options_Animation "Publish Center Options" width:350 height:105
 		(
 			group  "Publish Animation Options"
 			(
-				checkbox SetRange_CheckBox "Set Range" checked:false across:3
-				spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1]
-				spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1]
-				checkbox LoadSavedNames_CheckBox "Load saved names before transfering animation" checked:false
+
+				checkbox SetRange_CheckBox "Set Range" checked:false tooltip:"Enables Animation Publish on a specific range" across:3
+				spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1] tooltip:"Start frame to Publish animation"
+				spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1] tooltip:"End frame to Publish animation"
+				checkbox LoadSavedNames_CheckBox "Load saved names before transferring animation" checked:false  tooltip:"Load saved names inside User Properties on the object before doing a Publish"
+
 			)
 			button buttonOK "OK" pos:[258, 75]
 			button buttonCancel "Cancel" align:#right offset:[0,-26]
@@ -276,9 +274,6 @@ struct ASSET_PublishOptions
 		)
 		createDialog ASSET_Options_Animation
 
-
-
-
 	)
 )
 
@@ -297,65 +292,57 @@ function FN_PublishCenter = -- asset: the current asset definition
 			edittext edt_PrefixGang_Custom text:"Layout" width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[-3,0] enabled:true
 */
 		groupbox grp_MaterialFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
-			checkbox chk_MaterialFile "Material" align:#left offset:[0,((grp_MaterialFile.height * -1) - 5)] -- enabled:false
+			checkbox chk_MaterialFile "Material" align:#left offset:[0,((grp_MaterialFile.height * -1) - 5)] tooltip:"Enable Material Publish"
 				dropdownlist ddl_MaterialFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]  visible:false
-				edittext edt_MaterialFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25]
-				spinner spinner_MaterialFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
-				button button_MaterialFile_Options "Options" offset:[0,-25] align:#right
+				edittext edt_MaterialFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25] tooltip:"Version name prefix"
+				spinner spinner_MaterialFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21] tooltip:"Version number"
+				button button_MaterialFile_Options "Options" offset:[0,-25] align:#right tooltip:"Material Publishing Options"
 				label lab_MaterialFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 		
 		groupbox grp_MaxFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
-			checkbox chk_MaxFile "3ds Max File" align:#left offset:[0,((grp_MaxFile.height * -1) - 5)] checked:true --enabled:false
+			checkbox chk_MaxFile "3ds Max File" align:#left offset:[0,((grp_MaxFile.height * -1) - 5)] checked:true tooltip:"Enable 3dsMax file Publish"
 				dropdownlist ddl_MaxFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]  visible:false
-				edittext edt_MaxFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25]
-				spinner spinner_MaxFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
-				button button_MaxFile_Options "Options" offset:[0,-25] align:#right
+				edittext edt_MaxFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25] tooltip:"Version name prefix"
+				spinner spinner_MaxFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21] tooltip:"Version number"
+				button button_MaxFile_Options "Options" offset:[0,-25] align:#right tooltip:"3dsMax Publishing Options"
 				label lab_MaxFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 			
 		groupbox grp_vrmeshFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
-			checkbox chk_vrmeshFile ".vrmesh" align:#left offset:[0,((grp_vrmeshFile.height * -1) - 5)] -- enabled:false
+			checkbox chk_vrmeshFile ".vrmesh" align:#left offset:[0,((grp_vrmeshFile.height * -1) - 5)] tooltip:"Enable Vraymesh file Publish"
 				dropdownlist ddl_vrmeshFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]  visible:false
-				edittext edt_vrmeshFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25]
-				spinner spinner_vrmeshFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
-				button button_vrmeshFile_Options "Options" offset:[0,-25] align:#right
+				edittext edt_vrmeshFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25] tooltip:"Version name prefix"
+				spinner spinner_vrmeshFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21] tooltip:"Version number"
+				button button_vrmeshFile_Options "Options" offset:[0,-25] align:#right tooltip:"VRay Publishing Options"
 				label lab_vrmeshAnimFrames "frames:0" enabled:false align:#left offset:[125,-20]
-				button button_vrmeshFileRefresh "R" align:#left offset:[105,-21] width:18 height:18
+				button button_vrmeshFileRefresh "R" align:#left offset:[105,-21] width:18 height:18 tooltip:"Reset frame range to current scene time range and enables Export Animation under Options menu"
 				label lab_vrmeshFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 
 		groupbox grp_vrmeshPartsFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
-			checkbox chk_vrmeshPartsFile ".vrmesh Parts" align:#left offset:[0,((grp_vrmeshFile.height * -1) - 5)] -- enabled:false
+			checkbox chk_vrmeshPartsFile ".vrmesh Parts" align:#left offset:[0,((grp_vrmeshFile.height * -1) - 5)] tooltip:"Enable Vraymesh file parts Publish"
 				dropdownlist ddl_vrmeshPartsFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0] visible:false
-				edittext edt_vrmeshPartsFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25]
-				spinner spinner_vrmeshPartsFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
+				edittext edt_vrmeshPartsFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25] tooltip:"Version name prefix"
+				spinner spinner_vrmeshPartsFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21] tooltip:"Version number"
 				label lab_vrmeshPartsFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
 
 
-
-
-
-
 		groupbox grp_AnimationFile "" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:65
-			checkbox chk_AnimationFile "Animation .xaf File" align:#left offset:[0,((grp_AnimationFile.height * -1) - 5)] -- enabled:false
+			checkbox chk_AnimationFile "Animation .xaf File" align:#left offset:[0,((grp_AnimationFile.height * -1) - 5)] tooltip:"Enable Animation file Publish"
 				dropdownlist ddl_AnimationFile_Name "" items:#("name","none") width:60 align:#left offset:[-1,0]  visible:false
-				edittext edt_AnimationFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25]
-				spinner spinner_AnimationFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21]
-				button button_AnimationFile_Options "Options" offset:[0,-25] align:#right
+				edittext edt_AnimationFile_Prefex "" text: "ver" width:60 align:#left offset:[0,-25] tooltip:"Version name prefix"
+				spinner spinner_AnimationFile_Number "" range:[1,999,1] type:#integer width:40 align:#left offset:[60,-21] tooltip:"Version number"
+				button button_AnimationFile_Options "Options" offset:[0,-25] align:#right tooltip:"Animation Publishing Options"
 				label lab_AnimationAnimFrames "frames:0" enabled:false align:#left offset:[125,-20]
-				button button_AnimationFileRefresh "R" align:#left offset:[105,-21] width:18 height:18
+				button button_AnimationFileRefresh "R" align:#left offset:[105,-21] width:18 height:18 tooltip:"Reset frame range to current scene time range and enables Set Range under Options menu"
 				label lab_AnimationFile " error" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 25) align:#left offset:[0,0]
-
-
-
-
 
 		groupbox grp_PublishAsset "Publish Asset" width:(ASSET_PublishCenterRollout.width - 15) align:#left offset:[-5,5] height:120
 			label lab_PublishAssetDir  "" style_sunkenedge:true align:#left width:(ASSET_PublishCenterRollout.width - 68) height:16 offset:[0,((grp_PublishAsset.height * -1) + 10)]
-				button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23]
-				button btn_openAssetDir "..." width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 45),-23]
-				button btn_PublishAsset " Publish Asset " height:40 width:(ASSET_PublishCenterRollout.width - 25)
+				button btn_copyAssetDir "C" width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23] tooltip:"Copy the path to the clipboard"
+				button btn_openAssetDir "..." width:18 height:18 align:#left offset:[(ASSET_PublishCenterRollout.width - 45),-23] tooltip:"Open explorer on the current path"
+				button btn_PublishAsset " Publish Asset " height:40 width:(ASSET_PublishCenterRollout.width - 25) tooltip:"Publish Assets"
 				progressbar prog_totalprogress height:10 width:(ASSET_PublishCenterRollout.width - 25)
 				label lab_Status " Status: ready" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 65) align:#left
-				button btn_logOpen "log" height:20 width:40 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23]
+				button btn_logOpen "log" height:20 width:40 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23] tooltip:"Open the publishing log"
 
 	
 		-- Returns the filename of the desired output, with the passed variables included
@@ -618,6 +605,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_MaxFile_Number.enabled = bool
 			edt_MaxFile_Prefex.enabled = bool
 			ddl_MaxFile_Name.enabled = bool
+			button_MaxFile_Options.enabled = bool
 			
 			-- MaterialFile
 			bool = chk_MaterialFile.checked
@@ -625,13 +613,24 @@ function FN_PublishCenter = -- asset: the current asset definition
 			spinner_MaterialFile_Number.enabled = bool
 			edt_MaterialFile_Prefex.enabled = bool
 			ddl_MaterialFile_Name.enabled = bool
+			button_MaterialFile_Options.enabled = bool
 			
 			-- vrmeshFile
 			bool = chk_vrmeshFile.checked
 			lab_vrmeshFile.enabled = bool
 			spinner_vrmeshFile_Number.enabled = bool
 			edt_vrmeshFile_Prefex.enabled = bool
+			button_vrmeshFileRefresh.enabled = bool
 			ddl_vrmeshFile_Name.enabled = bool
+			button_vrmeshFile_Options.enabled = bool
+			if bool then
+			(
+				lab_vrmeshAnimFrames.enabled = (execute ( getinisetting (ASSET_PublishFunctions.INIget()) "vrmeshFile" "ExportAnimation" ))
+			)
+			else
+			(
+				lab_vrmeshAnimFrames.enabled = bool
+			)
 
 			-- vrmeshPartsFile
 			bool = chk_vrmeshPartsFile.checked
@@ -645,7 +644,19 @@ function FN_PublishCenter = -- asset: the current asset definition
 			lab_AnimationFile.enabled = bool
 			spinner_AnimationFile_Number.enabled = bool
 			edt_AnimationFile_Prefex.enabled = bool
+
+			button_AnimationFileRefresh.enabled = bool
 			ddl_AnimationFile_Name.enabled = bool
+			button_AnimationFile_Options.enabled = bool
+			if bool then
+			(
+				lab_AnimationAnimFrames.enabled = (execute ( getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "SetRange" ))
+			)
+			else
+			(
+				lab_AnimationAnimFrames.enabled = bool
+			)
+
 		)
 		
 		function FN_CountEnabled =
@@ -771,16 +782,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_CategoryToggle() 
 		)
 
-
-
-
 		on ddl_AnimationFile_Name changed state do FN_Update_AnimationFile() --TODO: Create this function
 		on edt_AnimationFile_Prefex changed state do FN_Update_AnimationFile()
 		on spinner_AnimationFile_Number changed state do FN_Update_AnimationFile()
-
-
-
-
 
 		on button_AnimationFile_Options pressed do (ASSET_PublishOptions.AnimationFile())
 		on button_AnimationFileRefresh pressed do
@@ -883,6 +887,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			-- report the results of the publishing operations
 			FN_ReportEnd errorcount timestart
 			if errorcount > 0 then(ASSET_PublishFunctions.LOGopen()) else(destroydialog ASSET_PublishCenterRollout)
+			FN_Callback_SelectionChange() -- call this callback function to update the AssetSwitch UI to populate newly published assets
 		)
 		
 		on btn_copyAssetDir pressed do
