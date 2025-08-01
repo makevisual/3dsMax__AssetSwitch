@@ -20,6 +20,7 @@
 --								>> Added MultiMaterial publishing and tyLibMtl support
 -- version 1.7.1 : 07.25.2025	>> Fixed bugs on switching old assets created before v 1.7
 -- version 1.7.2 : 07.28.2025	>> Added feature to load animations on switched assets
+-- version 1.7.3 : 07.30.2025	>> Further improved the saving and loading animation workflow
 --*****************************************************
 
 try(DestroyDialog MAIN_AssetSwitchUI)catch()
