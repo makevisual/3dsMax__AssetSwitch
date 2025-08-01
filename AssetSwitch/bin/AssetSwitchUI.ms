@@ -464,10 +464,6 @@ fn FN_UiUpdate =
 	curTypesArr =	FN_GetObjectsInDir()
 	curVersionArr = FN_GetVersionsInDir()
 	curAnimationArr = FN_GetAnimationsInDir()
-	print "curMaterialsArr"
-	print curMaterialsArr
-	print "curAnimationArr"
-	print curAnimationArr
 		
 	curMaterial = getUserProp selection[1] "MAKE_Asset_Loaded_Material"
 	curType = getUserProp selection[1] "MAKE_Asset_Loaded_Filetype"
@@ -764,7 +760,6 @@ fn FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange oper
 )
 fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepath to import | arg2: the node to do the switch on
 (
-	print "here1"
 	nodeAsset = arg2
 	LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "LoadSavedNames"))
 	SetRange = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange"))
@@ -792,7 +787,6 @@ fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepat
 		("QuickSwitchLoad"):
 		(
 			deleteKeys nodeAsset #allKeys
-			print TempAnimFile
 			FN_Save_Load_Animation TempAnimFile AnimationNodes SetRange IntervalRange "AnimLoad"
 			deletefile TempAnimFile
 		)

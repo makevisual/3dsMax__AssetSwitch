@@ -774,18 +774,9 @@ function FN_PublishCenter = -- asset: the current asset definition
 			setinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "OutputEnabled" (chk_AnimationFile.checked as string)
 			FN_CategoryToggle() 
 		)
-
-
-
-
 		on ddl_AnimationFile_Name changed state do FN_Update_AnimationFile() --TODO: Create this function
 		on edt_AnimationFile_Prefex changed state do FN_Update_AnimationFile()
 		on spinner_AnimationFile_Number changed state do FN_Update_AnimationFile()
-
-
-
-
-
 		on button_AnimationFile_Options pressed do (ASSET_PublishOptions.AnimationFile())
 		on button_AnimationFileRefresh pressed do
 		(
@@ -887,6 +878,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			-- report the results of the publishing operations
 			FN_ReportEnd errorcount timestart
 			if errorcount > 0 then(ASSET_PublishFunctions.LOGopen()) else(destroydialog ASSET_PublishCenterRollout)
+			FN_Callback_SelectionChange() -- call this callback function to update the AssetSwitch UI to populate newly published assets
 		)
 		
 		on btn_copyAssetDir pressed do
