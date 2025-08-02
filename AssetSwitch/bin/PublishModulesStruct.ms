@@ -147,7 +147,7 @@ struct ASSET_PublishFunctions
 		MatCollection = #()
 		AllNodesArray = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true
 		MaterialMapArray = FindChildrenMaterials AllNodesArray MatCollection
-		setinisetting ((substring arg_path[1] 1 (arg_path[1].count - 4)) + ".matmap") "MaterialNodeMap" "MaterialMapArray" (MaterialMapArray as string)
+		setinisetting ((substring arg_path[1] 1 (arg_path[1].count - 4)) + ".matmap") "MaterialNodeMap" "MaterialMapArray" (with printAllElements on (MaterialMapArray as string))
 		-- If there is more than one material collected 
 		if MatCollection.count > 1 then
 		(
@@ -261,6 +261,46 @@ struct ASSET_PublishFunctions
 		)
 		catch(return "ERROR: MaxFile Publish failed")
 	),
+	function Remove_Duplicate_Objects &ObjArray =
+	(
+		DuplicateIndexes = #()
+		if ObjArray.count > 1 do
+		(
+			for i = ObjArray.count to 2 by -1 do
+			(
+				for j = (i - 1) to 1 by -1 do
+				(
+					if i != j do
+					(
+						if ObjArray[i].name == ObjArray[j].name do
+						(
+							append DuplicateIndexes i
+							append DuplicateIndexes j
+						)
+					)
+				)
+			)
+		)
+		if DuplicateIndexes.count != 0 do
+		(
+			sort DuplicateIndexes
+			for i = DuplicateIndexes.count to 1 by -1 do
+			(
+				removeObj = false
+				for CurrentModifier in ObjArray[DuplicateIndexes[i]].modifiers do
+				(
+					if (classof CurrentModifier) == Point_Cache do
+					(
+						removeObj = true
+					)
+				)
+				if removeObj do
+				(
+					deleteItem ObjArray DuplicateIndexes[i]
+				)
+			)
+		)
+	),
 	function pub_AnimationFile arg_asset arg_path = --TODO: Create animation publishing routine
 	(
 		try
@@ -270,6 +310,7 @@ struct ASSET_PublishFunctions
 			FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" ))
 			LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "LoadSavedNames" ))
 			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true MeshObjOnly:false
+			Remove_Duplicate_Objects &saveArr
 			if LoadSavedNames do
 			(
 				for CurrentNode in saveArr do
@@ -289,13 +330,19 @@ struct ASSET_PublishFunctions
 			(
 				IntervalRange = (interval 0f 0f)
 			)
-			print "Path"
-			print arg_path
-			print "Dir"
-			print (getFilenamePath arg_path)
-			makeDir (getFilenamePath arg_path)
-			LoadSaveAnimation.saveAnimation arg_path &saveArr (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:SetRange segInterval:IntervalRange
-			return "Success!"
+			AnimationSaveStatus = LoadSaveAnimation.saveAnimation arg_path &saveArr (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:SetRange segInterval:IntervalRange
+			if AnimationSaveStatus then
+			(
+				return "Success!"
+			)
+			else
+			(
+				return "ERROR: Animation Publish failed. Check for duplicate names on the Asset"
+			)
+
+
+
+
 		)
 		catch(return "ERROR: Animation Publish failed")
 	),
