@@ -246,7 +246,38 @@ struct ASSET_PublishFunctions
 		)
 		catch(return "ERROR: MaxFile Publish failed")
 	),
-	function Remove_Duplicate_Objects &ObjArray =
+	function Collect_Animated_Properties theObject &Animated_Properties=
+	(
+		if try (theObject.isAnimated) catch (false) do
+		append Animated_Properties theObject
+		for i = 1 to theObject.numSubs do
+		Collect_Animated_Properties theObject[i] &Animated_Properties
+
+	),
+	function Remove_Objects_With_Attachment_Constraint &ObjArray =
+	(
+		for i = ObjArray.count to 1 by -1 do
+		(
+			if ObjArray[i].isAnimated do
+			(
+				Animated_Properties = #()
+				Collect_Animated_Properties ObjArray[i] &Animated_Properties
+				HasAttachmentConstraint = false
+				for CurrentAnim in Animated_Properties do
+				(
+					if (classof CurrentAnim.controller) == Attachment do
+					(
+						HasAttachmentConstraint = true
+					)
+				)
+				if HasAttachmentConstraint do
+				(
+					deleteItem ObjArray i
+				)
+			)
+		)
+	),
+	function Find_Duplicate_Objects &ObjArray &DuplicateNameArray = -- removes objects that have a point cache modifier from the array that will be parsed to the Save Animation routine
 	(
 		DuplicateIndexes = #()
 		if ObjArray.count > 1 do
@@ -259,30 +290,29 @@ struct ASSET_PublishFunctions
 					(
 						if ObjArray[i].name == ObjArray[j].name do
 						(
-							append DuplicateIndexes i
-							append DuplicateIndexes j
+							append DuplicateNameArray ObjArray[i].name
+							append DuplicateNameArray ObjArray[j].name
 						)
 					)
 				)
 			)
 		)
-		if DuplicateIndexes.count != 0 do
+	),
+	function Remove_PointCache_Objects &ObjArray =
+	(
+		for i = ObjArray.count to 1 by -1 do
 		(
-			sort DuplicateIndexes
-			for i = DuplicateIndexes.count to 1 by -1 do
+			removeObj = false
+			for CurrentMod in ObjArray[i].modifiers do
 			(
-				removeObj = false
-				for CurrentModifier in ObjArray[DuplicateIndexes[i]].modifiers do
+				if (classof CurrentMod) == Point_Cache do
 				(
-					if (classof CurrentModifier) == Point_Cache do
-					(
-						removeObj = true
-					)
+					removeObj = true
 				)
-				if removeObj do
-				(
-					deleteItem ObjArray DuplicateIndexes[i]
-				)
+			)
+			if removeObj do
+			(
+				deleteItem ObjArray i
 			)
 		)
 	),
@@ -295,7 +325,27 @@ struct ASSET_PublishFunctions
 			FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" ))
 			LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "LoadSavedNames" ))
 			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true MeshObjOnly:false
-			Remove_Duplicate_Objects &saveArr
+			PointCacheRemoved = ""
+			AttachmentRemoved = ""
+			BeforePointCacheRemoval = saveArr.count
+			Remove_PointCache_Objects &saveArr
+			if BeforePointCacheRemoval - saveArr.count != 0 do
+			(
+				PointCacheRemoved = ((BeforePointCacheRemoval - saveArr.count) as string) + " nodes removed from Animation publishing due to having point cache modifiers"
+			)
+			BeforeAttachmentRemoval = saveArr.count
+			Remove_Objects_With_Attachment_Constraint &saveArr
+			if BeforeAttachmentRemoval - saveArr.count != 0 do
+			(
+				if PointCacheRemoved == "" then
+				(
+					AttachmentRemoved = ((BeforeAttachmentRemoval - saveArr.count) as string) + " nodes removed from Animation publishing due to having Attachment Constraints"
+				)
+				else
+				(
+					AttachmentRemoved = ", and " + ((BeforeAttachmentRemoval - saveArr.count) as string) + " nodes removed from Animation publishing due to having Attachment Constraints"
+				)
+			)
 			if LoadSavedNames do
 			(
 				for CurrentNode in saveArr do
@@ -318,16 +368,23 @@ struct ASSET_PublishFunctions
 			AnimationSaveStatus = LoadSaveAnimation.saveAnimation arg_path &saveArr (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:SetRange segInterval:IntervalRange
 			if AnimationSaveStatus then
 			(
-				return "Success!"
+				if (PointCacheRemoved != "") OR (AttachmentRemoved != "") then
+				(
+					return ("WARNING: " + PointCacheRemoved + AttachmentRemoved + ". Animation was still published for valid nodes.")
+				)
+				else
+				(
+					return "Success!"
+				)
 			)
 			else
 			(
-				return "ERROR: Animation Publish failed. Check for duplicate names on the Asset"
+				DuplicateNames = #()
+				Find_Duplicate_Objects &saveArr &DuplicateNames
+				print "Duplicate Object Names:"
+				for objName in DuplicateNames do (print objName)
+				return "ERROR: Animation Publish failed. Check for duplicate names on the Listener"
 			)
-
-
-
-
 		)
 		catch(return "ERROR: Animation Publish failed")
 	),

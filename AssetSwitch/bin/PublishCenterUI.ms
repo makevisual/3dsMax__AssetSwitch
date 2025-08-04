@@ -340,7 +340,6 @@ function FN_PublishCenter = -- asset: the current asset definition
 				button btn_logOpen "log" height:20 width:40 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23] tooltip:"Open the publishing log"
 		
 
-
 		-- Bakes on ALL children their name as a User Properties.
 		fn FN_ChildrenName_Bake =
 		(
