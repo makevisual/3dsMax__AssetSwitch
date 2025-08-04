@@ -338,8 +338,26 @@ function FN_PublishCenter = -- asset: the current asset definition
 				progressbar prog_totalprogress height:10 width:(ASSET_PublishCenterRollout.width - 25)
 				label lab_Status " Status: ready" style_sunkenedge:true height:16 width:(ASSET_PublishCenterRollout.width - 65) align:#left
 				button btn_logOpen "log" height:20 width:40 align:#left offset:[(ASSET_PublishCenterRollout.width - 65),-23] tooltip:"Open the publishing log"
+		
 
-	
+
+		-- Bakes on ALL children their name as a User Properties.
+		fn FN_ChildrenName_Bake =
+		(
+			ChildrenArray = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false
+			if ChildrenArray.count > 1 do
+			(
+				Global_Asset_Name = (getINISetting assetFile "Global" "name")
+				for child in ChildrenArray do
+				(
+					if (doesUserPropExist child "AssetName") do
+					(
+						deleteUserProp child "AssetName"
+					)
+					setUserProp child "MAKE_NodeName" child.name
+				)
+			)
+		)
 		-- Returns the filename of the desired output, with the passed variables included
 		function FN_UpdateLocalPath target curClass arg1 arg2 arg3 = -- target:target label | curClass:class of publish | edittext arg1: name | arg2: prefix | arg3:version
 		(
@@ -839,6 +857,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			countTotal = FN_CountEnabled()
 
 			FN_PUBhistSave()
+			FN_ChildrenName_Bake()
 
 			try( setinisetting AssetFile "Global" "radius" 		(nodeAsset.radius as string)	) catch ()
 			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAsset.wirecolor as string)	) catch ()

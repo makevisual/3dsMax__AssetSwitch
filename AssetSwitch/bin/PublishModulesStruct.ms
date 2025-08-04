@@ -238,21 +238,6 @@ struct ASSET_PublishFunctions
 		(
 			-- Collect all child nodes in array
 			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true
-			-- Bakes on ALL children the Asset Name as a User Properties.
-			if saveArr.count > 1 do
-			(
-				Global_Asset_Name = (getINISetting assetFile "Global" "name")
-				ChildArray = deepCopy saveArr
-				deleteItem ChildArray 1
-				for child in ChildArray do
-				(
-					if (doesUserPropExist child "AssetName") do
-					(
-						deleteUserProp child "AssetName"
-					)
-					setUserProp child "MAKE_NodeName" child.name
-				)
-			)
 			-- Make the target folder if it doesn't exist, and saves the file to it
 			makeDir (getFilenamePath arg_path)
 			saveNodes saveArr arg_path
