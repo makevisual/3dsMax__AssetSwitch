@@ -21,7 +21,6 @@
 -- version 1.7.1 : 07.25.2025	>> Fixed bugs on switching old assets created before v 1.7
 -- version 1.7.2 : 07.28.2025	>> Added feature to load animations on switched assets
 -- version 1.7.3 : 07.30.2025	>> Further improved the saving and loading animation workflow
-
 --*****************************************************
 
 try(DestroyDialog MAIN_AssetSwitchUI)catch()
@@ -31,7 +30,7 @@ try(DestroyDialog MAIN_AssetSwitchUI)catch()
 -- =========================================
 
 -- Get the filetype of the files in the location
-fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
+function FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 (
 	importType = undefined
 		
@@ -43,14 +42,14 @@ fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 		if VrmeshPartFiles.count > 0 then
 		(
 			curTypeImporter = 3
-			MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+			--MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 			return "V-Ray Parts Loader"
 		)
 		else
 		(
 			curTypeImporter = 1
 			curMaterialFile
-			MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+			--MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 			return "Max File Merge"
 		)
 	)
@@ -59,16 +58,38 @@ fn FN_importTypeTest arg = --arg: the folder to look at the filetypes in
 	if curFiles.count > 0 do
 	(
 		curTypeImporter = 2
-		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+		--MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
 		return "V-Ray Mesh Loader"
 	)
+
+
+
+
+
+
+	-- Animation Test
+--	if (doesFileExist arg) do
+--	(
+--		MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+--		return "Animation Loader"
+--	)
+
+
+
+
+
+
+
 	curTypeImporter = undefined
-	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = false
+
+	--MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = false
 	return "no valid files found"
+	
+
 )
 	
 -- gets all of the .mtl files in the assedts directory and returns them as an array
-fn FN_GetMtlsInDIr =
+function FN_GetMtlsInDIr =
 (
 	matArr = getfiles (assetDir + @"Publish\Material\*.mat")
 	matNames = #()
@@ -85,7 +106,7 @@ fn FN_GetMtlsInDIr =
 )
 
 -- gets all of the 'type folders' in the assedts directory and returns them as an array
-fn FN_GetObjectsInDir =
+function FN_GetObjectsInDir =
 (
 	typeArr = getDirectories (assetDir + @"Publish\*")
 	typeNames = #()
@@ -100,38 +121,45 @@ fn FN_GetObjectsInDir =
 	)
 	if typeNames.count == 0 do
 	(
-		typeNames = #(" No Types Found")
+		typeNames = #("No Types Found")
 	)
 	curType = typeNames[1]
 	return typeNames
 )
 	
 -- gets all of the 'version folders' in the assets directory and returns them as an array
-fn FN_GetVersionsInDir = -- arg: curType
+function FN_GetVersionsInDir = -- arg: curType
 (
 	try
 	(
-		versionArr = getDirectories (assetDir + @"Publish\" + curType + "\*")	
-		versionNames = #()
-		for i in 1 to versionArr.count do
+		if curType != "" then -- this test is needed in case the type was not found, and avoids the tool to load version from folder names up the tree
 		(
-			foldersArr = filterstring versionArr[i] @"\"
-			curFolder = #(foldersArr[foldersArr.count])
-			join versionNames curFolder
+			versionArr = getDirectories (assetDir + @"Publish\" + curType + "\*")
+			versionNames = #()
+			for i in 1 to versionArr.count do
+			(
+				foldersArr = filterstring versionArr[i] @"\"
+				curFolder = #(foldersArr[foldersArr.count])
+				join versionNames curFolder
+			)
+			if versionNames.count == 0 do
+			(
+				versionNames = #("No Versions Found")
+			)
+			curVersion = versionNames[1]
+			return versionNames
 		)
-		if versionNames.count == 0 do
+		else
 		(
-			versionNames = #(" No Versions Found")
+			return #("No Versions Found")
 		)
-		curVersion = versionNames[1]
-		return versionNames
 	)
 	catch
 	(
 		return #()
 	)
 )
-fn FN_GetAnimationsInDir =
+function FN_GetAnimationsInDir =
 (
 	AnimArr = getfiles (assetDir + @"Publish\Animation\*.xaf")
 	AnimNames = #()
@@ -148,7 +176,7 @@ fn FN_GetAnimationsInDir =
 )
 	
 -- Changes the asset file and redefines all of the global asset variables used by other functions
-fn FN_ChangeAsset =
+function FN_ChangeAsset =
 (
 	-- open file pick dialog to choose a .asset file
 	newAsset = undefined
@@ -215,7 +243,7 @@ fn FN_ChangeAsset =
 -- =====================================
 
 -- Set the ui to a no selection case
-fn FN_UiReset =
+function FN_UiReset =
 (
 	assetFile = undefined
 	assetName = undefined
@@ -232,7 +260,6 @@ fn FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
-
 	MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
 	MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
 		
@@ -266,23 +293,40 @@ fn FN_UiReset =
 	
 		
 )
-
+--function for setting the "Switch Asset" button enabled or disabled depending on the UI state
+function Switch_Button_Enable_Disable =
+(
+	SwitchState = false
+	if MAIN_AssetSwitchUI.chkbox_materials.checked AND (doesFileExist curMaterialFile) do
+	(
+		SwitchState = true
+	)
+	if MAIN_AssetSwitchUI.chkbox_objects.checked AND (doesFileExist curVersionFile) do
+	(
+		SwitchState = true
+	)
+	if MAIN_AssetSwitchUI.chkbox_animation.checked AND (doesFileExist curAnimFile) do
+	(
+		SwitchState = true
+	)
+	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = SwitchState
+)
 -- Set the ui to a invalid selection case	
-fn FN_UiWarnInvalid =
+function FN_UiWarnInvalid =
 	(
 	FN_UiReset()
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = " Node(s) do not have an asset set! "
 	)
 	
 -- Set the ui to a mismatched selection case
-fn FN_UiWarnMismatch =
+function FN_UiWarnMismatch =
 (
 	FN_UiReset()
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = " Nodes do not share the same asset! "
 )
 	
 -- Update all the elements in the Information panel except the import module
-fn FN_UiInformationUpdate = 
+function FN_UiInformationUpdate = 
 (
 	-- Prepare data for inspection	
 	try
@@ -305,11 +349,12 @@ fn FN_UiInformationUpdate =
 	(
 		curAnim = MAIN_AssetSwitchUI.ddl_AnimationDropdown.selected
 		curAnimFile = (assetDir + @"Publish\Animation\" + curAnim + ".xaf")
+--		FN_importTypeTest curAnimFile
 	)
 	catch()
 		
 	-- Set the bitmap image
-	bmp_PreviewFilename = (substring assetFile 1 (assetFile.count - 5) + "jpg")
+	bmp_PreviewFilename = (substring assetFile 1 (assetFile.count - 5) + "jpg") -- TODO: Fix or Remove the Bitmap Preview
 	if (doesFileExist bmp_PreviewFilename) then
 	(
 		MAIN_AssetSwitchUI.bmp_preview.filename = bmp_PreviewFilename
@@ -342,14 +387,7 @@ fn FN_UiInformationUpdate =
 		curAnimationFileSS = ("invalid")	
 	)
 	MAIN_AssetSwitchUI.lab_versionInfo_AnimationFile.text = ("Animation file: " + curAnimationFileSS)
-
-
-
 	-- Set the Import file name
-		
-		
-		
-		
 	searchDir = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
 	curFileExtension = @"*.*"
 		
@@ -404,11 +442,25 @@ fn FN_UiInformationUpdate =
 	(
 		MAIN_AssetSwitchUI.lab_versionInfo_Frames.text = ("Frame range: N/A")
 	)
-	
+	Switch_Button_Enable_Disable()
 )		
 	
--- Update the Ui when the objects dropdown is changed
-fn FN_UiUpdate_Versions = 
+function FN_UiUpdate_Materials = -- Update the Ui when the material dropdown is changed
+(
+	MAIN_AssetSwitchUI.ddl_matDropdown.items = FN_GetMtlsInDIr()
+	MAIN_AssetSwitchUI.ddl_matDropdown.selection = 1
+)
+
+
+
+
+
+
+
+/*
+
+-- Update the Ui when the versions dropdown is changed
+function FN_UiUpdate_Versions = 
 (
 	-- 	MAIN_AssetSwitchUI.ddl_versionDropdown.items = (FN_GetVersionsInDir())
 	MAIN_AssetSwitchUI.chkbox_objects.text = ("Objects : " + (MAIN_AssetSwitchUI.ddl_objDropdown.items.count as string) + " available, " + (MAIN_AssetSwitchUI.ddl_versionDropdown.items.count as string) + " versions")
@@ -434,7 +486,7 @@ fn FN_UiUpdate_Versions =
 )	
 	
 -- Update the Ui when the objects dropdown is changed
-fn FN_UiUpdate_Objects = 
+function FN_UiUpdate_Objects = 
 (
 	MAIN_AssetSwitchUI.ddl_versionDropdown.items = (FN_GetVersionsInDir())
 	MAIN_AssetSwitchUI.ddl_versionDropdown.selection = 1
@@ -446,7 +498,6 @@ fn FN_UiUpdate_Objects =
 
 	if (curType == "Max") OR (curType == "VrmeshParts") then
 	(
-
 		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = true
 		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = true
 	)
@@ -454,15 +505,22 @@ fn FN_UiUpdate_Objects =
 	(
 		MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
 		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
-
 	)
 		
 	FN_UiUpdate_Versions()
 		
 )
 	
+
+
+
+
+*/
+
+
+
 -- Set the Ui to a succsessfull selection and check, the user can now procede with choosing switch
-fn FN_UiUpdate =
+function FN_UiUpdate =
 (
 	curMaterialsArr =	FN_GetMtlsInDIr()
 	curTypesArr =	FN_GetObjectsInDir()
@@ -489,8 +547,9 @@ fn FN_UiUpdate =
 			MAIN_AssetSwitchUI.ddl_objDropdown.selection = i
 		)
 	)
-	
-	curVersionArr =	FN_GetVersionsInDir()
+
+	--curVersionArr =	FN_GetVersionsInDir() -- duplicate? This command was called around 15 lines above?
+
 	for i in 1 to curVersionArr.count do
 	(
 		if curVersion == curVersionArr[i] do
@@ -502,7 +561,8 @@ fn FN_UiUpdate =
 	-- Update the asset groupbox
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = assetName			
 	MAIN_AssetSwitchUI.lab_assetDir.text = (" " + assetDir)
-	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true
+	
+	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = true -- TODO: Unecessary since this is being ovewritten on the FN_importTypeTest function?
 	MAIN_AssetSwitchUI.btn_copyAssetDir.enabled = true
 	MAIN_AssetSwitchUI.btn_openAssetDir.enabled = true
 		
@@ -531,11 +591,18 @@ fn FN_UiUpdate =
 	curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
 	MAIN_AssetSwitchUI.lab_importType.text = ( "Import Module: " + (FN_importTypeTest curVersionFile))
 		
-	FN_UiUpdate_Objects()
+
+
+
+
+
+
+
+	-- FN_UiUpdate_Objects()
 )
 	
 -- Test the selection for count, an assigned asset file, and matching asset types
-fn FN_UiUpdate_SelectionCheck =
+function FN_UiUpdate_SelectionCheck =
 (		
 	-- Test if there are any objects selected, and update the ui if there are things to update it with
 	if ((selection as array).count) == 0 then
@@ -589,10 +656,7 @@ fn FN_UiUpdate_SelectionCheck =
 				(
 					curVersion_temp = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
 					curVersionArr =	FN_GetVersionsInDir()
-
-					FN_UiUpdate_Objects() -- ASK AARON -> Added thi line to Brute Force fix for the unpopulated Objects DropDownList
-
-
+					--FN_UiUpdate_Objects() -- ASK AARON -> Added thi line to Brute Force fix for the unpopulated Objects DropDownList
 					-- Loop throught the possible choices and set it if the prefferd choice is there
 					for i in 1 to curVersionArr.count do
 					(
@@ -622,7 +686,7 @@ fn FN_UiUpdate_SelectionCheck =
 )
 	
 -- Callback trigger for selection change
-fn FN_Callback_SelectionChange =
+function FN_Callback_SelectionChange =
 (
 	FN_UiUpdate_SelectionCheck()
 	nodeAsset = selection[1] -- TODO: ADDED THIS CHANGE TO UPDATE THE nodeAsset Global Variable
@@ -630,7 +694,7 @@ fn FN_Callback_SelectionChange =
 )
 	
 -- Set the visibility for the contents of the information groupbox
-fn FN_UiToggleInformation arg = 
+function FN_UiToggleInformation arg = 
 (
 	MAIN_AssetSwitchUI.lab_versionInfo_Frames.visible = arg
 	MAIN_AssetSwitchUI.lab_versionInfo_Filename.visible = arg
@@ -641,21 +705,17 @@ fn FN_UiToggleInformation arg =
 )
 	
 -- Check for the state of the information checkbox, and set UI elements accordingly
-fn FN_UiToggleInformationTest arg =
+function FN_UiToggleInformationTest arg =
 (
 	if arg == true then
 	(
-
 		MAIN_AssetSwitchUI.height = 475
 		MAIN_AssetSwitchUI.grp_Info.height = 130
-
 		FN_UiToggleInformation true
 	)
 	else
 	(
-
 		MAIN_AssetSwitchUI.height = 385
-
 		MAIN_AssetSwitchUI.grp_Info.height = 40
 		FN_UiToggleInformation false
 	)
@@ -666,7 +726,7 @@ fn FN_UiToggleInformationTest arg =
 -- ================================
 	
 -- Function for recursivly selecting all of the children of an inital object
-fn FN_collectAllChildren obj includeParent:true MeshObjOnly:false =
+function FN_collectAllChildren obj includeParent:true MeshObjOnly:false =
 (
 	-- start collecting direct children of <obj>
 	allChildren = #(obj)
@@ -755,21 +815,32 @@ fn	FN_DoSwitch_Material curMaterialFile curMaterialMapFile nodeAsset LoadtyLibMt
 		theObjects.material = currentMaterialLibrary[1]
 	)
 )
-
-fn FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange operation =
+function FN_Save_Load_Animation AnimFile AnimationNodes UseInterval IntervalRange operation =
 (
 	if operation == "AnimSave" then
 	(
-		LoadSaveAnimation.saveAnimation AnimFile &AnimationNodes (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:UseInterval segInterval:IntervalRange
+		AnimationSaveStatus = LoadSaveAnimation.saveAnimation AnimFile &AnimationNodes (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:UseInterval segInterval:IntervalRange
+		if NOT AnimationSaveStatus do
+		(
+			SaveAnimationLog = #()
+			append SaveAnimationLog "[ ANIMATION TRANSFER ON SWITCH ]"
+			append SaveAnimationLog "Transfering current animation failed while attempting to save animation to file."
+			append SaveAnimationLog "Check the asset for possible duplicate names on controllers, objects, nodes, etc."
+			append SaveAnimationLog ""
+			for CurrentError in SaveAnimationLog do
+			(
+				ASSET_PublishFunctions.LOGwrite CurrentError
+			)
+			ASSET_PublishFunctions.LOGopen()
+		)
 	)
 	else
 	(
 		LoadSaveAnimation.loadAnimation AnimFile &AnimationNodes relative:false insert:false --insertTime:(IntervalRange.start)
 	)
 )
-fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepath to import | arg2: the node to do the switch on
+function FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepath to import | arg2: the node to do the switch on
 (
-
 	nodeAsset = arg2
 	LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "LoadSavedNames"))
 	SetRange = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange"))
@@ -777,6 +848,8 @@ fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepat
 	FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameEnd"))
 	IntervalRange = interval FrameStart FrameEnd
 	AnimationNodes = (FN_collectAllChildren nodeAsset includeParent:true MeshObjOnly:false)
+	ASSET_PublishFunctions.Remove_PointCache_Objects &AnimationNodes
+	ASSET_PublishFunctions.Remove_Objects_With_Attachment_Constraint &AnimationNodes
 	if LoadSavedNames do
 	(
 		for CurrentNode in AnimationNodes do
@@ -797,31 +870,25 @@ fn FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the filepat
 		("QuickSwitchLoad"):
 		(
 			deleteKeys nodeAsset #allKeys
-
 			FN_Save_Load_Animation TempAnimFile AnimationNodes SetRange IntervalRange "AnimLoad"
 			deletefile TempAnimFile
 		)
 		("none"):
 		(
+			print "tried here"
 			deleteKeys nodeAsset #allKeys
 			FN_Save_Load_Animation arg AnimationNodes SetRange IntervalRange "AnimLoad"
 		)
 	)
 )
-
 fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the node to do the switch on
 (
 	-- set some stuff up
-	LoadAnimation = false
 	nodeAsset = arg2
 	heroName = nodeAsset.name
 	allObjectsArr = (objects as array)
 	nameDuplicatesArr = #()
-	if (MAIN_AssetSwitchUI.LoadAnim_CheckBox.enabled == true) AND (MAIN_AssetSwitchUI.LoadAnim_CheckBox.checked == true) do
-	(
-		LoadAnimation = true
-		FN_Save_Load_Animation nodeAsset "AnimSave"
-	)
+
 	-- Put all objects named the same in an array
 	for i in 1 to allObjectsArr.count do
 	(
@@ -856,10 +923,6 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 			
 		-- Put all of the nodes back to having the same name	
 		for i in 1 to nameDuplicatesArr.count do (nameDuplicatesArr[i].name = (heroName))
-		if LoadAnimation do
-		(
-			FN_Save_Load_Animation nodeAsset "AnimLoad"
-		)
 	)
 
 	Catch
@@ -1025,7 +1088,7 @@ fn	FN_DoSwitch_Type arg1 arg2 arg3 arg4 = -- arg1: the type of import to do | ar
 )
 	
 -- Fetch the held file, and reset selection to match selection when the hold was performed
-fn FN_Revert =
+function FN_Revert =
 (
 	-- Fetch the held file without interruption
 	fetchMaxFile quiet:true
@@ -1039,7 +1102,7 @@ fn FN_Revert =
 )
 	
 -- Prepare all chosen data, and apply it to the selected node ( THE MAIN ACTION )
-fn FN_DoSwitch =
+function FN_DoSwitch =
 (
 -- 	clearlistener()
 
@@ -1089,47 +1152,51 @@ fn FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
-
-			-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
-			-- Creates the temporary animation *.xaf file
-			TempAnimFile = undefined
-			-- Test for the Animation Group AND the "Transfer Current Animation" checkboxes
-			if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == true) do
+			if doesFileExist curVersionFile do
 			(
-				-- Creates the filepath for the temporary animation file where the animation data will be stored
-				TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
-				-- Call the Animation Swtitch function in "QuickSwitchSave" mode, which will just record the animation of the current assets on the temporary file
-				-- and then proceeds to switch the Asset's objects (*.max file or VrayMesh files)
-
-				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
-			)
-			switchObjectsArray[i].name = assetGlobalName
-			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
-
-			-- Test for temporary animation file (if it exists, it means it was created because the user wanted to transfer the asset's current animation to the newly switched asset)
-			if TempAnimFile != undefined do
-			(
-				-- -- Call the Animation Swtitch function in "QuickSwitchLoad" mode, which will load the animation of the temporary animation file on the new switched asset
-
-				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
+				-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
+				-- Creates the temporary animation *.xaf file
+				TempAnimFile = undefined
+				-- Test for the Animation Group AND the "Transfer Current Animation" checkboxes
+				if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == true) do
+				(
+					-- Creates the filepath for the temporary animation file where the animation data will be stored
+					TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
+					-- Call the Animation Swtitch function in "QuickSwitchSave" mode, which will just record the animation of the current assets on the temporary file
+					-- and then proceeds to switch the Asset's objects (*.max file or VrayMesh files)
+					FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
+				)
+				switchObjectsArray[i].name = assetGlobalName
+				FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
+				-- Test for temporary animation file (if it exists, it means it was created because the user wanted to transfer the asset's current animation to the newly switched asset)
+				if TempAnimFile != undefined do
+				(
+					-- -- Call the Animation Swtitch function in "QuickSwitchLoad" mode, which will load the animation of the temporary animation file on the new switched asset
+					FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
+				)
 			)
 		)
 		
 		-- Test for if a material switch is desired, and do it if so			
 		if MAIN_AssetSwitchUI.chkbox_materials.checked == true do
 		(
-			FN_DoSwitch_Material curMaterialFile curMaterialMapFile switchObjectsArray[i] LoadtyLibMtl -- TODO: If we load the materials inside this function, it will 
+			if doesFileExist curMaterialFile do
+			(
+				FN_DoSwitch_Material curMaterialFile curMaterialMapFile switchObjectsArray[i] LoadtyLibMtl -- TODO: If we load the materials inside this function, it will 
 																						  -- change at every iteration (meaning the material will NOT be 
 																						  -- instanced across objects. Several objects will have the SAME 
 																						  -- material, with the SAME name, but with potentially different values.
 																						  -- To avoid this the materials should be defined BEFORE the loop on
 																						  -- line 1038 ("for i in 1 to switchObjectsArray.count do")
+			)
 		)
-
 		-- Test for if an Animation switch is desired. Will only hold true IF the Animation Group checkbox is true AND the "Transfer Current Animation" is false
 		if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == false) do
 		(
-			FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] "undefined" "none"
+			if doesFileExist curAnimFile do
+			(
+				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] "undefined" "none"
+			)
 		)
 	)
 	
@@ -1140,13 +1207,12 @@ fn FN_DoSwitch =
 		selectmore (maxOps.getNodeByHandle switchObjectsHandleArray[i])  --- TODO: Better method than SelectMore?
 	)
 )
-
 -- ============================
 -- FUNCTIONS FOR MENUBAR
 -- ============================
 	
 -- Function for removing userDefinedProperties using passed string
-fn FN_setup_RemoveInfo node prop = if getUserProp node prop != undefined do
+function FN_setup_RemoveInfo node prop = if getUserProp node prop != undefined do
 (
 	buff = (getUserPropBuffer node) as stringStream 
 	newb = stringStream ""
@@ -1160,7 +1226,7 @@ fn FN_setup_RemoveInfo node prop = if getUserProp node prop != undefined do
 	
 -- Collects selected files, and prompts user with a directory to save them into
 	
-fn FN_setup_Initalize  = 
+function FN_setup_Initalize  = 
 (
 	-- Get rid of any pre-existing initalizing rollouts
 	try(DestroyDialog ROLL_AssetSwitch_Initalize)catch()
@@ -1218,7 +1284,7 @@ fn FN_setup_Initalize  =
 	createdialog ROLL_AssetSwitch_Initalize 200 105
 )
 	
-fn FN_help_About = 
+function FN_help_About = 
 (
 	try(DestroyDialog ROLL_AssetSwitch_Help)catch()
 
@@ -1237,8 +1303,7 @@ fn FN_help_About =
 		
 	createdialog ROLL_AssetSwitch_Help 200 105
 )
-
-fn TransferAnimation_Label_Update =
+function TransferAnimation_Label_Update =
 (
 	if ( hasINISetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" ) then
 	(
@@ -1272,18 +1337,16 @@ function FN_RefreshFrameRange arg_iniKey arg_label = -- arg_iniKey: where to rea
 		
 	arg_label.text = ("frames: " + startFrame + " to " + endFrame)
 )
-fn TransferAnimation_Options =
+function TransferAnimation_Options =
 (
 	rollout SWITCH_TransferAnimation_Options "Asset Switch Options" width:350 height:105
 	(
 		group  "Switch Animation Options"
 		(
-
 			checkbox SetRange_CheckBox "Set Range" checked:false tooltip:"Enables Animation Switch on a specific range" across:3
 			spinner StartRange_Spinner "from" range:[-9999,9999,animationrange.start] type:#integer width:70 align:#left offset:[51,1] tooltip:"Start frame to Switch animation"
 			spinner EndRange_Spinner "to" range:[-9999,9999,animationrange.end] type:#integer width:70 align:#left offset:[20,1] tooltip:"End frame to Switch animation"
 			checkbox LoadSavedNames_CheckBox "Load saved names before transferring animation" checked:false tooltip:"Load saved names inside User Properties on the object before doing a Switch"
-
 		)
 		button buttonOK "OK" pos:[258, 75]
 		button buttonCancel "Cancel" align:#right offset:[0,-26]
@@ -1374,7 +1437,6 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 			button btn_copyMatDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
 			button btn_openMatDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
 		
-
 	groupBox grp_objects "" width:438 align:#left offset:[-8,13] height:75
 		checkbox chkbox_objects "Objects" offset:[0,((grp_objects.height * -1)-6)] checked:true align:#left tooltip:"Enable Object Switch"
 		dropdownlist ddl_objDropdown width:381 items:#(" -- No Objects Present --") align:#left offset:[0,0] tooltip:"Object type to Switch"
@@ -1402,7 +1464,6 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 		label lab_versionInfo_Filename "File name: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Materialname "Material name: N/A"  align:#left offset:[3,0] visible:false
 		label lab_versionInfo_AnimationFile "Animation file: N/A"  align:#left offset:[3,0] visible:false
-
 		label lab_versionInfo_Frames "Frame Range: N/A" align:#left offset:[3,0] visible:false
 		label lab_versionInfo_Date "Date Created: N/A" align:#left offset:[3,0] visible:false
 		bitmap bmp_preview filename:"" width:82 height:82 align:#right offset:[-5,-90] visible:false
@@ -1416,6 +1477,108 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 -- EVENT HANDLERS
 -- ===================
 
+	-- Choose an Asset: set the type and update interested UI items
+	on btn_chooseAsset pressed do
+	(
+		FN_ChangeAsset()
+	)
+	-- Enable / Disable the Materials dropdown on the checkbox toggle
+	on chkbox_materials changed state do
+	(
+		ddl_matDropdown.enabled = state
+		FN_UiInformationUpdate()
+	)
+	-- Triggers on MATERIAL selection, from its dropdown
+	on ddl_matDropdown selected arg do
+	(
+		curMaterial = ddl_matDropdown.items[arg]
+		--FN_UiUpdate_Materials()
+		FN_UiInformationUpdate()
+	)
+	-- Enable / Disable the Object and Version dropdown on the checkbox toggle
+	on chkbox_objects changed state do
+	(
+		ddl_objDropdown.enabled = state
+		lab_versionDropdown.enabled = state
+		ddl_versionDropdown.enabled = state
+		if state then
+		(
+			if chkbox_animation.checked do
+			(
+				SwitchCurrentAnim_CheckBox.enabled = state
+			)
+		)
+		else
+		(
+			SwitchCurrentAnim_CheckBox.enabled = state
+			SwitchCurrentAnim_CheckBox.checked = state
+			if chkbox_animation.checked do
+			(
+				ddl_AnimationDropdown.enabled = true
+			)
+		)
+		FN_UiInformationUpdate()
+	)
+	-- Triggers on OBJECT selection, from its dropdown		
+	on ddl_objDropdown selected arg do
+	(
+		curType = ddl_ObjDropdown.items[arg]
+		--FN_UiUpdate_Objects()
+		FN_UiInformationUpdate()
+	)
+		
+	-- Triggers on VERSION selection, from its dropdown
+	on ddl_versionDropdown selected arg do
+	(
+		curVersion = ddl_versionDropdown.items[arg]
+		curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
+		FN_importTypeTest curVersionFile
+		FN_UiInformationUpdate()
+	)
+	on chkbox_animation changed state do
+	(
+		if chkbox_objects.checked then
+		(
+			SwitchCurrentAnim_CheckBox.enabled = state
+		)
+		SaveLoadAnim_Refresh.enabled = state
+		if (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" )) do
+		(
+			SaveLoadAnim_Label.enabled = state
+		)
+		SaveLoadAnim_Options.enabled = state
+		if SwitchCurrentAnim_CheckBox.checked then
+		(
+			ddl_AnimationDropdown.enabled = false
+		)
+		else
+		(
+			ddl_AnimationDropdown.enabled = state
+		)
+		FN_UiInformationUpdate()
+	)
+	on SwitchCurrentAnim_CheckBox changed state do
+	(
+		ddl_AnimationDropdown.enabled = NOT state
+	)
+	on SaveLoadAnim_Refresh pressed do
+	(
+		FN_RefreshFrameRange "AnimationSwitch" SaveLoadAnim_Label
+		SaveLoadAnim_Label.enabled = true
+	)
+	on SaveLoadAnim_Options pressed do
+	(
+		TransferAnimation_Options()
+	)
+	-- Triggers on ANIMATION selection, from its dropdown
+	on ddl_AnimationDropdown selected arg do
+	(
+		curAnim = ddl_AnimationDropdown.items[arg]
+		FN_UiInformationUpdate()
+	)
+	-- When the Info Group Checkbox is toggled hide/unhide the contents of the information group
+	on chkbox_info changed state do(FN_UiToggleInformationTest state)
+	-- Starts a publishing operation
 	on btn_Open_Publish_Center pressed do
 	(
 		doPublish = true
@@ -1448,159 +1611,49 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 			)
 		)
 	)
-		
 	-- Starts a switch operation, and holds first if told to
 	on btn_SwitchAsset pressed do
+	(
+		-- Give it a good go
+		try
 		(
-			-- Give it a good go
-			try
-			(
-				disablesceneredraw()
-				
-				-- Perform max hold if told to
-				if chkbtn_SwitchHold.checked == true do
-				(
-					holdMaxFile()
-					btn_Revert.enabled = true
-				)
-					
-				-- call the switch function
-				FN_DoSwitch()
-				SwtichEnd = timestamp()
-				enablesceneredraw()
-			)
-
+			disablesceneredraw()
 			
-			catch
+			-- Perform max hold if told to
+			if chkbtn_SwitchHold.checked == true do
 			(
-				enablesceneredraw()
-				
-				-- On crashed import, check if 'hold' was perfromed, if so, fetch
-				if chkbtn_SwitchHold.checked == true then
-				(
-					Messagebox "Unhandled exception! attempting to revert scene..."
-					try ( FN_Revert() )	catch (Messagebox "Unhandled exception, sorry! -David")
-				)
-				else
-				(
-					Messagebox "Unhandled exception, sorry! -Aaron"
-				)
+				holdMaxFile()
+				btn_Revert.enabled = true
 			)
-			
+				
+			-- call the switch function
+			FN_DoSwitch()
+			SwtichEnd = timestamp()
+			enablesceneredraw()
 		)
+		catch
+		(
+			enablesceneredraw()
+			
+			-- On crashed import, check if 'hold' was perfromed, if so, fetch
+			if chkbtn_SwitchHold.checked == true then
+			(
+				Messagebox "Unhandled exception! attempting to revert scene..."
+				try ( FN_Revert() )	catch (Messagebox "Unhandled exception, sorry! -David")
+			)
+			else
+			(
+				Messagebox "Unhandled exception, sorry! -Aaron"
+			)
+		)
+		
+	)
 		
 	-- Revert to scene / selection from before last switch
 	on btn_Revert pressed do
 	(
 		FN_Revert()
 	)
-		
-	-- Triggers on MATERIAL selection, from its dropdown
-	on ddl_matDropdown selected arg do
-	(
-		curMaterial = ddl_matDropdown.items[arg]
-		FN_UiInformationUpdate()
-	)
-	
-	-- Triggers on OBJECT selection, from its dropdown		
-	on ddl_objDropdown selected arg do
-	(
-		curType = ddl_ObjDropdown.items[arg]
-		FN_UiUpdate_Objects()
-	)
-		
-	-- Triggers on VERSION selection, from its dropdown
-	on ddl_versionDropdown selected arg do
-	(
-		curVersion = ddl_versionDropdown.items[arg]
-		curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
-			
-		FN_importTypeTest curVersionFile
-		FN_UiInformationUpdate()
-	)
-	-- Triggers on ANIMATION selection, from its dropdown
-	on ddl_AnimationDropdown selected arg do
-	(
-		curAnim = ddl_AnimationDropdown.items[arg]
-		FN_UiInformationUpdate()
-	)
-
-	on SaveLoadAnim_Refresh pressed do
-	(
-		FN_RefreshFrameRange "AnimationSwitch" SaveLoadAnim_Label
-		SaveLoadAnim_Label.enabled = true
-	)
-	on SaveLoadAnim_Options pressed do
-	(
-		TransferAnimation_Options()
-	)	
-	-- Choose an Asset: set the type and update interested UI items
-	on btn_chooseAsset pressed do
-	(
-		FN_ChangeAsset()
-	)
-		
-	-- Enable / Disable the Materials dropdown on the checkbox toggle
-	on chkbox_materials changed state do (ddl_matDropdown.enabled = state)
-		
-	-- Enable / Disable the Object and Version dropdown on the checkbox toggle
-	on chkbox_objects changed state do
-	(
-		ddl_objDropdown.enabled = state
-		lab_versionDropdown.enabled = state
-		ddl_versionDropdown.enabled = state
-		if state then
-		(
-			if chkbox_animation.checked do
-			(
-				SwitchCurrentAnim_CheckBox.enabled = state
-			)
-		)
-		else
-		(
-			SwitchCurrentAnim_CheckBox.enabled = state
-			SwitchCurrentAnim_CheckBox.checked = state
-			if chkbox_animation.checked do
-			(
-				ddl_AnimationDropdown.enabled = true
-			)
-		)
-	)
-	on chkbox_animation changed state do
-	(
-		if chkbox_objects.checked then
-		(
-			SwitchCurrentAnim_CheckBox.enabled = state
-		)
-		SaveLoadAnim_Refresh.enabled = state
-		if (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" )) do
-		(
-			SaveLoadAnim_Label.enabled = state
-		)
-		SaveLoadAnim_Options.enabled = state
-		if SwitchCurrentAnim_CheckBox.checked then
-		(
-			ddl_AnimationDropdown.enabled = false
-		)
-		else
-		(
-			ddl_AnimationDropdown.enabled = state
-		)
-	)
-	on chkbox_animation changed state do
-	(
-		SwitchCurrentAnim_CheckBox.enabled = state
-		SaveLoadAnim_Refresh.enabled = state
-		SaveLoadAnim_Label.enabled = state
-		SaveLoadAnim_Options.enabled = state
-		ddl_AnimationDropdown.enabled = state
-	)
-		
-	on SwitchCurrentAnim_CheckBox changed state do
-	(
-		ddl_AnimationDropdown.enabled = NOT state
-	)
-
 	-- When the Copy button is pressed, copy file path of the asset to the clipboard
 	on btn_copyAssetDir pressed do (setclipboardText assetDir)
 	on btn_copyMatDir pressed do (setclipboardText (assetDir + @"\Publish\Material"))
@@ -1615,8 +1668,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	on btn_openVerDir pressed do(shelllaunch (assetDir + @"Publish\" + curType + @"\"+ curVersion + @"\") "")
 	on btn_openAnimationDir pressed do(shelllaunch (assetDir + @"\Publish\Animation") "")
 
-	-- When the Info Group Checkbox is toggled hide/unhide the contents of the information group
-	on chkbox_info changed state do(FN_UiToggleInformationTest state)
+
 	
 	-- This is to rearrange and distribute the UI elements. A Rewrite of this whole tool can make this thing more streamlined
 	on MAIN_AssetSwitchUI resized arg do
