@@ -293,7 +293,24 @@ function FN_UiReset =
 	
 		
 )
-
+--function for setting the "Switch Asset" button enabled or disabled depending on the UI state
+function Switch_Button_Enable_Disable =
+(
+	SwitchState = false
+	if MAIN_AssetSwitchUI.chkbox_materials.checked AND (doesFileExist curMaterialFile) do
+	(
+		SwitchState = true
+	)
+	if MAIN_AssetSwitchUI.chkbox_objects.checked AND (doesFileExist curVersionFile) do
+	(
+		SwitchState = true
+	)
+	if MAIN_AssetSwitchUI.chkbox_animation.checked AND (doesFileExist curAnimFile) do
+	(
+		SwitchState = true
+	)
+	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = SwitchState
+)
 -- Set the ui to a invalid selection case	
 function FN_UiWarnInvalid =
 	(
@@ -831,7 +848,8 @@ function FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the f
 	FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "FrameEnd"))
 	IntervalRange = interval FrameStart FrameEnd
 	AnimationNodes = (FN_collectAllChildren nodeAsset includeParent:true MeshObjOnly:false)
-	ASSET_PublishFunctions.Remove_Duplicate_Objects &AnimationNodes
+	ASSET_PublishFunctions.Remove_PointCache_Objects &AnimationNodes
+	ASSET_PublishFunctions.Remove_Objects_With_Attachment_Constraint &AnimationNodes
 	if LoadSavedNames do
 	(
 		for CurrentNode in AnimationNodes do
@@ -857,6 +875,7 @@ function FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the f
 		)
 		("none"):
 		(
+			print "tried here"
 			deleteKeys nodeAsset #allKeys
 			FN_Save_Load_Animation arg AnimationNodes SetRange IntervalRange "AnimLoad"
 		)
@@ -1133,25 +1152,28 @@ function FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
-			-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
-			-- Creates the temporary animation *.xaf file
-			TempAnimFile = undefined
-			-- Test for the Animation Group AND the "Transfer Current Animation" checkboxes
-			if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == true) do
+			if doesFileExist curVersionFile do
 			(
-				-- Creates the filepath for the temporary animation file where the animation data will be stored
-				TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
-				-- Call the Animation Swtitch function in "QuickSwitchSave" mode, which will just record the animation of the current assets on the temporary file
-				-- and then proceeds to switch the Asset's objects (*.max file or VrayMesh files)
-				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
-			)
-			switchObjectsArray[i].name = assetGlobalName
-			FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
-			-- Test for temporary animation file (if it exists, it means it was created because the user wanted to transfer the asset's current animation to the newly switched asset)
-			if TempAnimFile != undefined do
-			(
-				-- -- Call the Animation Swtitch function in "QuickSwitchLoad" mode, which will load the animation of the temporary animation file on the new switched asset
-				FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
+				-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
+				-- Creates the temporary animation *.xaf file
+				TempAnimFile = undefined
+				-- Test for the Animation Group AND the "Transfer Current Animation" checkboxes
+				if (MAIN_AssetSwitchUI.chkbox_animation.checked == true) AND (MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.checked == true) do
+				(
+					-- Creates the filepath for the temporary animation file where the animation data will be stored
+					TempAnimFile = sysInfo.tempdir + "TempAnimFile_" + (timestamp() as string) + ".xaf"
+					-- Call the Animation Swtitch function in "QuickSwitchSave" mode, which will just record the animation of the current assets on the temporary file
+					-- and then proceeds to switch the Asset's objects (*.max file or VrayMesh files)
+					FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchSave"
+				)
+				switchObjectsArray[i].name = assetGlobalName
+				FN_DoSwitch_Type curTypeImporter curVersionFile switchObjectsArray[i] true
+				-- Test for temporary animation file (if it exists, it means it was created because the user wanted to transfer the asset's current animation to the newly switched asset)
+				if TempAnimFile != undefined do
+				(
+					-- -- Call the Animation Swtitch function in "QuickSwitchLoad" mode, which will load the animation of the temporary animation file on the new switched asset
+					FN_DoSwitch_Animation curAnimFile switchObjectsArray[i] TempAnimFile "QuickSwitchLoad"
+				)
 			)
 		)
 		
@@ -1184,24 +1206,6 @@ function FN_DoSwitch =
 	(
 		selectmore (maxOps.getNodeByHandle switchObjectsHandleArray[i])  --- TODO: Better method than SelectMore?
 	)
-)
---function for setting the "Switch Asset" button enabled or disabled depending on the UI state
-function Switch_Button_Enable_Disable =
-(
-	SwitchState = false
-	if MAIN_AssetSwitchUI.chkbox_materials.checked AND (doesFileExist curMaterialFile) do
-	(
-		SwitchState = true
-	)
-	if MAIN_AssetSwitchUI.chkbox_objects.checked AND (doesFileExist curVersionFile) do
-	(
-		SwitchState = true
-	)
-	if MAIN_AssetSwitchUI.chkbox_animation.checked AND (doesFileExist curAnimFile) do
-	(
-		SwitchState = true
-	)
-	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = SwitchState
 )
 -- ============================
 -- FUNCTIONS FOR MENUBAR
