@@ -246,6 +246,7 @@ struct ASSET_PublishFunctions
 		)
 		catch(return "ERROR: MaxFile Publish failed")
 	),
+	-- Function to collect all objects that have animation keys on any of its properties/controllers
 	function Collect_Animated_Properties theObject &Animated_Properties=
 	(
 		if try (theObject.isAnimated) catch (false) do
@@ -254,6 +255,8 @@ struct ASSET_PublishFunctions
 		Collect_Animated_Properties theObject[i] &Animated_Properties
 
 	),
+	-- Function to find and remove from the Animation Publishing array any objects that have an Attachment Constraint controller applied, since the Save/Load animation function in 3dsMax does not
+	-- currently saves and loads keys on such controller type (Attachment Constraint keys are not saved when using Save/Load Animation)
 	function Remove_Objects_With_Attachment_Constraint &ObjArray =
 	(
 		for i = ObjArray.count to 1 by -1 do
@@ -277,7 +280,8 @@ struct ASSET_PublishFunctions
 			)
 		)
 	),
-	function Find_Duplicate_Objects &ObjArray &DuplicateNameArray = -- removes objects that have a point cache modifier from the array that will be parsed to the Save Animation routine
+	-- Function to find duplicate objects on the Animation Publishing array, and later report to the user about such duplicates
+	function Find_Duplicate_Objects &ObjArray &DuplicateNameArray =
 	(
 		DuplicateIndexes = #()
 		if ObjArray.count > 1 do
@@ -298,6 +302,8 @@ struct ASSET_PublishFunctions
 			)
 		)
 	),
+	-- Function to find and remove from the Animation Publishing array any objects that have a Point Cache modifier applied to them, since the animation of such objects must come from the Point Cache
+	-- modifier itself and not keyframed animation on these objects.
 	function Remove_PointCache_Objects &ObjArray =
 	(
 		for i = ObjArray.count to 1 by -1 do
@@ -316,7 +322,8 @@ struct ASSET_PublishFunctions
 			)
 		)
 	),
-	function pub_AnimationFile arg_asset arg_path = --TODO: Create animation publishing routine
+	-- Function to publish the animation of the currently selected asset
+	function pub_AnimationFile arg_asset arg_path =
 	(
 		try
 		(
@@ -324,19 +331,26 @@ struct ASSET_PublishFunctions
 			FrameStart = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameStart" ))
 			FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" ))
 			LoadSavedNames = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "LoadSavedNames" ))
+			-- Collects in an array the objects which animation is to be published
 			saveArr = ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:true MeshObjOnly:false
 			PointCacheRemoved = ""
 			AttachmentRemoved = ""
 			BeforePointCacheRemoval = saveArr.count
+			-- Removes from the Objects Array those which have a Point Cache modifier
 			Remove_PointCache_Objects &saveArr
+			-- Compares the array size to assess if objects were removed from the original Object Array
 			if BeforePointCacheRemoval - saveArr.count != 0 do
 			(
+				-- Creates an appropriate warning message in case objects were removed because they had a Point Cache modifier
 				PointCacheRemoved = ((BeforePointCacheRemoval - saveArr.count) as string) + " nodes removed from Animation publishing due to having point cache modifiers"
 			)
 			BeforeAttachmentRemoval = saveArr.count
+			-- Removes from the Objects Array those which have an Attachment Constraint controller (because, as of now, the Save/Load Max command does not support this controller)
 			Remove_Objects_With_Attachment_Constraint &saveArr
+			-- Compares the array size to assess if objects were removed from the original Object Array
 			if BeforeAttachmentRemoval - saveArr.count != 0 do
 			(
+				-- Creates an appropriate warning message in case objects were removed because they had an Attachment Constraint controller
 				if PointCacheRemoved == "" then
 				(
 					AttachmentRemoved = ((BeforeAttachmentRemoval - saveArr.count) as string) + " nodes removed from Animation publishing due to having Attachment Constraints"
@@ -346,6 +360,7 @@ struct ASSET_PublishFunctions
 					AttachmentRemoved = ", and " + ((BeforeAttachmentRemoval - saveArr.count) as string) + " nodes removed from Animation publishing due to having Attachment Constraints"
 				)
 			)
+			-- Loads back to the objects their saved UserProperties name
 			if LoadSavedNames do
 			(
 				for CurrentNode in saveArr do
@@ -357,6 +372,7 @@ struct ASSET_PublishFunctions
 					) 
 				)
 			)
+			-- Creates the interval to be used on the LoadSaveAnimation command
 			if SetRange then
 			(
 				IntervalRange = interval FrameStart FrameEnd
@@ -365,9 +381,11 @@ struct ASSET_PublishFunctions
 			(
 				IntervalRange = (interval 0f 0f)
 			)
+			-- Tries to Publish the animation. Returns "False" if the process fails (most commonly because of the presence of objects with duplicate names)
 			AnimationSaveStatus = LoadSaveAnimation.saveAnimation arg_path &saveArr (#()) (#()) animatedTracks:false includeConstraints:true keyableTracks:true saveSegment:SetRange segInterval:IntervalRange
 			if AnimationSaveStatus then
 			(
+				-- If the Animation publishing is successful returns "Success", or if it's partially successful returns a "Warning" in case some objects had point cache modifiers or attachment constraint present
 				if (PointCacheRemoved != "") OR (AttachmentRemoved != "") then
 				(
 					return ("WARNING: " + PointCacheRemoved + AttachmentRemoved + ". Animation was still published for valid nodes.")
@@ -388,24 +406,6 @@ struct ASSET_PublishFunctions
 		)
 		catch(return "ERROR: Animation Publish failed")
 	),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	-- Publish a MaterialFile	
 	function Create_TyLibMaterial currentMaterialLibrary arg_path =
 	(
