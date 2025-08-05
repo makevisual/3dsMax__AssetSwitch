@@ -327,6 +327,7 @@ struct ASSET_PublishFunctions
 	(
 		try
 		(
+			makeDir (pathConfig.removePathLeaf arg_path)
 			SetRange = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "SetRange" ))
 			FrameStart = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameStart" ))
 			FrameEnd = (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationPublish" "FrameEnd" ))

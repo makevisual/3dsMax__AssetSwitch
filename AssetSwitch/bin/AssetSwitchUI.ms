@@ -337,7 +337,7 @@ function FN_UiInformationUpdate =
 	catch()
 		
 	-- Set the bitmap image
-	bmp_PreviewFilename = (substring assetFile 1 (assetFile.count - 5) + "jpg")
+	bmp_PreviewFilename = (substring assetFile 1 (assetFile.count - 5) + "jpg") -- TODO: Fix or Remove the Bitmap Preview
 	if (doesFileExist bmp_PreviewFilename) then
 	(
 		MAIN_AssetSwitchUI.bmp_preview.filename = bmp_PreviewFilename
