@@ -474,10 +474,14 @@ struct ASSET_PublishFunctions
 			-- collect the objects to export
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
 			hierarchy_Array = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:false)
+			-- Removes from the Hierarchy Array all objects that have no children
 			for obj in export_arr do
 			(
-				IndexToDelete = FindItem hierarchy_Array obj
-				DeleteItem hierarchy_Array IndexToDelete
+				if obj.children.count == 0 do
+				(
+					IndexToDelete = FindItem hierarchy_Array obj
+					DeleteItem hierarchy_Array IndexToDelete
+				)
 			)
 			-- Temporarily storing the Asset's tranform				
 			NodeTemporaryTransform = nodeAsset.transform
@@ -515,19 +519,61 @@ struct ASSET_PublishFunctions
 				CurrentAssetName = ((substring (pathConfig.stripPathToLeaf arg_path) 1 ((pathConfig.stripPathToLeaf arg_path).count - 7)))
 				PartsPartialName = PartsDirectory + CurrentAssetName
 				makeDir PartsDirectory
-
 				for i = 1 to export_arr.count do
 				(
 					NodetoExportPath = PartsPartialName + "_" + export_arr[i].name + ".vrmesh"
-					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:true exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true 
+					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:true exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
 					ExportedNodesNames[i] = export_arr[i].name
 					ExportedNodesFilePath[i] = NodetoExportPath
 					ExportedNodesTransforms[i] = (export_arr[i].transform*(inverse export_arr[i].parent.transform)) -- new method for safe asset replace in case the replacement node is absent
 					ExportedNodesParents[i] = (export_arr[i].parent).name
 				)
 				MapIniName = PartsPartialName + "_Parts.vpmap"
+				-- Initializes an Array to reparent nodes back to their original parents in case they had to be parented to VrayProxy nodes
+				ParentRevertArray = #()
+				-- Checks for Geometry that has any children inside the Export Array and reassigns the parent to be the newly created VrayProxy Object
+				for j = hierarchy_Array.count to 1 by -1 do
+				(
+					-- Checks if a node on the ExportedNodeNames exists on the hierarchy_array (implying an exported node is also a parent of some other node)
+					ParentIndex = findItem ExportedNodesNames ("VRayProxy_" + hierarchy_Array[j].name)
+					if ParentIndex != 0 do
+					(
+						-- Grabs all the children of the Hierarchy_Array node to assign them to a new parent inside the Export Array
+						ChildrenToReparent = (for CurrentChild in hierarchy_Array[j].children collect CurrentChild)
+						for ChildIndex = ChildrenToReparent.count to 1 by -1 do
+						(
+							IndexinExportArray = (FindItem export_arr ChildrenToReparent[ChildIndex])
+							IndexinHierarchyArray = (FindItem hierarchy_Array ChildrenToReparent[ChildIndex])
+							-- Checks to see if all the children are included on the Export_Array or Hierarchy Array. If they are not, exclude such node to be reparented.
+							if (IndexinExportArray == 0) AND (IndexinHierarchyArray == 0) do
+							(
+								deleteItem ChildrenToReparent ChildIndex
+							)
+							-- Checks if a to be reparent node is originally part of the hierarchy array (and hence, it is a control object, like a spline or helper)
+							if IndexinHierarchyArray != 0 do
+							(
+								-- adds such objects to the ParentRevert array along with its original parent
+								append ParentRevertArray ChildrenToReparent[ChildIndex]
+								append ParentRevertArray hierarchy_Array[j]
+							)
+						)
+						-- Reparent the children to a node inside the export array
+						ChildrenToReparent.parent = export_arr[ParentIndex]
+						-- Removes the Geometry that had children on the Export Array from the hierarchy array to be published afterwards
+						deleteItem hierarchy_Array j
+					)
+				)
 				Max_nodes_to_Save = export_arr + hierarchy_Array
-				saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max" )
+				saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max")
+				-- Checks if there are elements on the ParentRevert array
+				if ParentRevertArray.count != 0 do
+				(	
+					-- Proceeds to parent those objects back to their original parents
+					for i = 1 to (ParentRevertArray.count*0.5) do
+					(
+						ParentRevertArray[(i*2) - 1].parent = ParentRevertArray[i*2]
+					)
+				)
 			)
 			setinisetting (MapIniName) "NodesNames" "NodesNamesArray" (ExportedNodesNames as string)
 			setinisetting (MapIniName) "NodesPath" "NodesFilePath" (ExportedNodesFilePath as string)
