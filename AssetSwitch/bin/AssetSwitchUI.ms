@@ -146,7 +146,9 @@ function FN_GetVersionsInDir = -- arg: curType
 			(
 				versionNames = #("No Versions Found")
 			)
-			curVersion = versionNames[1]
+
+			--curVersion = versionNames[1]
+
 			return versionNames
 		)
 		else
@@ -251,6 +253,9 @@ function FN_UiReset =
 		
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = " No Object(s) Selected "
 	MAIN_AssetSwitchUI.lab_assetDir.text = ""
+	
+	
+	
 	MAIN_AssetSwitchUI.btn_SwitchAsset.enabled = false
 	MAIN_AssetSwitchUI.btn_copyAssetDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openAssetDir.enabled = false
@@ -260,23 +265,31 @@ function FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openObjDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
-	MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
-	MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
-		
+	MAIN_AssetSwitchUI.btn_copyAnimationDir.enabled = false
+	MAIN_AssetSwitchUI.btn_openAnimationDir.enabled = false
+
+	
+	
+	MAIN_AssetSwitchUI.chkbox_materials.enabled = false
 	MAIN_AssetSwitchUI.chkbox_materials.text = "Materials"
-	MAIN_AssetSwitchUI.chkbox_objects.text = "Objects"
-	MAIN_AssetSwitchUI.chkbox_animation.text = "Animation"
-
-
+	MAIN_AssetSwitchUI.ddl_matDropdown.enabled = false
 	MAIN_AssetSwitchUI.ddl_matDropdown.items = #(" -- No Materials Present --")
 	MAIN_AssetSwitchUI.ddl_matDropdown.selection = 1
 	
+	MAIN_AssetSwitchUI.chkbox_objects.enabled = false
+	MAIN_AssetSwitchUI.chkbox_objects.text = "Objects"
+	MAIN_AssetSwitchUI.ddl_objDropdown.enabled = false
 	MAIN_AssetSwitchUI.ddl_objDropdown.items = #(" -- No Objects Present --")
 	MAIN_AssetSwitchUI.ddl_objDropdown.selection = 1
-
+	MAIN_AssetSwitchUI.ddl_versionDropdown.enabled = false
 	MAIN_AssetSwitchUI.ddl_versionDropdown.items = #(" -- No Versions Present --")
 	MAIN_AssetSwitchUI.ddl_versionDropdown.selection = 1
 
+	MAIN_AssetSwitchUI.chkbox_animation.enabled = false
+	MAIN_AssetSwitchUI.chkbox_animation.text = "Animation"
+	MAIN_AssetSwitchUI.SaveLoadAnim_Refresh.enabled = false
+	MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = false
+	MAIN_AssetSwitchUI.ddl_AnimationDropdown.enabled = false
 	MAIN_AssetSwitchUI.ddl_AnimationDropdown.items = #(" -- No Animation Present --")
 	MAIN_AssetSwitchUI.ddl_AnimationDropdown.selection = 1
 	
@@ -306,6 +319,7 @@ function Switch_Button_Enable_Disable =
 		SwitchState = true
 	)
 	if MAIN_AssetSwitchUI.chkbox_animation.checked AND (doesFileExist curAnimFile) do
+
 	(
 		SwitchState = true
 	)
@@ -313,10 +327,10 @@ function Switch_Button_Enable_Disable =
 )
 -- Set the ui to a invalid selection case	
 function FN_UiWarnInvalid =
-	(
+(
 	FN_UiReset()
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = " Node(s) do not have an asset set! "
-	)
+)
 	
 -- Set the ui to a mismatched selection case
 function FN_UiWarnMismatch =
@@ -325,7 +339,9 @@ function FN_UiWarnMismatch =
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = " Nodes do not share the same asset! "
 )
 	
--- Update all the elements in the Information panel except the import module
+
+-- Update all the elements in the Information panel except the import module (now it DOES update the import module)
+
 function FN_UiInformationUpdate = 
 (
 	-- Prepare data for inspection	
@@ -341,7 +357,7 @@ function FN_UiInformationUpdate =
 		curType = MAIN_AssetSwitchUI.ddl_objDropdown.selected
 		curVersion = MAIN_AssetSwitchUI.ddl_versionDropdown.selected
 		curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")	
-		
+		MAIN_AssetSwitchUI.lab_importType.text = ( "Import Module: " + (FN_importTypeTest curVersionFile))
 		FN_importTypeTest curVersionFile
 	)
 	catch()
@@ -567,21 +583,43 @@ function FN_UiUpdate =
 	MAIN_AssetSwitchUI.btn_openAssetDir.enabled = true
 		
 	-- Update UI Items
+	MAIN_AssetSwitchUI.chkbox_materials.enabled = true
 	MAIN_AssetSwitchUI.ddl_matDropdown.items = (curMaterialsArr)
-	MAIN_AssetSwitchUI.btn_copyMatDir.enabled = true
-	MAIN_AssetSwitchUI.btn_openMatDir.enabled = true
-		
+	if MAIN_AssetSwitchUI.chkbox_materials.checked do
+	(
+		MAIN_AssetSwitchUI.ddl_matDropdown.enabled = true
+		MAIN_AssetSwitchUI.btn_copyMatDir.enabled = true
+		MAIN_AssetSwitchUI.btn_openMatDir.enabled = true
+	)
+	
+	
+	MAIN_AssetSwitchUI.chkbox_objects.enabled = true
 	MAIN_AssetSwitchUI.ddl_objDropdown.items = (curTypesArr)
-	MAIN_AssetSwitchUI.btn_copyObjDir.enabled = true
-	MAIN_AssetSwitchUI.btn_openObjDir.enabled = true
-
 	MAIN_AssetSwitchUI.ddl_versionDropdown.items = (curVersionArr)
-	MAIN_AssetSwitchUI.btn_copyVerDir.enabled = true
-	MAIN_AssetSwitchUI.btn_openVerDir.enabled = true
+	if MAIN_AssetSwitchUI.chkbox_objects.checked do
+	(
+		MAIN_AssetSwitchUI.ddl_objDropdown.enabled = true
+		MAIN_AssetSwitchUI.ddl_versionDropdown.enabled = true
+		MAIN_AssetSwitchUI.btn_copyObjDir.enabled = true
+		MAIN_AssetSwitchUI.btn_openObjDir.enabled = true
+		MAIN_AssetSwitchUI.btn_copyVerDir.enabled = true
+		MAIN_AssetSwitchUI.btn_openVerDir.enabled = true
+	)
 
+	MAIN_AssetSwitchUI.chkbox_animation.enabled = true
 	MAIN_AssetSwitchUI.ddl_AnimationDropdown.items = (curAnimationArr)
-	MAIN_AssetSwitchUI.btn_copyAnimationDir.enabled = true
-	MAIN_AssetSwitchUI.btn_openAnimationDir.enabled = true
+	if MAIN_AssetSwitchUI.chkbox_animation.checked do
+	(
+		MAIN_AssetSwitchUI.ddl_AnimationDropdown.enabled = true
+		MAIN_AssetSwitchUI.SaveLoadAnim_Options.enabled = true
+		MAIN_AssetSwitchUI.SaveLoadAnim_Refresh.enabled = true
+		MAIN_AssetSwitchUI.btn_copyAnimationDir.enabled = true
+		MAIN_AssetSwitchUI.btn_openAnimationDir.enabled = true
+		MAIN_AssetSwitchUI.btn_copyAnimationDir.enabled = true
+		MAIN_AssetSwitchUI.btn_openAnimationDir.enabled = true
+	)
+
+
 		
 	MAIN_AssetSwitchUI.chkbox_materials.text = ("Materials : " + (MAIN_AssetSwitchUI.ddl_matDropdown.items.count as string) + " available")
 	MAIN_AssetSwitchUI.chkbox_objects.text = ("Objects : " + (MAIN_AssetSwitchUI.ddl_objDropdown.items.count as string) + " available, " + (MAIN_AssetSwitchUI.ddl_versionDropdown.items.count as string) + " versions")
@@ -603,7 +641,9 @@ function FN_UiUpdate =
 	
 -- Test the selection for count, an assigned asset file, and matching asset types
 function FN_UiUpdate_SelectionCheck =
-(		
+
+(
+
 	-- Test if there are any objects selected, and update the ui if there are things to update it with
 	if ((selection as array).count) == 0 then
 	(
@@ -654,15 +694,23 @@ function FN_UiUpdate_SelectionCheck =
 				-- Attempt to set the VERSION dropdown based off of a stored value ( this is the gross hack to get this thing into place..... I am ashamed -> Don't be!)
 				try
 				(
+					curType = MAIN_AssetSwitchUI.ddl_objDropdown.selected
 					curVersion_temp = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
-					curVersionArr =	FN_GetVersionsInDir()
+
+					MAIN_AssetSwitchUI.ddl_versionDropdown.items = curVersionArr = FN_GetVersionsInDir()
+
 					--FN_UiUpdate_Objects() -- ASK AARON -> Added thi line to Brute Force fix for the unpopulated Objects DropDownList
 					-- Loop throught the possible choices and set it if the prefferd choice is there
 					for i in 1 to curVersionArr.count do
 					(
-						if curVersion_temp == curVersionArr[i] do
+						if curVersion_temp == curVersionArr[i] then
 						(
 							MAIN_AssetSwitchUI.ddl_versionDropdown.selection = i
+							curVersion = curVersion_temp
+						)
+						else
+						(
+							curVersion = curVersionArr[1]
 						)
 					)
 					curMaterialFile = (assetDir + @"Publish\Material\" + curMaterial + ".mat")
@@ -1152,6 +1200,9 @@ function FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
+
+			-- Checks if the Max or Vray file to load exists
+
 			if doesFileExist curVersionFile do
 			(
 				-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
@@ -1452,7 +1503,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 		checkbox SwitchCurrentAnim_CheckBox "Transfer Current Animation on Switch" enabled:false tooltip:"Transfer animation from current scene Asset to Switched Asset" across:4
 		button SaveLoadAnim_Refresh "R" align:#left offset:[100,-3] width:18 height:18 tooltip:"Reset frame range to current scene time range and enables Set Range under Options menu"
 		label SaveLoadAnim_Label "frames:" enabled:false offset:[15,0]
-		button SaveLoadAnim_Options "Options" enabled:false offset:[20,-3] tooltip:"Options for Animation Switching"
+		button SaveLoadAnim_Options "Options" enabled:true offset:[20,-3] tooltip:"Options for Animation Switching"
 		dropdownlist ddl_AnimationDropdown width:381 items:#(" -- No Animation Present --") align:#left offset:[0,0] tooltip:"Animation to Switch"
 			button btn_copyAnimationDir "C" width:18 height:18 align:#left offset:[382,-25] tooltip:"Copy the path to the clipboard"
 			button btn_openAnimationDir "..." width:18 height:18 align:#left offset:[401,-23] tooltip:"Open explorer on the current path"
@@ -1493,6 +1544,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	(
 		curMaterial = ddl_matDropdown.items[arg]
 		--FN_UiUpdate_Materials()
+
 		FN_UiInformationUpdate()
 	)
 	-- Enable / Disable the Object and Version dropdown on the checkbox toggle
@@ -1524,6 +1576,9 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	(
 		curType = ddl_ObjDropdown.items[arg]
 		--FN_UiUpdate_Objects()
+		ddl_versionDropdown.items = FN_GetVersionsInDir()
+		ddl_versionDropdown.selection = 1
+		FN_importTypeTest curVersionFile
 		FN_UiInformationUpdate()
 	)
 		
@@ -1537,16 +1592,21 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	)
 	on chkbox_animation changed state do
 	(
+		SaveLoadAnim_Refresh.enabled = state
+		SaveLoadAnim_Options.enabled = state
+		btn_copyAnimationDir.enabled = state
+		btn_openAnimationDir.enabled = state
 		if chkbox_objects.checked then
 		(
 			SwitchCurrentAnim_CheckBox.enabled = state
 		)
-		SaveLoadAnim_Refresh.enabled = state
-		if (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" )) do
-		(
-			SaveLoadAnim_Label.enabled = state
+		try(
+			if (execute (getinisetting (ASSET_PublishFunctions.INIget()) "AnimationSwitch" "SetRange" )) do
+			(
+				SaveLoadAnim_Label.enabled = state
+			)
 		)
-		SaveLoadAnim_Options.enabled = state
+		catch()
 		if SwitchCurrentAnim_CheckBox.checked then
 		(
 			ddl_AnimationDropdown.enabled = false
@@ -1580,6 +1640,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	on chkbox_info changed state do(FN_UiToggleInformationTest state)
 	-- Starts a publishing operation
 	on btn_Open_Publish_Center pressed do
+
 	(
 		doPublish = true
 		nodeAsset = selection[1]
@@ -1610,6 +1671,23 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 				messagebox "Select a node with a valid asset definition"
 			)
 		)
+		FN_UiInformationUpdate()
+	)
+	-- Triggers on OBJECT selection, from its dropdown		
+	on ddl_objDropdown selected arg do
+	(
+		curType = ddl_ObjDropdown.items[arg]
+		--FN_UiUpdate_Objects()
+		FN_UiInformationUpdate()
+	)
+		
+	-- Triggers on VERSION selection, from its dropdown
+	on ddl_versionDropdown selected arg do
+	(
+		curVersion = ddl_versionDropdown.items[arg]
+		curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
+		FN_importTypeTest curVersionFile
+		FN_UiInformationUpdate()
 	)
 	-- Starts a switch operation, and holds first if told to
 	on btn_SwitchAsset pressed do
@@ -1646,14 +1724,17 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 				Messagebox "Unhandled exception, sorry! -Aaron"
 			)
 		)
+
 		
 	)
 		
 	-- Revert to scene / selection from before last switch
 	on btn_Revert pressed do
+
 	(
 		FN_Revert()
 	)
+
 	-- When the Copy button is pressed, copy file path of the asset to the clipboard
 	on btn_copyAssetDir pressed do (setclipboardText assetDir)
 	on btn_copyMatDir pressed do (setclipboardText (assetDir + @"\Publish\Material"))
