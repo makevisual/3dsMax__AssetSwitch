@@ -147,8 +147,8 @@ function FN_GetVersionsInDir = -- arg: curType
 				versionNames = #("No Versions Found")
 			)
 
-
 			--curVersion = versionNames[1]
+
 			return versionNames
 		)
 		else
@@ -267,7 +267,7 @@ function FN_UiReset =
 	MAIN_AssetSwitchUI.btn_openVerDir.enabled = false
 	MAIN_AssetSwitchUI.btn_copyAnimationDir.enabled = false
 	MAIN_AssetSwitchUI.btn_openAnimationDir.enabled = false
-	MAIN_AssetSwitchUI.SwitchCurrentAnim_CheckBox.enabled = false
+
 	
 	
 	MAIN_AssetSwitchUI.chkbox_materials.enabled = false
@@ -319,6 +319,7 @@ function Switch_Button_Enable_Disable =
 		SwitchState = true
 	)
 	if MAIN_AssetSwitchUI.chkbox_animation.checked AND (doesFileExist curAnimFile) do
+
 	(
 		SwitchState = true
 	)
@@ -338,7 +339,9 @@ function FN_UiWarnMismatch =
 	MAIN_AssetSwitchUI.btn_chooseAsset.text = " Nodes do not share the same asset! "
 )
 	
+
 -- Update all the elements in the Information panel except the import module (now it DOES update the import module)
+
 function FN_UiInformationUpdate = 
 (
 	-- Prepare data for inspection	
@@ -638,7 +641,9 @@ function FN_UiUpdate =
 	
 -- Test the selection for count, an assigned asset file, and matching asset types
 function FN_UiUpdate_SelectionCheck =
+
 (
+
 	-- Test if there are any objects selected, and update the ui if there are things to update it with
 	if ((selection as array).count) == 0 then
 	(
@@ -691,7 +696,9 @@ function FN_UiUpdate_SelectionCheck =
 				(
 					curType = MAIN_AssetSwitchUI.ddl_objDropdown.selected
 					curVersion_temp = getUserProp selection[1] "MAKE_Asset_Loaded_Version"
+
 					MAIN_AssetSwitchUI.ddl_versionDropdown.items = curVersionArr = FN_GetVersionsInDir()
+
 					--FN_UiUpdate_Objects() -- ASK AARON -> Added thi line to Brute Force fix for the unpopulated Objects DropDownList
 					-- Loop throught the possible choices and set it if the prefferd choice is there
 					for i in 1 to curVersionArr.count do
@@ -916,6 +923,7 @@ function FN_DoSwitch_Animation arg arg2 TempAnimFile QuickSwitch = -- arg: the f
 		)
 		("none"):
 		(
+			print "tried here"
 			deleteKeys nodeAsset #allKeys
 			FN_Save_Load_Animation arg AnimationNodes SetRange IntervalRange "AnimLoad"
 		)
@@ -1192,7 +1200,9 @@ function FN_DoSwitch =
 		-- Test for if an object switch is desired, and do it if so
 		if MAIN_AssetSwitchUI.chkbox_objects.checked == true do
 		(
+
 			-- Checks if the Max or Vray file to load exists
+
 			if doesFileExist curVersionFile do
 			(
 				-- This branch condition is needed in case the user wants to do a Switch but grab the CURRENT animation on the asset (without having to publish the animation before hand)
@@ -1534,6 +1544,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	(
 		curMaterial = ddl_matDropdown.items[arg]
 		--FN_UiUpdate_Materials()
+
 		FN_UiInformationUpdate()
 	)
 	-- Enable / Disable the Object and Version dropdown on the checkbox toggle
@@ -1629,6 +1640,7 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 	on chkbox_info changed state do(FN_UiToggleInformationTest state)
 	-- Starts a publishing operation
 	on btn_Open_Publish_Center pressed do
+
 	(
 		doPublish = true
 		nodeAsset = selection[1]
@@ -1659,6 +1671,23 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 				messagebox "Select a node with a valid asset definition"
 			)
 		)
+		FN_UiInformationUpdate()
+	)
+	-- Triggers on OBJECT selection, from its dropdown		
+	on ddl_objDropdown selected arg do
+	(
+		curType = ddl_ObjDropdown.items[arg]
+		--FN_UiUpdate_Objects()
+		FN_UiInformationUpdate()
+	)
+		
+	-- Triggers on VERSION selection, from its dropdown
+	on ddl_versionDropdown selected arg do
+	(
+		curVersion = ddl_versionDropdown.items[arg]
+		curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
+		FN_importTypeTest curVersionFile
+		FN_UiInformationUpdate()
 	)
 	-- Starts a switch operation, and holds first if told to
 	on btn_SwitchAsset pressed do
@@ -1695,14 +1724,17 @@ rollout MAIN_AssetSwitchUI ("Asset Switch v" + (versionNumber as string) )
 				Messagebox "Unhandled exception, sorry! -Aaron"
 			)
 		)
+
 		
 	)
 		
 	-- Revert to scene / selection from before last switch
 	on btn_Revert pressed do
+
 	(
 		FN_Revert()
 	)
+
 	-- When the Copy button is pressed, copy file path of the asset to the clipboard
 	on btn_copyAssetDir pressed do (setclipboardText assetDir)
 	on btn_copyMatDir pressed do (setclipboardText (assetDir + @"\Publish\Material"))
