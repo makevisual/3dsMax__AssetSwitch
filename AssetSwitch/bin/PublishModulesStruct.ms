@@ -402,7 +402,7 @@ struct ASSET_PublishFunctions
 				Find_Duplicate_Objects &saveArr &DuplicateNames
 				print "Duplicate Object Names:"
 				for objName in DuplicateNames do (print objName)
-				return "ERROR: Animation Publish failed. Check for duplicate names on the Listener"
+				return "ERROR: Animation Publish failed. Check for duplicate names on Maxscript Listener"
 			)
 		)
 		catch(return "ERROR: Animation Publish failed")
@@ -450,7 +450,40 @@ struct ASSET_PublishFunctions
 		)
 		Catch(return "ERROR: Material Publish failed")
 	),
-	
+	function Reparent_VrayProxies &HierarchyArray &NodesArray &RevertHierarchyArray NodesNamesArray =
+	(
+		for j = HierarchyArray.count to 1 by -1 do
+		(
+			-- Checks if a node on the ExportedNodeNames exists on the hierarchy_array (implying an exported node is also a parent of some other node)
+			ParentIndex = findItem NodesNamesArray HierarchyArray[j].name
+			if ParentIndex != 0 do
+			(
+				-- Grabs all the children of the Hierarchy_Array node to assign them to a new parent inside the Export Array
+				ChildrenToReparent = (for CurrentChild in HierarchyArray[j].children collect CurrentChild)
+				for ChildIndex = ChildrenToReparent.count to 1 by -1 do
+				(
+					IndexinExportArray = (FindItem NodesArray ChildrenToReparent[ChildIndex])
+					IndexinHierarchyArray = (FindItem HierarchyArray ChildrenToReparent[ChildIndex])
+					-- Checks to see if all the children are included on the Export_Array or Hierarchy Array. If they are not, exclude such node to be reparented.
+					if (IndexinExportArray == 0) AND (IndexinHierarchyArray == 0) do
+					(
+						deleteItem ChildrenToReparent ChildIndex
+					)
+					-- Checks if a to be reparent node is originally part of the hierarchy array (and hence, it is a control object, like a spline or helper)
+					if IndexinHierarchyArray != 0 do
+					(
+						-- adds such objects to the ParentRevert array along with its original parent
+						append RevertHierarchyArray ChildrenToReparent[ChildIndex]
+						append RevertHierarchyArray HierarchyArray[j]
+					)
+				)
+				-- Reparent the children to a node inside the export array
+				ChildrenToReparent.parent = NodesArray[ParentIndex]
+				-- Removes the Geometry that had children on the Export Array from the hierarchy array to be published afterwards
+				deleteItem HierarchyArray j
+			)
+		)
+	),
 	-- Publish a vrmeshFile	
 	function pub_vrmeshFile arg_asset arg_path CombineAllMeshes =
 	(
@@ -472,11 +505,13 @@ struct ASSET_PublishFunctions
 			else ( anim = off )
 			
 			-- collect the objects to export
+			export_arr_Names = #()
 			export_arr = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:true)
 			hierarchy_Array = (ASSET_PublishFunctions.CollectAllChildren nodeAsset includeParent:false MeshObjOnly:false)
 			-- Removes from the Hierarchy Array all objects that have no children
 			for obj in export_arr do
 			(
+				append export_arr_Names obj.name
 				if obj.children.count == 0 do
 				(
 					IndexToDelete = FindItem hierarchy_Array obj
@@ -518,6 +553,38 @@ struct ASSET_PublishFunctions
 				PartsDirectory = ((pathConfig.removePathLeaf(getFilenamePath arg_path)) + @"\" + ((pathConfig.stripPathToLeaf (pathConfig.removePathLeaf arg_path)) + @"_Parts\"))
 				CurrentAssetName = ((substring (pathConfig.stripPathToLeaf arg_path) 1 ((pathConfig.stripPathToLeaf arg_path).count - 7)))
 				PartsPartialName = PartsDirectory + CurrentAssetName
+				-- Initializes an Array to reparent nodes back to their original parents in case they had to be parented to VrayProxy nodes
+				ParentRevertArray = #()
+				BadHierarchy = false
+				-- Checks for Geometry that has any children inside the Export Array and reassigns the parent to be the newly created VrayProxy Object
+				for CurrentNode in hierarchy_Array do
+				(
+					-- Checks if a node on the ExportedNodeNames exists on the hierarchy_array (implying an exported node is also a parent of some other node)
+					ParentIndex = findItem export_arr_Names CurrentNode.name
+					if ParentIndex != 0 do
+					(
+						BadHierarchy = true
+					)
+				)
+				if BadHierarchy do
+				(
+					ReparentVrayProxies = queryBox ("The Asset contains geometry parented to other" +
+					"\ngeometry objects. IT IS HIGHLY RECOMMENDED to" +
+					"\nCANCEL the publishing of this Asset and fix" +
+					"\nthe hierarchy, making sure all geometry is" +
+					"\nparented to point helpers or controllers objects." +
+					"\n\nContinue anyways?" +
+					"\n\nYES - Ignore and continue." +
+					"\nNO - Cancels publishing (RECOMMENDED).") title:"AssetSwitch - Material Conflict"
+					if ReparentVrayProxies then
+					(
+						Reparent_VrayProxies &hierarchy_Array &export_arr &ParentRevertArray export_arr_Names
+					)
+					else
+					(
+						return ("ERROR: vrmesh Publish cancelled by user")
+					)
+				)
 				makeDir PartsDirectory
 				for i = 1 to export_arr.count do
 				(
@@ -529,40 +596,6 @@ struct ASSET_PublishFunctions
 					ExportedNodesParents[i] = (export_arr[i].parent).name
 				)
 				MapIniName = PartsPartialName + "_Parts.vpmap"
-				-- Initializes an Array to reparent nodes back to their original parents in case they had to be parented to VrayProxy nodes
-				ParentRevertArray = #()
-				-- Checks for Geometry that has any children inside the Export Array and reassigns the parent to be the newly created VrayProxy Object
-				for j = hierarchy_Array.count to 1 by -1 do
-				(
-					-- Checks if a node on the ExportedNodeNames exists on the hierarchy_array (implying an exported node is also a parent of some other node)
-					ParentIndex = findItem ExportedNodesNames ("VRayProxy_" + hierarchy_Array[j].name)
-					if ParentIndex != 0 do
-					(
-						-- Grabs all the children of the Hierarchy_Array node to assign them to a new parent inside the Export Array
-						ChildrenToReparent = (for CurrentChild in hierarchy_Array[j].children collect CurrentChild)
-						for ChildIndex = ChildrenToReparent.count to 1 by -1 do
-						(
-							IndexinExportArray = (FindItem export_arr ChildrenToReparent[ChildIndex])
-							IndexinHierarchyArray = (FindItem hierarchy_Array ChildrenToReparent[ChildIndex])
-							-- Checks to see if all the children are included on the Export_Array or Hierarchy Array. If they are not, exclude such node to be reparented.
-							if (IndexinExportArray == 0) AND (IndexinHierarchyArray == 0) do
-							(
-								deleteItem ChildrenToReparent ChildIndex
-							)
-							-- Checks if a to be reparent node is originally part of the hierarchy array (and hence, it is a control object, like a spline or helper)
-							if IndexinHierarchyArray != 0 do
-							(
-								-- adds such objects to the ParentRevert array along with its original parent
-								append ParentRevertArray ChildrenToReparent[ChildIndex]
-								append ParentRevertArray hierarchy_Array[j]
-							)
-						)
-						-- Reparent the children to a node inside the export array
-						ChildrenToReparent.parent = export_arr[ParentIndex]
-						-- Removes the Geometry that had children on the Export Array from the hierarchy array to be published afterwards
-						deleteItem hierarchy_Array j
-					)
-				)
 				Max_nodes_to_Save = export_arr + hierarchy_Array
 				saveNodes Max_nodes_to_Save (PartsPartialName + "_Parts.max")
 				-- Checks if there are elements on the ParentRevert array
