@@ -599,9 +599,15 @@ function FN_PublishCenter = -- asset: the current asset definition
 		
 		function FN_PUBhistSave =
 		(
+			setUserProp nodeAsset "MAKE_Asset_Material_Prefix" edt_MaterialFile_Prefex.text
  			setUserProp nodeAsset "MAKE_Asset_Material_Versions" spinner_MaterialFile_Number.value
+ 			setUserProp nodeAsset "MAKE_Asset_Max_Prefix" edt_MaxFile_Prefex.text
  			setUserProp nodeAsset "MAKE_Asset_Max_Versions" spinner_MaxFile_Number.value
+ 			setUserProp nodeAsset "MAKE_Asset_Vrmesh_Prefix" edt_vrmeshFile_Prefex.text
  			setUserProp nodeAsset "MAKE_Asset_Vrmesh_Versions" spinner_vrmeshFile_Number.value
+ 			setUserProp nodeAsset "MAKE_Asset_VrmeshParts_Prefix" edt_vrmeshPartsFile_Prefex.text
+ 			setUserProp nodeAsset "MAKE_Asset_VrmeshParts_Versions" spinner_vrmeshPartsFile_Number.value
+ 			setUserProp nodeAsset "MAKE_Asset_Animation_Prefix" edt_AnimationFile_Prefex.text
  			setUserProp nodeAsset "MAKE_Asset_Animation_Versions" spinner_AnimationFile_Number.value
  			setUserProp nodeAsset "MAKE_Asset_TimeStamp" localTime
  			setUserProp nodeAsset "MAKE_Asset_Author" sysInfo.username
@@ -813,22 +819,33 @@ function FN_PublishCenter = -- asset: the current asset definition
 			-- Update stored names 
 			curStr = "undefined"
 
-			if curStr == "undefined" then( curStr = "ver" )
-			edt_MaxFile_Prefex.text = curStr
-
-			curStr = ((getUserProp nodeAsset "PUBhist_Material") as string )  -- TODO: Fix with the new UserProp values!!!!
-			if curStr == "undefined" then( curStr = "ver" )
+			curStr = ((getUserProp nodeAsset "MAKE_Asset_Material_Prefix") as string ) 
+			if curStr == "undefined" do ( curStr = "ver" )
 			edt_MaterialFile_Prefex.text = curStr
 
-			curStr = ((getUserProp nodeAsset "PUBhist_Vrmesh") as string )  -- TODO: Fix with the new UserProp values!!!!
-			if curStr == "undefined" then( curStr = "ver" )
+			curStr = ((getUserProp nodeAsset "MAKE_Asset_Max_Prefix") as string )
+			if curStr == "undefined" do ( curStr = "ver" )
+			edt_MaxFile_Prefex.text = curStr
+
+			curStr = ((getUserProp nodeAsset "MAKE_Asset_Vrmesh_Prefix") as string )
+			if curStr == "undefined" do ( curStr = "ver" )
 			edt_vrmeshFile_Prefex.text = curStr
+
+			curStr = ((getUserProp nodeAsset "MAKE_Asset_VrmeshParts_Prefix") as string )
+			if curStr == "undefined" do ( curStr = "ver" )
+			edt_vrmeshPartsFile_Prefex.text = curStr
 			
+			curStr = ((getUserProp nodeAsset "MAKE_Asset_Animation_Prefix") as string )
+			if curStr == "undefined" do ( curStr = "ver" )
+			edt_AnimationFile_Prefex.text = curStr
+
 			-- Update stored interations
+			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAsset "MAKE_Asset_Material_Versions" ) 	as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
 			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAsset "MAKE_Asset_Max_Versions" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
-			try( spinner_MaterialFile_Number.value 		= ( ( getUserProp nodeAsset "MAKE_Asset_Material_Versions" ) 		as integer ) ) catch ( spinner_MaterialFile_Number.value 		= 001 )
 			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAsset "MAKE_Asset_Vrmesh_Versions" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
-				
+			try( spinner_vrmeshPartsFile_Number.value 	= ( ( getUserProp nodeAsset "MAKE_Asset_VrmeshParts_Versions" ) as integer ) ) catch ( spinner_vrmeshPartsFile_Number.value 	= 001 )
+			try( spinner_AnimationFile_Number.value 	= ( ( getUserProp nodeAsset "MAKE_Asset_Animation_Versions" ) 	as integer ) ) catch ( MAKE_Asset_Animation_Versions.value 		= 001 )
+			
 			-- Update individual paths for each asset
 			FN_Update_3dsMaxFile()
 			FN_Update_Material_Lib_File()
