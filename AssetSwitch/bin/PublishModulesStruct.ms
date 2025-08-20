@@ -589,11 +589,13 @@ struct ASSET_PublishFunctions
 				for i = 1 to export_arr.count do
 				(
 					NodetoExportPath = PartsPartialName + "_" + export_arr[i].name + ".vrmesh"
+					OriginalMeshName = export_arr[i].name
 					vrayMeshExport meshFile:NodetoExportPath nodes:export_arr[i] autoCreateProxies:true exportMultiple:true maxPreviewFaces:Facecount animation:false animationRange:#explicit animationStart:FrameStart animationEnd:FrameEnd animationRedrawViews:true
 					ExportedNodesNames[i] = export_arr[i].name
 					ExportedNodesFilePath[i] = NodetoExportPath
 					ExportedNodesTransforms[i] = (export_arr[i].transform*(inverse export_arr[i].parent.transform)) -- new method for safe asset replace in case the replacement node is absent
 					ExportedNodesParents[i] = (export_arr[i].parent).name
+					setUserProp export_arr[i] "MAKE_Asset_Original_Mesh" OriginalMeshName
 				)
 				MapIniName = PartsPartialName + "_Parts.vpmap"
 				Max_nodes_to_Save = export_arr + hierarchy_Array
