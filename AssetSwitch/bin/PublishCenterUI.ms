@@ -854,7 +854,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_Update_AnimationFile()
 			--arg_enabled: if animation is enabled | arg_source: either scene or predefined range | arg_label: the UI element to update
 			FN_UpdateFrameRange lab_vrmeshAnimFrames "vrmeshFile" "ExportAnimation"
-			FN_UpdateFrameRange lab_AnimationAnimFrames "AnimationPublish" "OutputEnabled"
+			FN_UpdateFrameRange lab_AnimationAnimFrames "AnimationPublish" "SetRange"
 			-- Update Ui Items
 			FN_PublishAssetDirPreview()
 			FN_CategoryToggle()
