@@ -844,7 +844,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			try( spinner_MaxFile_Number.value 			= ( ( getUserProp nodeAsset "MAKE_Asset_Max_Versions" ) 		as integer ) ) catch ( spinner_MaxFile_Number.value 			= 001 )
 			try( spinner_vrmeshFile_Number.value 		= ( ( getUserProp nodeAsset "MAKE_Asset_Vrmesh_Versions" ) 		as integer ) ) catch ( spinner_vrmeshFile_Number.value 			= 001 )
 			try( spinner_vrmeshPartsFile_Number.value 	= ( ( getUserProp nodeAsset "MAKE_Asset_VrmeshParts_Versions" ) as integer ) ) catch ( spinner_vrmeshPartsFile_Number.value 	= 001 )
-			try( spinner_AnimationFile_Number.value 	= ( ( getUserProp nodeAsset "MAKE_Asset_Animation_Versions" ) 	as integer ) ) catch ( MAKE_Asset_Animation_Versions.value 		= 001 )
+			try( spinner_AnimationFile_Number.value 	= ( ( getUserProp nodeAsset "MAKE_Asset_Animation_Versions" ) 	as integer ) ) catch ( spinner_AnimationFile_Number.value 		= 001 )
 			
 			-- Update individual paths for each asset
 			FN_Update_3dsMaxFile()
