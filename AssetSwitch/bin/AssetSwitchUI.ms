@@ -712,7 +712,7 @@ function FN_UiUpdate_SelectionCheck =
 				catch()
 				-- curMaterialFile = (assetDir + @"Publish\Material\" + curMaterial + ".mat")
 				-- curVersionFile = (assetDir + @"Publish\" + curType + @"\" + curVersion + @"\")
-				FN_UiInformationUpdate()	
+				FN_UiInformationUpdate()
 			)
 			"invalid":
 			(
@@ -731,6 +731,7 @@ function FN_Callback_SelectionChange =
 (
 	FN_UiUpdate_SelectionCheck()
 	nodeAsset = selection[1] -- TODO: ADDED THIS CHANGE TO UPDATE THE nodeAsset Global Variable
+
 	--clearlistener()
 )
 	
@@ -951,7 +952,6 @@ fn	FN_DoSwitch_Standard arg arg2 = -- arg: the filepath to import | arg2: the no
 	(
 		-- Search the names of the objects in the scene for the hero name
 		removeGlobalIndex = findItem mergeObjects heroName
-		
 		-- remove it from the list, and then import the other objects
 		deleteItem mergeObjects removeGlobalIndex
 		
