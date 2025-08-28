@@ -875,6 +875,7 @@ function FN_PublishCenter = -- asset: the current asset definition
 			FN_PUBhistSave()
 			FN_ChildrenName_Bake()
 
+			try( nodeAsset.name = (getIniSetting assetFile "Global" "name")) catch() -- Resets the name of the asset back to the default name stored in the Asset file)
 			try( setinisetting AssetFile "Global" "radius" 		(nodeAsset.radius as string)	) catch ()
 			try( setinisetting AssetFile "Global" "wirecolor" 	(nodeAsset.wirecolor as string)	) catch ()
 			try( setinisetting AssetFile "Global" "steps" 		(nodeAsset.steps as string)		) catch ()
